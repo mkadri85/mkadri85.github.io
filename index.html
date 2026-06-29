@@ -23,7 +23,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -50,8 +50,14 @@
     background:rgba(10,13,19,.72);border-bottom:1px solid transparent;transition:border-color .3s}
   header.scrolled{border-color:var(--line)}
   nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .brand{font-family:'Space Grotesk';font-weight:700;font-size:18px;letter-spacing:.02em}
-  .brand .dot{color:var(--accent)}
+  .brand{font-family:'Great Vibes',cursive;font-size:30px;line-height:1;color:var(--ink);
+    position:relative;display:inline-block;white-space:nowrap;padding-bottom:3px;opacity:0;
+    animation:brandIn .9s .15s ease forwards}
+  .brand::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;
+    background:linear-gradient(90deg,var(--accent),var(--violet));border-radius:2px;
+    transform:scaleX(0);transform-origin:left;animation:sign 1.2s .35s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes brandIn{to{opacity:1}}
+  @keyframes sign{to{transform:scaleX(1)}}
   .navlinks{display:flex;gap:28px;font-size:14px;color:var(--mut)}
   .navlinks a{transition:color .2s}.navlinks a:hover{color:var(--ink)}
   .nav-cta{border:1px solid var(--line);padding:8px 16px;border-radius:999px;font-size:13.5px;color:var(--ink);transition:.2s}
@@ -82,8 +88,13 @@
   .btn-ghost:hover{border-color:var(--accent);background:var(--panel)}
 
   /* Metrics */
-  .metrics{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2)}
-  .metrics .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:34px 24px}
+  .metrics{border-top:1px solid var(--line);background:var(--bg2)}
+  .metrics .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:34px 24px 22px}
+  .competencies{background:var(--bg2);border-bottom:1px solid var(--line)}
+  .competencies .wrap{display:flex;flex-wrap:wrap;gap:11px 26px;justify-content:center;padding:4px 24px 30px}
+  .competencies span{font-size:13.5px;color:var(--mut);position:relative;padding-left:16px;white-space:nowrap}
+  .competencies span::before{content:"";position:absolute;left:0;top:50%;width:6px;height:6px;border-radius:50%;
+    transform:translateY(-50%);background:linear-gradient(var(--accent),var(--violet))}
   .metric .n{font-family:'Space Grotesk';font-size:clamp(26px,4vw,40px);font-weight:700;line-height:1}
   .metric .l{color:var(--mut);font-size:13px;margin-top:8px}
   @media(max-width:720px){.metrics .wrap{grid-template-columns:repeat(2,1fr);gap:20px}}
@@ -176,14 +187,15 @@
 
   .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
   .reveal.in{opacity:1;transform:none}
-  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.pulse{animation:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}.pulse{animation:none}
+    .brand{opacity:1;animation:none}.brand::after{transform:scaleX(1);animation:none}}
 </style>
 </head>
 <body>
 
 <header id="hdr">
   <nav class="wrap">
-    <div class="brand">MK<span class="dot">.</span></div>
+    <a class="brand" href="#top" aria-label="Mohamed Kadri">Mohamed Kadri</a>
     <div class="navlinks">
       <a href="#about">About</a>
       <a href="#expertise">Expertise</a>
@@ -217,10 +229,19 @@
 <!-- METRICS -->
 <div class="metrics">
   <div class="wrap">
-    <div class="metric reveal"><div class="n grad" data-count="17" data-suffix="+">0</div><div class="l">Years across telecom and ICT</div></div>
-    <div class="metric reveal"><div class="n grad" data-count="99" data-suffix=".95%">0</div><div class="l">Multi-country platform uptime</div></div>
-    <div class="metric reveal"><div class="n grad" data-count="11" data-suffix="%">0</div><div class="l">OPEX cut (iPowerStar)</div></div>
-    <div class="metric reveal"><div class="n grad" data-count="1200" data-suffix="+">0</div><div class="l">Network sites optimized</div></div>
+    <div class="metric reveal"><div class="n grad" data-count="17" data-suffix="+">0</div><div class="l">Years leading telecom and product delivery</div></div>
+    <div class="metric reveal"><div class="n grad" data-count="4" data-suffix="">0</div><div class="l">Countries of team and delivery leadership</div></div>
+    <div class="metric reveal"><div class="n grad" data-count="99" data-suffix=".95%">0</div><div class="l">Uptime on a product I own end to end</div></div>
+    <div class="metric reveal"><div class="n grad" data-count="11" data-suffix="%">0</div><div class="l">OPEX cut delivered to the business</div></div>
+  </div>
+</div>
+<div class="competencies">
+  <div class="wrap reveal">
+    <span>Team leadership</span>
+    <span>Product ownership and management</span>
+    <span>Stakeholder management</span>
+    <span>Martech and growth</span>
+    <span>AI and cloud engineering</span>
   </div>
 </div>
 
