@@ -51,12 +51,10 @@
   header.scrolled{border-color:var(--line)}
   nav{display:flex;align-items:center;justify-content:space-between;height:64px}
   .brand{font-family:'Great Vibes',cursive;font-size:30px;line-height:1;color:var(--ink);
-    position:relative;display:inline-block;white-space:nowrap;padding-bottom:3px;opacity:0;
-    animation:brandIn .9s .15s ease forwards}
+    position:relative;display:inline-block;white-space:nowrap;padding-bottom:3px}
   .brand::after{content:"";position:absolute;left:0;bottom:0;height:2px;width:100%;
     background:linear-gradient(90deg,var(--accent),var(--violet));border-radius:2px;
-    transform:scaleX(0);transform-origin:left;animation:sign 1.2s .35s cubic-bezier(.2,.7,.2,1) forwards}
-  @keyframes brandIn{to{opacity:1}}
+    transform:scaleX(0);transform-origin:left;animation:sign 1.3s .4s cubic-bezier(.2,.7,.2,1) forwards}
   @keyframes sign{to{transform:scaleX(1)}}
   .navlinks{display:flex;gap:28px;font-size:14px;color:var(--mut)}
   .navlinks a{transition:color .2s}.navlinks a:hover{color:var(--ink)}
