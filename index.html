@@ -31,7 +31,7 @@
     --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
     --accent:#34e0c8; --accent2:#6aa8ff; --violet:#9a7bff;
     --glow:rgba(52,224,200,.16);
-    --maxw:1080px;
+    --maxw:1240px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -69,6 +69,16 @@
     width:780px;height:520px;background:radial-gradient(closest-side,var(--glow),transparent);
     filter:blur(10px);z-index:0;pointer-events:none}
   .hero .wrap{position:relative;z-index:1}
+  .hero-grid{display:grid;grid-template-columns:1.35fr .8fr;gap:52px;align-items:center}
+  @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:0}.hero-card{display:none}}
+  .hero-card{background:rgba(16,20,30,.66);backdrop-filter:blur(12px);border:1px solid var(--line);
+    border-radius:18px;padding:22px 24px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+  .hero-card .hc-eyebrow{color:var(--accent);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
+  .hc-row{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:13.5px}
+  .hc-row:first-of-type{border-top:0;padding-top:0}
+  .hc-row .k{color:var(--dim)} .hc-row .v{color:var(--ink);text-align:right;font-weight:500}
+  .hc-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+  .hc-chips span{font-size:11.5px;color:var(--mut);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:3px 9px}
   .badge{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:var(--mut);
     border:1px solid var(--line);background:var(--panel);padding:6px 14px;border-radius:999px;margin-bottom:26px}
   .badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);
@@ -209,18 +219,29 @@
 <section class="hero">
   <canvas id="net"></canvas>
   <div class="hero-glow"></div>
-  <div class="wrap">
-    <div class="badge"><span class="pulse"></span> Available for select consulting and build engagements</div>
-    <h1>Mohamed Kadri<br><span class="grad">Operations leader who ships software.</span></h1>
-    <p class="role"><b>17 years</b> delivering microwave and transmission networks, then leading NOC digital transformation, at <b>Huawei</b> and <b>Etisalat</b> across the Middle East and Africa - and now architecting <b>AI and cloud products</b> end to end.</p>
-    <p class="sell">Carrier-grade operations plus hands-on engineering: I own a live mobile and web product end to end, build MCP-based AI automation, and run it all on Google Cloud with full CI/CD.</p>
-    <div class="cta-row">
-      <a class="btn btn-primary" href="#projects">View projects
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
-      <a class="btn btn-ghost" href="https://www.linkedin.com/in/mohamed-kadri-b3508916" target="_blank" rel="noopener">LinkedIn</a>
-      <a class="btn btn-ghost" href="https://github.com/mkadri85" target="_blank" rel="noopener">GitHub</a>
+  <div class="wrap hero-grid">
+    <div class="hero-main">
+      <div class="badge"><span class="pulse"></span> Available for select consulting and build engagements</div>
+      <h1>Mohamed Kadri<br><span class="grad">Operations leader who ships software.</span></h1>
+      <p class="role">A senior technology leader with <b>17 years</b> at <b>Huawei</b> and <b>Etisalat</b>, from carrier delivery to NOC digital transformation - who now designs, builds and ships <b>AI and cloud products</b> end to end.</p>
+      <p class="sell">I own a live mobile and web product from roadmap to production, build MCP-based AI automation, and run it all on Google Cloud with full CI/CD - backed by a career of leading multi-country teams against hard SLAs.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#projects">View projects
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a class="btn btn-ghost" href="https://www.linkedin.com/in/mohamed-kadri-b3508916" target="_blank" rel="noopener">LinkedIn</a>
+        <a class="btn btn-ghost" href="https://github.com/mkadri85" target="_blank" rel="noopener">GitHub</a>
+      </div>
     </div>
+    <aside class="hero-card">
+      <div class="hc-eyebrow">At a glance</div>
+      <div class="hc-row"><span class="k">Now</span><span class="v">Technical PM, Huawei UAE</span></div>
+      <div class="hc-row"><span class="k">Building</span><span class="v">AI and cloud products</span></div>
+      <div class="hc-row"><span class="k">Based in</span><span class="v">Dubai, UAE</span></div>
+      <div class="hc-row"><span class="k">Reach</span><span class="v">17+ yrs, 4 countries</span></div>
+      <div class="hc-row"><span class="k">Languages</span><span class="v">Arabic, English</span></div>
+      <div class="hc-chips"><span>Google Cloud</span><span>MCP</span><span>Flutter</span><span>Next.js</span><span>WhatsApp API</span><span>BigQuery</span></div>
+    </aside>
   </div>
 </section>
 
@@ -249,9 +270,9 @@
     <div class="reveal">
       <div class="eyebrow">About</div>
       <h2 class="h2">Two disciplines, one engineer</h2>
-      <p>My first 13 years were carrier-grade <b>microwave and transmission</b> delivery and operations: planning and integrating multi-vendor links (Huawei, Ericsson, NEC and others), clearing transmission networks of alarms, and negotiating SLA-based acceptance and billing with operators. I rose from site engineer to leading delivery and network-operations teams across four countries.</p>
-      <p style="margin-top:16px">At Huawei I moved into <b>NOC digital transformation</b>: intelligent assurance, ML-driven event management, and OSS cloud migration on the long-running du mobile-broadband program, delivered alongside executive ROI business cases for C-level stakeholders.</p>
-      <p style="margin-top:16px">In parallel I design and build <b>software</b>. I own a live mobile and web product end to end - a Flutter app on the iOS and Android stores and a Next.js and Node.js platform - built MCP-based AI automation for campaign orchestration, and run it all on Google Cloud with CI/CD across GitHub and GitLab. The result is a rare profile: someone who can <b>own a problem from the org chart down to the deploy pipeline</b>.</p>
+      <p>For <b>17 years</b> I have delivered and transformed mission-critical networks for operators across the Middle East and Africa, rising from hands-on engineering to leading <b>multi-vendor teams, network operations, and full digital-transformation programs</b> at Huawei and Etisalat. I am used to owning delivery against hard SLAs, managing customer and executive stakeholders, and turning technical decisions into ROI the business can see.</p>
+      <p style="margin-top:16px">In parallel I <b>design and build software</b>. I own a live consumer product end to end: a Flutter app on the iOS and Android stores and a Next.js and Node.js web platform. I built <b>MCP-based AI automation</b> for campaign orchestration, integrate Claude, Gemini and OpenAI into real workflows, and run the whole thing on Google Cloud with CI/CD across GitHub and GitLab.</p>
+      <p style="margin-top:16px">The result is a rare profile: someone who can <b>own a problem from the org chart down to the deploy pipeline</b> - set the strategy, manage the stakeholders, architect the system, write the code, and run it in production.</p>
     </div>
     <div class="cap-card reveal">
       <h3>What I bring to a build</h3>
@@ -390,8 +411,8 @@
         <span>Google Cloud Run</span><span>Cloud Functions</span><span>Cloud Storage / IAM</span><span>BigQuery</span><span>Vertex AI</span><span>Cloudflare Workers</span><span>Cloudflare (CDN / WAF / Zaraz)</span><span>Firebase / Firestore</span><span>Docker</span><span>Kubernetes</span><span>Terraform</span><span>Ansible</span><span>GitHub Actions</span><span>GitLab CI</span><span>Node.js</span><span>Next.js</span><span>Python / FastAPI</span><span>MongoDB</span><span>nginx</span></div></div>
       <div class="skillcol reveal"><h3>AI & Automation</h3><div class="chips">
         <span>MCP agentic automation</span><span>Claude</span><span>Gemini</span><span>OpenAI</span><span>RAG</span><span>Conversational agents</span><span>AI content pipelines</span><span>Playwright</span><span>ElevenLabs voice</span><span>Image generation</span></div></div>
-      <div class="skillcol reveal"><h3>Telecom & Operations</h3><div class="chips">
-        <span>Microwave / Transmission</span><span>Multi-vendor (Huawei, Ericsson, NEC)</span><span>NOC / AIOps</span><span>OSS / BSS</span><span>Event correlation</span><span>SLA acceptance & billing</span><span>OTDR / GIS</span><span>IBM Netcool</span><span>HP OpenView</span><span>Power BI / Fine BI</span></div></div>
+      <div class="skillcol reveal"><h3>Telecom Ops & Leadership</h3><div class="chips">
+        <span>NOC digital transformation</span><span>AIOps</span><span>Event correlation</span><span>OSS / BSS</span><span>SLA acceptance & billing</span><span>Multi-vendor delivery</span><span>Microwave / Transmission</span><span>OTDR / GIS</span><span>IBM Netcool</span><span>Power BI / Fine BI</span></div></div>
       <div class="skillcol reveal"><h3>Delivery, Growth & Frameworks</h3><div class="chips">
         <span>WhatsApp Cloud API</span><span>FCM / HMS push</span><span>SIP / Asterisk</span><span>Meta CAPI</span><span>GA4</span><span>SEO (technical / content)</span><span>ITIL v4</span><span>PMP</span><span>Agile / Scrum</span><span>MS Project</span><span>Jira</span></div></div>
     </div>
