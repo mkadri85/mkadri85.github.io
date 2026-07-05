@@ -80,7 +80,11 @@
   .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;margin:56px 0 14px}
   h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
   .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
   h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
   h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
   .hero{margin:0 0 34px}
@@ -133,7 +137,8 @@
 
 <article class="wrap">
   <div class="eyebrow">Developer guide</div>
-  <h1>One repository, <span class="grad">one shared brain</span>: a practical guide to shared AI memory for development teams</h1>
+  <h1>One Repository. <span class="grad">One Shared Brain.</span></h1>
+  <p class="subtitle">A practical guide to shared AI memory for development teams.</p>
   <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 11 min read</div>
 
   <figure class="hero">
@@ -158,9 +163,9 @@
 
   <h2 id="the-problem">The problem: your team's knowledge is trapped in chat logs</h2>
 
-  <p>Most development teams now work with AI coding assistants, and most teams use more than one. One developer prefers Claude Code, another works in Cursor, a third runs Codex. Each assistant builds a private model of the project inside its own conversation history: which approaches were already rejected, why a flow is locked to one specific mode, which innocent-looking refactor causes an incident.</p>
+  <p><strong>Git synchronizes source code. It does not synchronize what your AI learned while writing it.</strong></p>
 
-  <p>Git keeps the code in sync. Nothing keeps the understanding in sync.</p>
+  <p>Most development teams now work with AI coding assistants, and most teams use more than one. One developer prefers Claude Code, another works in Cursor, a third runs Codex. Each assistant builds a private model of the project inside its own conversation history: which approaches were already rejected, why a flow is locked to one specific mode, which innocent-looking refactor causes an incident. The code lands in the repository. The understanding never does.</p>
 
   <p>The symptoms are familiar to anyone working this way: the same requirements re-explained in every new session, different assistants proposing conflicting architectures, decisions re-litigated because the reasoning behind them evaporated, and the same landmines rediscovered by each person. On my own team, reviewing our history, one class of authorization bug shipped six separate times in four months. Each time, the developer and agent who fixed it learned the lesson. The knowledge then disappeared into a chat log, and the next feature reintroduced the bug.</p>
 
@@ -197,6 +202,28 @@
   <p><strong>Layer 3: personal.</strong> Machine paths, private preferences, credentials, each assistant's own local memory. Gitignored, never committed, never shared.</p>
 
   <p>The separation matters because the three layers have different change rates and different trust levels. Mixing them is how instruction files grow stale and how secrets end up in git history.</p>
+
+  <p>One more thing before the implementation: the shared memory serves humans as much as agents. A new developer inherits the project's accumulated intelligence by reading one small directory, instead of assembling tribal knowledge one conversation at a time.</p>
+
+<pre><code>                        repository
+   +--------------------------------------------------+
+   |                                                  |
+   |   AGENTS.md   rules + the session contract       |
+   |       ^                                          |
+   |       |  one-line shims (CLAUDE.md, ...)         |
+   |                                                  |
+   |   .ai/        evolving shared memory             |
+   |               STATE.md, decisions/, lessons...   |
+   |                                                  |
+   |   src/        the code itself                    |
+   |                                                  |
+   +--------------------------------------------------+
+        ^                 ^                 ^
+        |                 |                 |
+   Claude Code         Cursor            Codex
+        |                 |                 |
+   every agent reads at session start,
+   writes back before session end</code></pre>
 
   <h2 id="implementation">Implementation, step by step</h2>
 
@@ -321,6 +348,8 @@ fi</code></pre>
     <li>Scan for secrets and personal data before the first commit, and on every memory change after.</li>
     <li>Write down the scale-up trigger, then stop thinking about memory services until it fires.</li>
   </ol>
+
+  <p class="closing">Git taught us to version code.<br>AI may teach us to <span class="grad">version engineering knowledge</span>.</p>
 
   <hr>
 
