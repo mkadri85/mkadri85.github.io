@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Git Is Your Docker Compose: Building a Shared Brain for AI Coding Agents - Mohamed Kadri</title>
+<meta name="description" content="How a two-developer team unified project knowledge across Claude Code, Cursor and Codex with a committed AGENTS.md and a versioned .ai/ memory, and why we skipped the memory service.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/shared-ai-memory/">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://mkadri85.github.io/blog/shared-ai-memory/">
+<meta property="og:title" content="Git Is Your Docker Compose: Building a Shared Brain for AI Coding Agents">
+<meta property="og:description" content="Commit the knowledge, not a service. A field report on shared AI project memory across tools and machines.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2334e0c8'%3EMK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d13; --bg2:#0e121a; --panel:#121722; --line:#222a39;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#34e0c8; --accent2:#6aa8ff; --violet:#9a7bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Great Vibes',cursive;font-size:28px;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(30px,5vw,42px);margin:0 0 14px}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:40px}
+  h2{font-size:24px;margin:44px 0 12px}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-size:13.5px;line-height:1.6;margin:0 0 20px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  p code,li code{background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:14px;color:#dfe5ee}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout p{margin:0;color:#c6cedb}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:0 0 20px}
+  th{color:var(--mut);text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line)}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);color:#c6cedb;vertical-align:top}
+  .tblwrap{overflow-x:auto}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="brand" href="/">Mohamed Kadri</a>
+    <div class="navlinks">
+      <a href="/">Home</a>
+      <a href="/blog/">Writing</a>
+      <a href="/#contact">Contact</a>
+    </div>
+  </nav>
+</header>
+
+<article class="wrap">
+  <div class="eyebrow">Field report</div>
+  <h1>Git is your Docker Compose: building a <span class="grad">shared brain</span> for AI coding agents</h1>
+  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 9 min read</div>
+
+  <p>My team runs a production marketplace platform: a Node and Next.js monorepo, a React admin console, a Flutter app, all deploying straight to live on every merge. Two developers, different machines, different AI coding assistants. I work mostly in Claude Code; my collaborator works in Cursor and Codex.</p>
+
+  <p>Git kept our code in sync. Nothing kept our understanding in sync.</p>
+
+  <p>Every assistant on every machine was building its own private model of the project inside its conversation history: which architectural approaches we had already rejected, why a payment flow is locked to one specific mode, which innocent-looking refactor causes a production incident. When the other developer opened his assistant, none of that existed. He re-explained the project from scratch, his agent proposed architectures mine had already rejected, and both of us kept rediscovering the same landmines.</p>
+
+  <p>The cost was not theoretical. Reviewing our own history, one class of authorization bug shipped six separate times in four months. Each time, the developer and agent who fixed it learned the lesson. The knowledge then evaporated into a chat log, and the next feature reintroduced the bug.</p>
+
+  <h2>The Docker Compose insight</h2>
+
+  <p>I kept telling my collaborator I wanted "something like Docker for AI context," and the analogy turned out to be exact, including its lesson.</p>
+
+  <p>Docker did not unify runtime environments by running a synchronization service. It unified them with a committed text file. <code>docker-compose.yml</code> travels with the repo, and every machine interprets it identically. The environment problem became a file-contract problem, and git solved the distribution for free.</p>
+
+  <p>AI project memory has the same shape. The missing piece is a file contract that every agent reads on session start and writes back to before session end. Git is already the bus, and no new infrastructure is required.</p>
+
+  <h2>What the ecosystem offers (July 2026)</h2>
+
+  <p>Before building, I surveyed what exists. Four things matter:</p>
+
+  <div class="tblwrap"><table>
+    <tr><th>Approach</th><th>Verdict</th></tr>
+    <tr><td><strong>AGENTS.md</strong>, the open instruction-file standard now stewarded under the Linux Foundation. Read natively by 20+ tools: Codex, Cursor, Copilot, Windsurf, Zed, Gemini CLI, Aider, Devin and more.</td><td>Use it as the single entry point.</td></tr>
+    <tr><td><strong>Claude Code</strong> does not read AGENTS.md natively (it is the most upvoted open feature request on its tracker), but CLAUDE.md supports imports. A one-line <code>@AGENTS.md</code> bridges it completely.</td><td>Use the import; keep one canonical file.</td></tr>
+    <tr><td><strong>The memory-bank pattern</strong> (popularized by Cline): a small committed directory of markdown the agent reads at start and updates at end. A methodology, not a product.</td><td>Use the shape, trimmed hard.</td></tr>
+    <tr><td><strong>MCP memory services</strong> (mem0 and friends): an always-on store with embeddings and semantic recall that every tool connects to.</td><td>Defer. Below roughly five developers, flat files plus grep beat a service on cost, trust and inspectability.</td></tr>
+  </table></div>
+
+  <div class="callout"><p><strong>The documented failure mode surprised me.</strong> Practitioner reports agree that shared AI memory rarely fails by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. An uncurated shared memory becomes a shared source of hallucination for the whole team. Every design choice below follows from this.</p></div>
+
+  <h2>The design: three layers, all plain files</h2>
+
+  <p><strong>Layer 1: AGENTS.md.</strong> One canonical instruction file per repo: architecture notes, build and deploy rules, conventions, review criteria, and the session contract below. Every tool my collaborator uses reads it natively. Claude Code reads it through the import shim:</p>
+
+<pre><code># CLAUDE.md (entire file)
+@AGENTS.md
+
+All project instructions live in AGENTS.md, the cross-tool
+canonical file. Do not add instructions here.</code></pre>
+
+  <p><strong>Layer 2: the .ai/ directory.</strong> The evolving shared memory, versioned and PR-reviewed like code:</p>
+
+<pre><code>.ai/
+  STATE.md         &lt;- THE handoff. Current state, in-flight work,
+                      next steps, open questions. Rewritten, never
+                      appended. Capped at ~100 lines.
+  INDEX.md         &lt;- one line per file below
+  architecture.md  &lt;- how the system hangs together, and WHY
+  conventions.md   &lt;- evolving patterns not yet stable enough
+                      for AGENTS.md
+  known-issues.md  &lt;- live landmines, each entry dated
+  lessons.md       &lt;- failures already paid for
+  decisions/
+    ADR-001-....md &lt;- one decision per file, immutable once
+    ADR-002-....md    accepted; superseded, never edited</code></pre>
+
+  <p><strong>Layer 3: personal.</strong> Machine paths, private preferences, credentials. Gitignored local files and each assistant's own memory. Never committed.</p>
+
+  <h2>The session contract</h2>
+
+  <p>Written into AGENTS.md, three imperative bullets. Long policy documents get ignored by every agent; short contracts get followed.</p>
+
+  <ol>
+    <li><strong>Session start:</strong> read <code>.ai/STATE.md</code>, then <code>.ai/INDEX.md</code>. Open other files only when relevant. Never bulk-load the whole directory into context.</li>
+    <li><strong>During work:</strong> when you make a decision or hit a landmine, update the matching <code>.ai/</code> file in the same branch as the code change. Decisions become a new ADR.</li>
+    <li><strong>Session end:</strong> rewrite <code>STATE.md</code>: done, in flight, next, risks, open questions. Five minutes, not an essay.</li>
+  </ol>
+
+  <p>Enforcement is deliberately light. A Claude Code SessionStart hook injects STATE.md into every session automatically:</p>
+
+<pre><code>#!/bin/bash
+# .claude/hooks/session-start-ai-memory.sh
+STATE="$CLAUDE_PROJECT_DIR/.ai/STATE.md"
+if [ -f "$STATE" ]; then
+  echo "-- Shared project memory: .ai/STATE.md --"
+  cat "$STATE"
+  echo "-- Full index: .ai/INDEX.md. Rewrite STATE.md before finishing. --"
+fi</code></pre>
+
+  <p>For the other tools, AGENTS.md itself carries the instruction, and the PR template carries a checkbox: <code>.ai/ updated (STATE.md / ADR / known-issues) or N/A</code>. A reviewer treats a stale STATE.md like a failing test.</p>
+
+  <h2>The anti-staleness contract</h2>
+
+  <p>This is where these systems live or die, so it is non-negotiable:</p>
+
+  <ul>
+    <li><strong>Every claim is dated</strong>, and anything that cites code carries a warning that it is a point-in-time observation to re-verify.</li>
+    <li><strong>Delete beats update beats append.</strong> Resolved issues are removed, not marked fixed and kept.</li>
+    <li><strong>Memory changes ride the code PR</strong> and get the same review. A wrong memory entry is a bug that infects every future session of every developer.</li>
+    <li><strong>Size caps force pruning:</strong> STATE.md under ~100 lines, topic files under ~150, the whole directory under ~15 files. Hitting a cap is the system working.</li>
+    <li><strong>What never goes in:</strong> secrets, keys, personal data, anything derivable from code or git history, and raw chat transcripts. Summaries only; logs rot.</li>
+  </ul>
+
+  <h2>The gotcha that proved the point</h2>
+
+  <p>Migrating the platform repo, our automated PR reviewer flagged something I had missed: the CI review script used CLAUDE.md as its project-context input. My change had just shrunk CLAUDE.md to a seven-line shim, which would have quietly lobotomized every future automated review.</p>
+
+  <p>The fix was one line (read AGENTS.md first, fall back to CLAUDE.md), plus adding <code>AGENTS.md</code> and <code>.ai/**</code> to the reviewer's watched paths, so changes to the shared memory itself now get reviewed like code. That last part is the whole discipline in miniature: the memory is a first-class artifact, and wrong memory is treated as seriously as wrong code.</p>
+
+  <h2>Results and where the ceiling is</h2>
+
+  <p>The migration took about half a day per repo, most of it seeding <code>.ai/</code> from knowledge that previously lived in one assistant's private memory: the architecture map, a register of 24 known process gaps from a recent audit, and four ADRs recording decisions we had each re-litigated at least once. My collaborator installed nothing. His tools picked up AGENTS.md on the next pull, and his first session started with the full current state of my last one, including the exact blockers on his own open PRs.</p>
+
+  <p>The honest caveats:</p>
+
+  <ul>
+    <li>The system is only as good as the STATE.md rewrite habit. The hook and the PR checkbox nudge; the immediate pain of a stale handoff is the real enforcement.</li>
+    <li>Agents treat instruction files as strong suggestions. Keeping the contract to three bullets is a feature, not laziness.</li>
+    <li>This is sized for a small team. My upgrade trigger is written down in advance: more than three developers, or the day grep across fifteen markdown files stops finding things. Then, and only then, an MCP memory service with semantic search earns its infrastructure.</li>
+  </ul>
+
+  <p>Until that day, the shared brain is a directory of markdown, reviewed like code, distributed by git. The same boring trick that fixed environments a decade ago: commit the contract, not the machinery.</p>
+
+  <hr>
+
+  <p style="color:var(--dim);font-size:14px">Useful references: the <a href="https://agents.md/" target="_blank" rel="noopener">AGENTS.md spec and tool list</a>, the <a href="https://docs.cline.bot/best-practices/memory-bank" target="_blank" rel="noopener">Cline memory-bank methodology</a>, and the long-running <a href="https://github.com/anthropics/claude-code/issues/6235" target="_blank" rel="noopener">Claude Code AGENTS.md feature request</a> where the import workaround is documented.</p>
+</article>
+
+<footer>
+  <div>Mohamed Kadri - Technical Operations Leader &amp; AI/Cloud Engineer - Dubai, United Arab Emirates</div>
+</footer>
+
+</body>
+</html>
