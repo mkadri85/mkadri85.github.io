@@ -43,6 +43,8 @@
   .post{display:block;border:1px solid var(--line);background:var(--panel);
     border-radius:14px;padding:24px 26px;margin-bottom:18px;transition:border-color .2s,transform .2s}
   .post:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .post img{width:100%;height:auto;display:block;border-radius:10px;
+    border:1px solid var(--line);margin-bottom:16px}
   .post h2{font-size:21px;margin:0 0 8px}
   .post p{color:var(--mut);font-size:15px;margin:0 0 10px}
   .post .meta{color:var(--dim);font-size:13px}
@@ -71,6 +73,7 @@
   <p class="lead">Notes on AI-assisted engineering, cloud operations, and running real systems with small teams.</p>
 
   <a class="post" href="/blog/shared-ai-memory/">
+    <img src="/assets/shared-brain-hero.webp" alt="One repository, one shared brain illustration" width="1536" height="1024" loading="lazy">
     <h2>Git is your Docker Compose: building a shared brain for AI coding agents</h2>
     <p>Two developers, different machines, different AI assistants, one production platform. How we unified project knowledge with a committed AGENTS.md and a versioned .ai/ memory directory, and why we deliberately skipped the memory service.</p>
     <div class="meta">July 2026 &middot; 9 min read</div>

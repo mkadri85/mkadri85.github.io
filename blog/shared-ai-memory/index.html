@@ -11,8 +11,9 @@
 <meta property="og:url" content="https://mkadri85.github.io/blog/shared-ai-memory/">
 <meta property="og:title" content="Git Is Your Docker Compose: Building a Shared Brain for AI Coding Agents">
 <meta property="og:description" content="Commit the knowledge, not a service. A field report on shared AI project memory across tools and machines.">
-<meta property="og:image" content="https://mkadri85.github.io/assets/og-image.png">
+<meta property="og:image" content="https://mkadri85.github.io/assets/shared-brain-hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/shared-brain-hero.jpg">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2334e0c8'%3EMK%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -43,7 +44,18 @@
     text-transform:uppercase;margin:56px 0 14px}
   h1{font-size:clamp(30px,5vw,42px);margin:0 0 14px}
   .meta{color:var(--dim);font-size:14px;margin-bottom:40px}
-  h2{font-size:24px;margin:44px 0 12px}
+  h2{font-size:24px;margin:44px 0 12px;scroll-margin-top:84px}
+  .hero{margin:0 0 30px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .hero figcaption{color:var(--dim);font-size:13px;margin-top:8px;text-align:center}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 36px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px}
+  .toc li{margin-bottom:6px}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
   p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
   li{margin-bottom:8px}
   strong{color:var(--ink)}
@@ -84,6 +96,24 @@
   <h1>Git is your Docker Compose: building a <span class="grad">shared brain</span> for AI coding agents</h1>
   <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 9 min read</div>
 
+  <figure class="hero">
+    <img src="/assets/shared-brain-hero.webp" alt="Illustration of a git repository projecting a shared brain of markdown files that three developers and their AI assistants all connect to" width="1536" height="1024" fetchpriority="high">
+    <figcaption>One repository, one shared brain: the knowledge base travels with the code.</figcaption>
+  </figure>
+
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">On this page</div>
+    <ol>
+      <li><a href="#docker-compose-insight">The Docker Compose insight</a></li>
+      <li><a href="#ecosystem">What the ecosystem offers (July 2026)</a></li>
+      <li><a href="#three-layers">The design: three layers, all plain files</a></li>
+      <li><a href="#session-contract">The session contract</a></li>
+      <li><a href="#anti-staleness">The anti-staleness contract</a></li>
+      <li><a href="#the-gotcha">The gotcha that proved the point</a></li>
+      <li><a href="#results">Results and where the ceiling is</a></li>
+    </ol>
+  </nav>
+
   <p>My team runs a production marketplace platform: a Node and Next.js monorepo, a React admin console, a Flutter app, all deploying straight to live on every merge. Two developers, different machines, different AI coding assistants. I work mostly in Claude Code; my collaborator works in Cursor and Codex.</p>
 
   <p>Git kept our code in sync. Nothing kept our understanding in sync.</p>
@@ -92,7 +122,7 @@
 
   <p>The cost was not theoretical. Reviewing our own history, one class of authorization bug shipped six separate times in four months. Each time, the developer and agent who fixed it learned the lesson. The knowledge then evaporated into a chat log, and the next feature reintroduced the bug.</p>
 
-  <h2>The Docker Compose insight</h2>
+  <h2 id="docker-compose-insight">The Docker Compose insight</h2>
 
   <p>I kept telling my collaborator I wanted "something like Docker for AI context," and the analogy turned out to be exact, including its lesson.</p>
 
@@ -100,7 +130,7 @@
 
   <p>AI project memory has the same shape. The missing piece is a file contract that every agent reads on session start and writes back to before session end. Git is already the bus, and no new infrastructure is required.</p>
 
-  <h2>What the ecosystem offers (July 2026)</h2>
+  <h2 id="ecosystem">What the ecosystem offers (July 2026)</h2>
 
   <p>Before building, I surveyed what exists. Four things matter:</p>
 
@@ -114,7 +144,7 @@
 
   <div class="callout"><p><strong>The documented failure mode surprised me.</strong> Practitioner reports agree that shared AI memory rarely fails by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. An uncurated shared memory becomes a shared source of hallucination for the whole team. Every design choice below follows from this.</p></div>
 
-  <h2>The design: three layers, all plain files</h2>
+  <h2 id="three-layers">The design: three layers, all plain files</h2>
 
   <p><strong>Layer 1: AGENTS.md.</strong> One canonical instruction file per repo: architecture notes, build and deploy rules, conventions, review criteria, and the session contract below. Every tool my collaborator uses reads it natively. Claude Code reads it through the import shim:</p>
 
@@ -142,7 +172,7 @@ canonical file. Do not add instructions here.</code></pre>
 
   <p><strong>Layer 3: personal.</strong> Machine paths, private preferences, credentials. Gitignored local files and each assistant's own memory. Never committed.</p>
 
-  <h2>The session contract</h2>
+  <h2 id="session-contract">The session contract</h2>
 
   <p>Written into AGENTS.md, three imperative bullets. Long policy documents get ignored by every agent; short contracts get followed.</p>
 
@@ -165,7 +195,7 @@ fi</code></pre>
 
   <p>For the other tools, AGENTS.md itself carries the instruction, and the PR template carries a checkbox: <code>.ai/ updated (STATE.md / ADR / known-issues) or N/A</code>. A reviewer treats a stale STATE.md like a failing test.</p>
 
-  <h2>The anti-staleness contract</h2>
+  <h2 id="anti-staleness">The anti-staleness contract</h2>
 
   <p>This is where these systems live or die, so it is non-negotiable:</p>
 
@@ -177,13 +207,13 @@ fi</code></pre>
     <li><strong>What never goes in:</strong> secrets, keys, personal data, anything derivable from code or git history, and raw chat transcripts. Summaries only; logs rot.</li>
   </ul>
 
-  <h2>The gotcha that proved the point</h2>
+  <h2 id="the-gotcha">The gotcha that proved the point</h2>
 
   <p>Migrating the platform repo, our automated PR reviewer flagged something I had missed: the CI review script used CLAUDE.md as its project-context input. My change had just shrunk CLAUDE.md to a seven-line shim, which would have quietly lobotomized every future automated review.</p>
 
   <p>The fix was one line (read AGENTS.md first, fall back to CLAUDE.md), plus adding <code>AGENTS.md</code> and <code>.ai/**</code> to the reviewer's watched paths, so changes to the shared memory itself now get reviewed like code. That last part is the whole discipline in miniature: the memory is a first-class artifact, and wrong memory is treated as seriously as wrong code.</p>
 
-  <h2>Results and where the ceiling is</h2>
+  <h2 id="results">Results and where the ceiling is</h2>
 
   <p>The migration took about half a day per repo, most of it seeding <code>.ai/</code> from knowledge that previously lived in one assistant's private memory: the architecture map, a register of 24 known process gaps from a recent audit, and four ADRs recording decisions we had each re-litigated at least once. My collaborator installed nothing. His tools picked up AGENTS.md on the next pull, and his first session started with the full current state of my last one, including the exact blockers on his own open PRs.</p>
 
