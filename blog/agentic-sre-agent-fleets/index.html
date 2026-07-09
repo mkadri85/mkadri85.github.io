@@ -186,6 +186,46 @@
   .stat{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px}
   .stat b{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--ink);display:block}
   .stat span{font-size:13px;color:var(--mut)}
+
+  /* animated layered architecture: a pulse rises through the stacked layers */
+  .arch{border:1px solid var(--line);border-radius:14px;background:var(--bg2);padding:20px 20px 22px;margin:0 0 22px}
+  .arch-cap{position:relative;height:20px;margin-bottom:16px;font-size:13.5px;color:var(--ink)}
+  .arch-cap span{position:absolute;left:0;top:0;opacity:0;white-space:nowrap;animation:acap 15s infinite}
+  .arch-cap span:nth-child(1){animation-delay:0s}
+  .arch-cap span:nth-child(2){animation-delay:3s}
+  .arch-cap span:nth-child(3){animation-delay:6s}
+  .arch-cap span:nth-child(4){animation-delay:9s}
+  .arch-cap span:nth-child(5){animation-delay:12s}
+  @media(max-width:560px){.arch-cap{height:34px;white-space:normal}.arch-cap span{white-space:normal}}
+  @keyframes acap{0%{opacity:0;transform:translateY(3px)}2%{opacity:1;transform:none}18%{opacity:1}20%{opacity:0}100%{opacity:0}}
+  .arch-stack{position:relative}
+  .rail{position:absolute;left:22px;top:8px;bottom:8px;width:2px;background:var(--line);border-radius:2px}
+  .pulse{position:absolute;left:18px;width:10px;height:10px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 12px 3px var(--accent);animation:rise 15s infinite}
+  @keyframes rise{0%{top:calc(100% - 18px);opacity:0}4%{opacity:1}80%{top:4px;opacity:1}88%{opacity:0}100%{top:4px;opacity:0}}
+  .layer,.fleet{position:relative;border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:11px 14px 11px 44px;margin:0 0 10px;animation:lit 15s infinite}
+  .fleet{margin-bottom:0}
+  .layer .lname,.fleet .lname{display:block;font-family:'Space Grotesk',sans-serif;font-size:11px;font-weight:600;
+    letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chips span{font-size:12.5px;color:#c6cedb;border:1px solid var(--line);border-radius:6px;padding:2px 9px;background:var(--bg2)}
+  .chips.agents span{min-width:34px;text-align:center;color:var(--mut)}
+  .chips.agents span.bad{color:var(--warn);border-color:var(--warn);animation:badpulse 1.6s infinite}
+  @keyframes badpulse{0%,100%{box-shadow:0 0 8px -3px var(--warn)}50%{box-shadow:0 0 14px 0 var(--warn)}}
+  .layer.signal{animation-delay:3s}
+  .layer.reasoning{animation-delay:6s}
+  .layer.action{animation-delay:9s}
+  .layer.control{animation-delay:12s}
+  .fleet{animation-delay:0s}
+  @keyframes lit{0%,100%{border-color:var(--line);box-shadow:none}
+    2%{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 10px 30px -16px var(--accent)}
+    16%{border-color:var(--accent)}20%{border-color:var(--line);box-shadow:none}}
+  @media (prefers-reduced-motion: reduce){
+    .arch-cap span,.layer,.fleet,.pulse,.chips.agents span.bad{animation:none}
+    .arch-cap span:nth-child(1){opacity:1}.pulse{display:none}
+    .chips.agents span.bad{border-color:var(--warn);color:var(--warn)}
+  }
 </style>
 </head>
 <body>
@@ -278,31 +318,9 @@
 
   <h2 id="walkthrough">The loop, applied to an agent</h2>
 
-  <p>Here is the same loop running against a misbehaving agent instead of a database. The scenario below plays on a cycle: one of your agents starts looping on a failing tool call, the control plane catches it, replays the session to find the cause, checks its own confidence, and, because the fix is ambiguous, escalates rather than acting. Watch which box lights up at the end.</p>
+  <p>Here is the same loop running against a misbehaving agent instead of a database. One of your agents starts looping on a failing tool call, the control plane catches it, replays the session to find the cause, checks its own confidence, and, because the fix is ambiguous, escalates to a human rather than acting. That confidence gate is the whole design: high confidence and a known pattern, the loop closes itself; anything novel, it stops and pages you. The animated architecture in a moment shows this same incident flowing through the stack.</p>
 
-  <figure class="sim" role="img" aria-label="Animated walkthrough: an agent misbehaves, the control plane detects it, diagnoses it from session replay, checks confidence, and escalates to a human because confidence is low">
-    <div class="sim-head"><span class="dotlive"></span><b>Live: agent A4</b></div>
-    <div class="cap">
-      <span>11:02 &middot; A4 is retrying the same tool call in a tight loop, cost climbing</span>
-      <span>11:02 &middot; Detect: loop rate and token spend cross their thresholds</span>
-      <span>11:02 &middot; Diagnose: session replay shows a malformed tool response upstream</span>
-      <span>11:03 &middot; Decide: confidence 0.42, below the 0.8 auto-act threshold</span>
-      <span>11:03 &middot; Escalate: paused and handed to a human with the full trace</span>
-    </div>
-    <div class="track">
-      <div class="node"><div class="k">Detect</div><div class="s">loop + cost spike</div></div>
-      <div class="node"><div class="k">Diagnose</div><div class="s">replay the session</div></div>
-      <div class="node"><div class="k">Decide</div><div class="s">confidence gate</div></div>
-      <div class="node"><div class="k">Act</div><div class="s">reroute / roll back / pause</div></div>
-    </div>
-    <div class="branch">
-      <div class="out auto"><div class="k">Auto-remediate</div><div class="s">known pattern, high confidence</div></div>
-      <div class="out esc"><div class="k">Escalate to human</div><div class="s">novel or ambiguous, low confidence</div></div>
-    </div>
-  </figure>
-  <figcaption>The confidence gate is the whole design. High confidence and a known pattern, the loop closes itself. Anything novel, it stops and pages you.</figcaption>
-
-  <p>Nothing in that diagram is science fiction. Each box is a capability that exists in shipping observability tooling today. What is rare is wiring them into a loop that is allowed to act on your agents, with the gate in the middle deciding when it may.</p>
+  <p>None of this is science fiction. Each stage is a capability that exists in shipping observability tooling today. What is rare is wiring them into a loop that is allowed to act on your agents, with the gate in the middle deciding when it may.</p>
 
   <h2 id="detection">The hard part is detection</h2>
 
@@ -318,31 +336,24 @@
 
   <p>Put detection, the loop, and a boundary together and you get a shape. Four layers, with the agents sitting inside them rather than on top.</p>
 
-<pre><code>            +--------------------------------------------------+
-   CONTROL   |  identity . policy-as-code . tool contracts      |
-   PLANE     |  every call traceable, replayable, priced        |
-            +--------------------------------------------------+
-                    |                ^   escalate on low confidence
-        act         |                |
-            +-------v-------+   +-----+------------+
-   ACTION   | reroute model |   | pause / roll back |
-   LAYER    | run a runbook |   | quarantine agent  |
-            +-------+-------+   +------------------+
-                    ^
-        decide      |  confidence gate
-            +-------+----------------------------+
-   REASONING| detect -> triage -> correlate      |
-   LAYER    | (is this agent actually broken?)   |
-            +-------+----------------------------+
-                    ^
-        observe     |  traces, tool calls, cost, eval scores
-            +-------+----------------------------+
-   SIGNAL   | per-agent telemetry, session replay |
-   PLANE    | one record per decision the agent made
-            +------------------------------------+
-                    ^
-          [ A1 ] [ A2 ] [ A3 ] [ A4 drifting ] [ A5 ] ...
-                    the agent fleet</code></pre>
+  <figure class="arch" role="img" aria-label="Animated layered architecture. Signals rise from the agent fleet, where Agent 09 has failed, up through the signal plane, the reasoning layer, and the action layer to the control plane, which decides whether to auto-remediate or escalate. A pulse flows upward through the stacked layers.">
+    <div class="arch-cap">
+      <span>Agent 09 fails - a tight loop and a cost spike</span>
+      <span>Signal plane captures its traces and cost</span>
+      <span>Reasoning layer diagnoses it from session replay</span>
+      <span>Action layer readies a reroute or rollback</span>
+      <span>Control plane decides - escalate on low confidence</span>
+    </div>
+    <div class="arch-stack">
+      <span class="rail"></span><span class="pulse"></span>
+      <div class="layer control"><span class="lname">Control plane</span><div class="chips"><span>Identity</span><span>Policy</span><span>Tool contracts</span><span>Replay</span><span>Kill switch</span></div></div>
+      <div class="layer action"><span class="lname">Action layer</span><div class="chips"><span>Reroute</span><span>Roll back</span><span>Pause</span><span>Escalate</span></div></div>
+      <div class="layer reasoning"><span class="lname">Reasoning layer</span><div class="chips"><span>Detect</span><span>Triage</span><span>Correlate</span><span>Confidence gate</span></div></div>
+      <div class="layer signal"><span class="lname">Signal plane</span><div class="chips"><span>Logs</span><span>Metrics</span><span>Traces</span><span>Events</span><span>Cost</span></div></div>
+      <div class="fleet"><span class="lname">Agent fleet</span><div class="chips agents"><span>A1</span><span>A2</span><span>A3</span><span>A4</span><span>A5</span><span>A6</span><span>A7</span><span>A8</span><span class="bad">A9</span></div></div>
+    </div>
+  </figure>
+  <figcaption>Signals rise from the fleet to a decision at the top. The pulse is one incident flowing up the stack: Agent 09 fails, the signal plane sees it, the reasoning layer diagnoses it, and the control plane decides whether to act or page a human.</figcaption>
 
   <p><strong>The signal plane</strong> is the foundation, and it is the layer teams skip. You cannot operate what you cannot see, and an agent's useful telemetry is not CPU and memory. It is the trace of every decision: which model answered, which tools it called with what arguments, what each tool returned, how many tokens it burned, and how its own output scored against your quality checks. One replayable record per decision. Without this, every later layer is guessing.</p>
 
