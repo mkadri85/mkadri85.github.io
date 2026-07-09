@@ -365,6 +365,8 @@
 
   <p><strong>The control plane</strong> wraps everything and is where the PocketOS failure gets prevented. The emerging consensus, described by investors and security teams alike, comes down to four rules. Each agent runs under its own least-privilege identity and never borrows a human's credentials. Policy is code, enforced at runtime, not a wiki page. Tools are contracts: signed, rate-limited, and approval-gated, not open URLs an agent can point anywhere. And every call is traceable, replayable, and costed, tagged back to the workflow that caused it. The PocketOS agent violated the first and third of those in a single command. A control plane that enforced them would have handed it a token that could not see production and a delete tool that refused to run without a signed approval.</p>
 
+  <div class="callout"><p><strong>The four layers, as runnable code.</strong> I have shipped a minimal, dependency-free reference implementation of exactly this stack, the signal plane, the confidence gate and the kill switch, as an open-source library: <a href="https://github.com/mkadri85/guardplane" target="_blank" rel="noopener">guardplane</a>, also on <a href="https://www.npmjs.com/package/guardplane" target="_blank" rel="noopener">npm</a>. It is not a framework; it is the skeleton you wrap around whatever agent you already run.</p></div>
+
   <h2 id="breaker">The circuit breaker</h2>
 
   <p>Now the part everyone gets wrong in the other direction. Once you can auto-remediate, the temptation is to let the loop close on everything. That is how you turn a small incident into a large one.</p>
