@@ -31,10 +31,10 @@
 
 <style>
   :root{
-    --bg:#0a0d13; --bg2:#0e121a; --panel:#121722; --panel2:#161c28; --line:#222a39;
+    --bg:#0a0e16; --bg2:#0d1220; --panel:#121a29; --panel2:#17202f; --line:#243044;
     --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
-    --accent:#34e0c8; --accent2:#6aa8ff; --violet:#9a7bff;
-    --glow:rgba(52,224,200,.16);
+    --accent:#4f8fc9; --accent2:#77aede; --violet:#4f8fc9;
+    --glow:rgba(79,143,201,.10);
     --maxw:1240px;
   }
   *{box-sizing:border-box}
@@ -68,7 +68,7 @@
 
   /* Hero */
   .hero{position:relative;padding:96px 0 84px;overflow:hidden}
-  #net{position:absolute;inset:0;width:100%;height:100%;opacity:.55;z-index:0}
+  #net{position:absolute;inset:0;width:100%;height:100%;opacity:.30;z-index:0}
   .hero-glow{position:absolute;top:-180px;left:50%;transform:translateX(-50%);
     width:780px;height:520px;background:radial-gradient(closest-side,var(--glow),transparent);
     filter:blur(10px);z-index:0;pointer-events:none}
@@ -572,12 +572,12 @@
         for (let j = i + 1; j < nodes.length; j++) {
           const b = nodes[j], dx = a.x - b.x, dy = a.y - b.y, d = Math.hypot(dx, dy);
           if (d < max) {
-            ctx.strokeStyle = `rgba(52,224,200,${(1 - d / max) * 0.22})`;
+            ctx.strokeStyle = `rgba(79,143,201,${(1 - d / max) * 0.18})`;
             ctx.lineWidth = devicePixelRatio;
             ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
           }
         }
-        ctx.fillStyle = 'rgba(106,168,255,.6)';
+        ctx.fillStyle = 'rgba(120,170,222,.55)';
         ctx.beginPath(); ctx.arc(a.x, a.y, 1.4 * devicePixelRatio, 0, 7); ctx.fill();
       }
       raf = requestAnimationFrame(frame);
