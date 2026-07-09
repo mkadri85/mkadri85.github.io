@@ -23,7 +23,7 @@
 {"@context":"https://schema.org","@type":"Person","name":"Mohamed Kadri","jobTitle":"Senior Telecom Project Manager, AIOps and AI/Cloud Engineer","address":{"@type":"PostalAddress","addressLocality":"Dubai","addressCountry":"AE"},"url":"https://mkadri85.github.io/","sameAs":["https://www.linkedin.com/in/mohamed-kadri-b3508916","https://github.com/mkadri85"],"knowsAbout":["Microwave and Transmission Project Management","AIOps","NOC Digital Transformation","Cloud Engineering","AI Automation","PMP"],"alumniOf":["Alexandria University","ESLSCA Business School"]}
 </script>
 
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2334e0c8'%3EMK%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Georgia,serif' font-style='italic' font-size='32' font-weight='700' fill='%234f8fc9'%3EMK%3C/text%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -77,6 +77,9 @@
   @media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:0}.hero-card{display:none}}
   .hero-card{background:rgba(16,20,30,.66);backdrop-filter:blur(12px);border:1px solid var(--line);
     border-radius:18px;padding:22px 24px;box-shadow:0 30px 60px -30px rgba(0,0,0,.6)}
+  .hero-side{display:flex;flex-direction:column;gap:20px}
+  .hero-portrait{width:100%;max-width:320px;aspect-ratio:640/799;object-fit:cover;border-radius:16px;border:1px solid var(--line);box-shadow:0 24px 60px -24px rgba(0,0,0,.75);margin:0 auto;display:block}
+  @media(max-width:900px){.hero-portrait{max-width:230px}}
   .hero-card .hc-eyebrow{color:var(--accent);font-size:11.5px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;margin-bottom:12px}
   .hc-row{display:flex;justify-content:space-between;gap:14px;padding:11px 0;border-top:1px solid var(--line);font-size:13.5px}
   .hc-row:first-of-type{border-top:0;padding-top:0}
@@ -87,7 +90,7 @@
     border:1px solid var(--line);background:var(--panel);padding:6px 14px;border-radius:999px;margin-bottom:26px}
   .badge .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);
     box-shadow:0 0 0 0 var(--glow);animation:pulse 2.4s infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(52,224,200,.5)}70%{box-shadow:0 0 0 10px rgba(52,224,200,0)}100%{box-shadow:0 0 0 0 rgba(52,224,200,0)}}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,143,201,.5)}70%{box-shadow:0 0 0 10px rgba(79,143,201,0)}100%{box-shadow:0 0 0 0 rgba(79,143,201,0)}}
   .hero h1{font-size:clamp(34px,6vw,62px);line-height:1.04;margin:0 0 18px;font-weight:700}
   .hero .role{font-size:clamp(16px,2.4vw,21px);color:var(--mut);max-width:680px;margin:0 0 14px}
   .hero .role b{color:var(--ink);font-weight:600}
@@ -241,7 +244,9 @@
         <a class="btn btn-ghost" href="https://github.com/mkadri85" target="_blank" rel="noopener">GitHub</a>
       </div>
     </div>
-    <aside class="hero-card">
+    <div class="hero-side">
+      <img class="hero-portrait" src="/assets/portrait.jpg" alt="Mohamed Kadri, Senior Telecom Project Manager and AIOps leader" width="640" height="799">
+      <aside class="hero-card">
       <div class="hc-eyebrow">At a glance</div>
       <div class="hc-row"><span class="k">Now</span><span class="v">Technical PM, Huawei UAE</span></div>
       <div class="hc-row"><span class="k">Certified</span><span class="v">PMP, ITIL v4, MBA</span></div>
@@ -249,7 +254,8 @@
       <div class="hc-row"><span class="k">Reach</span><span class="v">17+ yrs, 6 countries</span></div>
       <div class="hc-row"><span class="k">Languages</span><span class="v">Arabic, English</span></div>
       <div class="hc-chips"><span>Microwave / Transmission</span><span>AIOps</span><span>Google Cloud</span><span>MCP</span><span>Flutter</span><span>Next.js</span></div>
-    </aside>
+      </aside>
+    </div>
   </div>
 </section>
 
