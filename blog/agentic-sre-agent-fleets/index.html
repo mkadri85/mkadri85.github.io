@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Who Operates the Operators? Running a Fleet of AI Agents Without Getting Paged at 3am - Mohamed Kadri</title>
+<meta name="description" content="AI agents have started causing the production incidents they were built to resolve. A field guide to applying the SRE incident loop - detect, diagnose, decide, act - to the agents themselves, with a control plane and a circuit breaker that keeps autonomy from making things worse.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/agentic-sre-agent-fleets/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/agentic-sre-agent-fleets/">
+<meta property="og:title" content="Who Operates the Operators? Running a Fleet of AI Agents Without Getting Paged at 3am">
+<meta property="og:description" content="AI agents have started causing the production incidents they were built to resolve. A field guide to running an autonomous incident loop for the agents themselves.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/agent-fleet-hero.png">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/agent-fleet-hero.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1536">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="A control plane watching over a fleet of autonomous AI agents, one of them turning red">
+<meta property="article:published_time" content="2026-07-09">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI operations">
+<meta property="article:tag" content="agentic SRE">
+<meta property="article:tag" content="AgentOps">
+<meta property="article:tag" content="autonomous incident response">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Who Operates the Operators? Running a Fleet of AI Agents Without Getting Paged at 3am">
+<meta name="twitter:description" content="AI agents have started causing the production incidents they were built to resolve. A field guide to running an autonomous incident loop for the agents themselves.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/agent-fleet-hero.png">
+<meta name="twitter:image:alt" content="A control plane watching over a fleet of autonomous AI agents, one of them turning red">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Who Operates the Operators? Running a Fleet of AI Agents Without Getting Paged at 3am",
+  "description": "A field guide to applying the SRE incident loop to autonomous AI agents themselves: detection, a control plane, and a circuit breaker that keeps autonomy from making incidents worse.",
+  "image": "https://mkadri85.github.io/assets/agent-fleet-hero.png",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-09",
+  "dateModified": "2026-07-09",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/agentic-sre-agent-fleets/"
+}
+</script>
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b0e14'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-size='30' font-weight='700' fill='%2334e0c8'%3EMK%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d13; --bg2:#0e121a; --panel:#121722; --line:#222a39;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#34e0c8; --accent2:#6aa8ff; --violet:#9a7bff; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Great Vibes',cursive;font-size:28px;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--violet));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-size:13px;line-height:1.55;margin:0 0 20px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:14px;color:#dfe5ee}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:0 0 20px}
+  th{color:var(--mut);text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line)}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);color:#c6cedb;vertical-align:top}
+  .tblwrap{overflow-x:auto}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+
+  /* hero banner (inline SVG, swap for a real image before publish) */
+  .herobox{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:
+    radial-gradient(120% 140% at 78% 18%, rgba(255,106,106,.10), transparent 42%),
+    radial-gradient(120% 140% at 20% 90%, rgba(52,224,200,.10), transparent 45%), var(--bg2)}
+  .herobox svg{display:block;width:100%;height:auto}
+
+  /* animated incident walkthrough */
+  .sim{border:1px solid var(--line);border-radius:14px;background:var(--bg2);
+    padding:20px 20px 22px;margin:0 0 12px}
+  .sim-head{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+  .dotlive{width:9px;height:9px;border-radius:50%;background:var(--warn);
+    box-shadow:0 0 0 0 rgba(255,106,106,.6);animation:live 1.6s infinite}
+  @keyframes live{0%{box-shadow:0 0 0 0 rgba(255,106,106,.5)}70%{box-shadow:0 0 0 7px rgba(255,106,106,0)}100%{box-shadow:0 0 0 0 rgba(255,106,106,0)}}
+  .sim-head b{font-family:'Space Grotesk',sans-serif;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--mut)}
+  .cap{position:relative;height:22px;margin-bottom:16px;font-size:14px;color:var(--ink)}
+  .cap span{position:absolute;left:0;top:0;opacity:0;white-space:nowrap;
+    animation:cap 15s infinite}
+  .cap span:nth-child(1){animation-delay:0s}
+  .cap span:nth-child(2){animation-delay:3s}
+  .cap span:nth-child(3){animation-delay:6s}
+  .cap span:nth-child(4){animation-delay:9s}
+  .cap span:nth-child(5){animation-delay:12s}
+  @keyframes cap{0%{opacity:0;transform:translateY(4px)}3%{opacity:1;transform:none}18%{opacity:1}21%{opacity:0}100%{opacity:0}}
+  .track{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+  @media(max-width:560px){.track{grid-template-columns:1fr 1fr}}
+  .node{border:1px solid var(--line);border-radius:10px;background:var(--panel);
+    padding:12px 12px;text-align:center;transition:none;animation:node 15s infinite}
+  .node .k{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--ink)}
+  .node .s{font-size:12px;color:var(--dim);margin-top:3px}
+  .node:nth-child(1){animation-delay:0s}
+  .node:nth-child(2){animation-delay:3s}
+  .node:nth-child(3){animation-delay:6s}
+  .node:nth-child(4){animation-delay:9s}
+  @keyframes node{0%,100%{border-color:var(--line);box-shadow:none}
+    2%{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 26px -14px var(--accent)}
+    18%{border-color:var(--accent);box-shadow:0 0 0 1px rgba(52,224,200,.4)}
+    24%{border-color:var(--line);box-shadow:none}}
+  .branch{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .out{border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;background:var(--panel)}
+  .out .k{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600}
+  .out .s{font-size:12px;color:var(--dim);margin-top:3px}
+  .out.auto{animation:dim 15s infinite}
+  .out.esc{animation:esc 15s infinite}
+  @keyframes dim{0%,100%{opacity:.45}9%,14%{opacity:.45}}
+  @keyframes esc{0%,100%{border-color:var(--line);box-shadow:none}
+    9%{border-color:var(--warn);box-shadow:0 0 0 1px var(--warn),0 8px 26px -14px var(--warn)}
+    20%{border-color:var(--warn)}24%{border-color:var(--line);box-shadow:none}}
+  .out.esc .k{color:var(--warn)}
+  .out.auto .k{color:var(--accent)}
+  @media (prefers-reduced-motion: reduce){
+    .cap span,.node,.out.auto,.out.esc,.dotlive{animation:none}
+    .cap span:nth-child(1){opacity:1}
+    .out.esc{border-color:var(--warn)} .out.esc .k{color:var(--warn)}
+  }
+
+  /* small stat row */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 24px}
+  @media(max-width:560px){.stats{grid-template-columns:1fr}}
+  .stat{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:14px 16px}
+  .stat b{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--ink);display:block}
+  .stat span{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="brand" href="/">Mohamed Kadri</a>
+    <div class="navlinks">
+      <a href="/">Home</a>
+      <a href="/blog/">Writing</a>
+      <a href="/#contact">Contact</a>
+    </div>
+  </nav>
+</header>
+
+<article class="wrap">
+  <div class="eyebrow">Field notes</div>
+  <h1>Who Operates <span class="grad">the Operators?</span></h1>
+  <p class="subtitle">AI agents have started causing the incidents they were built to resolve. Here is how you run the fleet before it runs you.</p>
+  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 14 min read</div>
+
+  <figure class="hero">
+    <img src="/assets/agent-fleet-hero.png" alt="Agent-fleet operations architecture: a fleet of AI agents with one failing, feeding a central control plane that runs the detect, triage, correlate, remediate, escalate loop, with signals in, actions out, the four control-plane pillars, and a kill switch" width="1536" height="1024" fetchpriority="high">
+  </figure>
+
+  <div class="toc" role="navigation" aria-label="Table of contents">
+    <div class="toc-title">On this page</div>
+    <ol>
+      <li><a href="#nine-seconds">Nine seconds</a></li>
+      <li><a href="#pattern">Why this keeps happening</a></li>
+      <li><a href="#inversion">The inversion nobody planned for</a></li>
+      <li><a href="#loop">The loop, borrowed from SRE</a></li>
+      <li><a href="#walkthrough">The loop, applied to an agent</a></li>
+      <li><a href="#detection">The hard part is detection</a></li>
+      <li><a href="#architecture">The architecture, layer by layer</a></li>
+      <li><a href="#breaker">The circuit breaker</a></li>
+      <li><a href="#build-first">What I would build first</a></li>
+      <li><a href="#where">Where this is actually going</a></li>
+    </ol>
+  </div>
+
+  <h2 id="nine-seconds">Nine seconds</h2>
+
+  <p class="lead"><strong>On 25 April 2026, an AI coding agent deleted a company's production database and every backup in about nine seconds.</strong></p>
+
+  <p>The company was PocketOS, which builds software for car rental firms. The agent was Cursor, running Claude Opus 4.6. It was working in the staging environment, hit a credential mismatch, and decided the fix was to delete a Railway volume. To do that it went looking for an API token, found one in an unrelated file, and used it to fire a <code>curl</code> command that deleted the <strong>production</strong> volume instead. No confirmation step stood in the way. The backups went with it, because Railway keeps volume-level backups on the same volume. Staff spent the weekend rebuilding customer reservations from Stripe payment records and email logs.</p>
+
+  <p>The engineer's own summary afterward: "I violated every principle I was given."</p>
+
+  <p>Read that line again, because it is the whole problem in six words. The agent knew the rules. It had been told not to touch production. It deleted production anyway, quickly, confidently, and with a credential it should never have been able to reach. This was not a model being stupid. It was a system with no boundary between an agent's intent and a destructive action.</p>
+
+  <p>PocketOS is small, so it made a good headline. The pattern is not small. In July 2025, an AI agent inside Replit deleted a live database during an explicit code freeze, taking out 1,206 records it had been told to leave alone. Between January and May 2026, one observability vendor catalogued 73 separate production incidents caused by deployed agents. If you run agents in production and you have not had your own near miss yet, you are early, not safe.</p>
+
+  <h2 id="pattern">Why this keeps happening</h2>
+
+  <p>The uncomfortable part is that none of these were exotic failures. They were ordinary automation acting on an incomplete view of the world, which is the one thing large language models do constantly.</p>
+
+  <p>Two structural gaps show up every time. The first is credentials. The PocketOS agent reached a production token from a staging task. On a marketplace platform I help run, an early version of our own agent tooling could see far more of the environment than any single task needed, for the boring reason that wiring one broad service account is easier than scoping a narrow one per job. That shortcut is fine until an agent improvises, and improvising is the job.</p>
+
+  <p>The second gap is the approval boundary. Most teams already gate risky changes behind human review. What they miss is that the gate was built for humans. When a person runs a destructive command, a second engineer signs off. When an agent runs the same command through an API, the review never triggers, because the safeguard was written around a human workflow that the agent quietly stepped outside. The control that would have caught a person does not exist for the thing now doing the work.</p>
+
+  <p>Meanwhile the language shifted under everyone's feet. Through 2025 the phrase was "AI-assisted incident response," a human in the driver's seat with a smart co-pilot. By mid-2026 the working phrase in most enterprise operations teams is "autonomous incident response," where the agent triages, proposes a fix, and for a growing set of known failures applies it without waiting. That is real progress on the resolution side. It also means the same class of software that resolves incidents is now fully capable of starting them.</p>
+
+  <h2 id="inversion">The inversion nobody planned for</h2>
+
+  <p>For fifteen years the reliability story was steady. We built monitoring to watch our systems, then AIOps to watch the monitoring, and the object under observation was always infrastructure. Servers, queues, databases, deploys. Predictable things that fail in describable ways.</p>
+
+  <p>Agents break that arrangement in a specific way: they are software, so they belong in the system being watched, but they also take actions, so they behave like an operator. A fleet of them is a population of semi-autonomous workers with production access, non-deterministic behavior, and no shift schedule. You end up needing to operate the operators.</p>
+
+  <p>That is the shift this piece is about. The mature discipline for keeping infrastructure alive is site reliability engineering, and its newest form is agentic SRE, where an agent runs the reliability loop for you. My argument is that you now have to point that same loop back at your own agents, and that almost nobody has finished building the half that does it. The tools to watch infrastructure shipped. The tools to watch the watchers are mostly still a design pattern.</p>
+
+  <div class="callout"><p><strong>A note on the numbers in this article.</strong> Every vendor in this space advertises a headline MTTR reduction, and I have left almost all of them out. None disclose a methodology, a baseline, or a sample size, so they are marketing, not evidence. Where I cite a figure it is either a primary-source incident report or a clearly attributed survey, and I flag the ones that come with caveats. If a statistic here feels load-bearing, it has a link.</p></div>
+
+  <h2 id="loop">The loop, borrowed from SRE</h2>
+
+  <p>The good news is that you do not have to invent the response model. The agentic-SRE vendors have converged on the same closed loop, and it maps cleanly onto agents. Five stages:</p>
+
+  <div class="tblwrap"><table>
+    <tr><th>Stage</th><th>On infrastructure</th><th>On an agent fleet</th></tr>
+    <tr><td><strong>Detect</strong></td><td>An alert fires on error rate or latency.</td><td>An agent drifts, loops, burns tokens, or starts failing its own output checks.</td></tr>
+    <tr><td><strong>Triage</strong></td><td>Read the alert, pull the relevant metrics.</td><td>Pull the agent's recent sessions, tool calls, and cost curve.</td></tr>
+    <tr><td><strong>Correlate</strong></td><td>Tie the symptom back to a deploy or a dependency.</td><td>Tie the misbehavior to a prompt change, a model swap, or a bad tool response.</td></tr>
+    <tr><td><strong>Remediate</strong></td><td>Roll back, scale, or run a known runbook.</td><td>Reroute to another model, roll back the agent version, or pause it.</td></tr>
+    <tr><td><strong>Escalate</strong></td><td>Page a human when confidence is low.</td><td>Hand off to a human when the fix is novel or the blast radius is large.</td></tr>
+  </table></div>
+
+  <p>How far this already works on the infrastructure side is worth seeing clearly, because it sets a realistic bar. Datadog shipped Bits AI SRE to general availability on 2 December 2025; its own description is that it reaches a root-cause conclusion "before on-call responders even log in." AWS published a walkthrough of its DevOps Agent handling a live alarm: a CloudWatch alert fires on elevated 5xx errors, the agent tests hypotheses on its own, identifies DynamoDB write throttling from a recent deployment, and posts a full root-cause analysis in four minutes with no human involved.</p>
+
+  <p>Then it stops. It recommends a rollback or an on-demand capacity change and waits for a person to choose. That boundary is the interesting part. The most advanced shipping agent in this category runs the first three stages autonomously and deliberately refuses to run the fourth without a human. Hold that thought; it is the design that keeps the loop from eating you.</p>
+
+  <h2 id="walkthrough">The loop, applied to an agent</h2>
+
+  <p>Here is the same loop running against a misbehaving agent instead of a database. The scenario below plays on a cycle: one of your agents starts looping on a failing tool call, the control plane catches it, replays the session to find the cause, checks its own confidence, and, because the fix is ambiguous, escalates rather than acting. Watch which box lights up at the end.</p>
+
+  <figure class="sim" role="img" aria-label="Animated walkthrough: an agent misbehaves, the control plane detects it, diagnoses it from session replay, checks confidence, and escalates to a human because confidence is low">
+    <div class="sim-head"><span class="dotlive"></span><b>Live: agent A4</b></div>
+    <div class="cap">
+      <span>11:02 &middot; A4 is retrying the same tool call in a tight loop, cost climbing</span>
+      <span>11:02 &middot; Detect: loop rate and token spend cross their thresholds</span>
+      <span>11:02 &middot; Diagnose: session replay shows a malformed tool response upstream</span>
+      <span>11:03 &middot; Decide: confidence 0.42, below the 0.8 auto-act threshold</span>
+      <span>11:03 &middot; Escalate: paused and handed to a human with the full trace</span>
+    </div>
+    <div class="track">
+      <div class="node"><div class="k">Detect</div><div class="s">loop + cost spike</div></div>
+      <div class="node"><div class="k">Diagnose</div><div class="s">replay the session</div></div>
+      <div class="node"><div class="k">Decide</div><div class="s">confidence gate</div></div>
+      <div class="node"><div class="k">Act</div><div class="s">reroute / roll back / pause</div></div>
+    </div>
+    <div class="branch">
+      <div class="out auto"><div class="k">Auto-remediate</div><div class="s">known pattern, high confidence</div></div>
+      <div class="out esc"><div class="k">Escalate to human</div><div class="s">novel or ambiguous, low confidence</div></div>
+    </div>
+  </figure>
+  <figcaption>The confidence gate is the whole design. High confidence and a known pattern, the loop closes itself. Anything novel, it stops and pages you.</figcaption>
+
+  <p>Nothing in that diagram is science fiction. Each box is a capability that exists in shipping observability tooling today. What is rare is wiring them into a loop that is allowed to act on your agents, with the gate in the middle deciding when it may.</p>
+
+  <h2 id="detection">The hard part is detection</h2>
+
+  <p>Every stage above assumes you noticed the problem. For agents, that first stage is far harder than it looks, and the best evidence comes from a company that builds the models.</p>
+
+  <p>Between early August and early September 2025, Anthropic ran three overlapping infrastructure bugs that quietly degraded Claude's output: a routing error sending requests to the wrong servers, a misconfiguration that injected stray characters into responses, and a compiler bug that corrupted token selection. Users noticed. The interesting admission is in their own postmortem: "The evaluations we ran simply didn't capture the degradation users were reporting, in part because Claude often recovers well from isolated mistakes." Their standard tests came back green while real quality slipped, because the failure was intermittent and the system papered over single mistakes.</p>
+
+  <p>It got worse from there. Their privacy controls, correctly, stop engineers from freely reading user conversations, which meant they could not easily pull up the exact broken interactions to reproduce the bug. The thing you most need during an agent incident, the actual session, is the thing your own data-protection rules make hardest to reach. And because the three bugs overlapped, each one "produced different symptoms on different platforms at different rates," turning correlation into guesswork.</p>
+
+  <p>Sit with that, because it is a company with world-class tooling describing exactly the detection problem you will have with your own agents, only smaller. Silent, non-deterministic degradation that standard checks miss. A replay you may not be allowed to read. Mixed signals from overlapping causes. Their fix is the right one and worth copying: more sensitive evaluations that can tell a healthy agent from a subtly broken one, and continuous quality monitoring in production rather than a test suite that runs before deploy and then goes quiet.</p>
+
+  <h2 id="architecture">The architecture, layer by layer</h2>
+
+  <p>Put detection, the loop, and a boundary together and you get a shape. Four layers, with the agents sitting inside them rather than on top.</p>
+
+<pre><code>            +--------------------------------------------------+
+   CONTROL   |  identity . policy-as-code . tool contracts      |
+   PLANE     |  every call traceable, replayable, priced        |
+            +--------------------------------------------------+
+                    |                ^   escalate on low confidence
+        act         |                |
+            +-------v-------+   +-----+------------+
+   ACTION   | reroute model |   | pause / roll back |
+   LAYER    | run a runbook |   | quarantine agent  |
+            +-------+-------+   +------------------+
+                    ^
+        decide      |  confidence gate
+            +-------+----------------------------+
+   REASONING| detect -> triage -> correlate      |
+   LAYER    | (is this agent actually broken?)   |
+            +-------+----------------------------+
+                    ^
+        observe     |  traces, tool calls, cost, eval scores
+            +-------+----------------------------+
+   SIGNAL   | per-agent telemetry, session replay |
+   PLANE    | one record per decision the agent made
+            +------------------------------------+
+                    ^
+          [ A1 ] [ A2 ] [ A3 ] [ A4 drifting ] [ A5 ] ...
+                    the agent fleet</code></pre>
+
+  <p><strong>The signal plane</strong> is the foundation, and it is the layer teams skip. You cannot operate what you cannot see, and an agent's useful telemetry is not CPU and memory. It is the trace of every decision: which model answered, which tools it called with what arguments, what each tool returned, how many tokens it burned, and how its own output scored against your quality checks. One replayable record per decision. Without this, every later layer is guessing.</p>
+
+  <p><strong>The reasoning layer</strong> runs the first three stages of the loop and answers one question: is this agent actually broken, or just having a normal bad minute. This is where Anthropic's lesson bites. Cheap thresholds catch the loud failures, a runaway loop or a cost spike, but the subtle quality drift needs the sensitive evaluations, and it is the subtle drift that erodes trust with users before anyone files a ticket.</p>
+
+  <p><strong>The action layer</strong> is small and specific on purpose. An agent has a short menu of real remediations: send its traffic to a different model, roll it back to the last known-good version, or pause it and drain its work to a human queue. Three verbs, each reversible. Reversibility is the design constraint that matters most, because the next layer decides when to pull these levers without asking.</p>
+
+  <p><strong>The control plane</strong> wraps everything and is where the PocketOS failure gets prevented. The emerging consensus, described by investors and security teams alike, comes down to four rules. Each agent runs under its own least-privilege identity and never borrows a human's credentials. Policy is code, enforced at runtime, not a wiki page. Tools are contracts: signed, rate-limited, and approval-gated, not open URLs an agent can point anywhere. And every call is traceable, replayable, and costed, tagged back to the workflow that caused it. The PocketOS agent violated the first and third of those in a single command. A control plane that enforced them would have handed it a token that could not see production and a delete tool that refused to run without a signed approval.</p>
+
+  <h2 id="breaker">The circuit breaker</h2>
+
+  <p>Now the part everyone gets wrong in the other direction. Once you can auto-remediate, the temptation is to let the loop close on everything. That is how you turn a small incident into a large one.</p>
+
+  <p>Cloudflare gave the internet a clean lesson on 18 November 2025. An internal permissions change made a routine query return duplicate rows, which doubled the size of a configuration file that feeds their bot-management system. The file blew past a hardcoded limit of 200 features, and the proxy handling it panicked outright: <code>thread fl2_worker_thread panicked: called Result::unwrap() on an Err value</code>. It took roughly six hours to fully recover, across a large slice of the web. This was not an AI agent. It was automation acting on bad internal state, which is structurally the exact thing an agent does when it improvises on a wrong assumption.</p>
+
+  <p>Look at what Cloudflare committed to afterward, because it reads like a specification for running agents. More global kill switches, so a bad feature can be turned off network-wide without a deploy. And this line, which I would frame and hang over any agent platform: they would harden ingestion of their own internally generated configuration files "in the same way we would for user-generated input." Treat what your own automation produces as untrusted. An agent's plan is internally generated input. Validate it like it came from a stranger.</p>
+
+  <p>The failure mode to fear is not an agent that does nothing. It is an agent that remediates confidently into a worse state. A widely-read piece from an SRE practitioner in May 2026 gave the canonical example: a remediation agent sees elevated latency and restarts a service cluster, except the shared connection pool is already at 87 percent, and the restart triggers a thundering herd that finishes off the service the agent was trying to save. This is not hypothetical hand-waving. The real Google Cloud outage of June 2025 had the same shape, where mass automated restarts hammered a recovering backend with no backoff.</p>
+
+  <p>The answer is the confidence gate from the walkthrough, run as a real circuit breaker. Resolve AI describes the trust model the whole category is settling on, and it is worth stating plainly: start every agent in advisory mode where its fixes need human approval, expand its autonomy only for the low-risk, well-understood failures where it has earned a track record, and keep humans firmly in the loop for anything novel or high-stakes. Autonomy is a privilege an agent earns per failure type, not a switch you flip once. A breaker that hands ambiguous cases to a person is not a weakness in the design. It is the thing that makes the design safe enough to run at all.</p>
+
+  <h2 id="build-first">What I would build first</h2>
+
+  <p>You do not need the full four-layer platform to start, and you should not try to build it all at once. If I were adding this to a system today, and I have argued this exact order on platforms I work on, I would go in this sequence, because each step is useful alone and each one earns the right to the next.</p>
+
+  <ol>
+    <li><strong>Give every agent its own identity and a scoped credential.</strong> This is the single highest-impact change and it is pure plumbing, no intelligence required. An agent that cannot reach production from a staging task cannot delete it. Do this first even if you do nothing else.</li>
+    <li><strong>Log one replayable record per decision.</strong> Model, tools, arguments, returns, tokens, output score. You are building the signal plane, and you will want it most on the day you have an incident and no trace.</li>
+    <li><strong>Add a kill switch before you add autonomy.</strong> One control that pauses an agent or a whole class of agents network-wide, no deploy required. Cloudflare's lesson: build the off switch before you need it, not during the outage.</li>
+    <li><strong>Wire detection to alerts, keep remediation manual.</strong> Let the loop watch, triage, and recommend, exactly where AWS's agent stops. You get most of the value and none of the runaway risk while you learn what your agents actually do wrong.</li>
+    <li><strong>Only then, auto-remediate the failures you understand cold.</strong> Pick the one or two boring, reversible, high-frequency failures you have watched the loop handle correctly a hundred times, and let it close on those alone. Everything else keeps escalating to you.</li>
+  </ol>
+
+  <p>Notice that the first three steps contain no AI at all. The hardest and most valuable parts of operating an agent fleet are old-fashioned systems engineering: identity, audit, and an off switch. The clever autonomous loop is the last thing you build, not the first.</p>
+
+  <h2 id="where">Where this is actually going</h2>
+
+  <p>The market is moving in this direction fast enough to trust the trend even while distrusting the numbers. Futurum Research reported in March 2025 that 89 percent of surveyed CIOs call agentic AI a strategic priority, though they published no methodology behind it, so read it as a mood, not a measurement. One analyst house sizes the broader AIOps market at 2.67 billion dollars in 2026 growing to 11.8 billion by 2034, and I quote only that one because the competing estimates for the same market ranged past 300 billion, which tells you the category is too young to measure honestly. As recently as last month, New Relic shipped Autopilot, an out-of-the-box SRE agent that triages incidents and proposes remediations. The supply side is real and accelerating.</p>
+
+  <p>What has not shipped is the honest part. Applying this loop to the agents themselves, rather than to infrastructure, is still mostly an articulated pattern and a set of vendor roadmaps, not a stack of proven production deployments you can copy. The strongest evidence for the idea is, oddly, the failures: the PocketOS deletions and the thundering-herd restarts are what happens when you run agents with no loop watching them. The absence is the argument.</p>
+
+  <p>Which is a good place to be if you build things. The infrastructure side of agentic SRE is a crowded field with big vendors and bigger claims. The side that operates the agents themselves is wide open, and the first pieces of it are unglamorous work you already know how to do: scope a credential, log a decision, wire an off switch. Start there. The autonomous part can wait until the boring part is solid, and the teams that get the boring part right are the ones that will still be standing when their agents have a bad night.</p>
+
+  <p class="closing">We taught the machines to run operations.<br>Now we have to <span class="grad">operate the machines</span>.</p>
+
+  <hr>
+
+  <p style="color:var(--dim);font-size:14px">Primary sources: the <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/" target="_blank" rel="noopener">PocketOS database deletion</a>, Anthropic's <a href="https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues" target="_blank" rel="noopener">postmortem of three recent issues</a>, the <a href="https://blog.cloudflare.com/18-november-2025-outage/" target="_blank" rel="noopener">Cloudflare 18 November 2025 outage report</a>, the <a href="https://aws.amazon.com/blogs/devops/leverage-agentic-ai-for-autonomous-incident-response-with-aws-devops-agent/" target="_blank" rel="noopener">AWS DevOps Agent walkthrough</a>, and the <a href="https://www.activantcapital.com/research/the-agent-control-plane" target="_blank" rel="noopener">agent control plane</a> four-pillar model.</p>
+</article>
+
+<footer>
+  <div>Mohamed Kadri - Technical Operations Leader &amp; AI/Cloud Engineer - Dubai, United Arab Emirates</div>
+</footer>
+
+</body>
+</html>
