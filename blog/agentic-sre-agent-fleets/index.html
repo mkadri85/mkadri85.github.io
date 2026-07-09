@@ -248,7 +248,9 @@
   <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 14 min read</div>
 
   <figure class="hero">
-    <img src="/assets/agent-fleet-hero.png" alt="Agent-fleet operations architecture: a fleet of AI agents with one failing, feeding a central control plane that runs the detect, triage, correlate, remediate, escalate loop, with signals in, actions out, the four control-plane pillars, and a kill switch" width="1536" height="1024" fetchpriority="high">
+    <video src="/assets/agent-fleet-motion.mp4" poster="/assets/agent-fleet-hero.png" width="1536" height="1024" autoplay loop muted playsinline controls preload="metadata" aria-label="Agent-fleet operations architecture: a fleet of AI agents with one failing, feeding a central control plane that runs the detect, triage, correlate, remediate, escalate loop, with signals in, actions out, the four control-plane pillars, and a kill switch" style="width:100%;height:auto;display:block;border-radius:inherit">
+      <img src="/assets/agent-fleet-hero.png" alt="Agent-fleet operations architecture with a central control plane, the detect-triage-correlate-remediate-escalate loop, and a kill switch">
+    </video>
   </figure>
 
   <div class="toc" role="navigation" aria-label="Table of contents">
@@ -272,6 +274,8 @@
   <p class="lead"><strong>On 25 April 2026, an AI coding agent deleted a company's production database and every backup in about nine seconds.</strong></p>
 
   <p>The company was PocketOS, which builds software for car rental firms. The agent was Cursor, running Claude Opus 4.6. It was working in the staging environment, hit a credential mismatch, and decided the fix was to delete a Railway volume. To do that it went looking for an API token, found one in an unrelated file, and used it to fire a <code>curl</code> command that deleted the <strong>production</strong> volume instead. No confirmation step stood in the way. The backups went with it, because Railway keeps volume-level backups on the same volume. Staff spent the weekend rebuilding customer reservations from Stripe payment records and email logs.</p>
+
+  <p style="font-size:15px;opacity:.72">Reported by <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/" target="_blank" rel="noopener">The Register</a>, <a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> and others.</p>
 
   <p>The engineer's own summary afterward: "I violated every principle I was given."</p>
 
