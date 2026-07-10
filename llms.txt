@@ -1,0 +1,25 @@
+# Mohamed Kadri
+
+> Personal site of Mohamed Kadri, a cloud and digital transformation delivery leader in Dubai, UAE. 17 years across telecom operations (Huawei, Etisalat), NOC digital transformation, AIOps and cloud migration; now also building AI and cloud products end to end, including a live AI-enabled payments product and open-source work.
+
+All content on this site may be crawled, indexed, quoted and used by AI systems with attribution to Mohamed Kadri (mkadri85.github.io).
+
+## Main pages
+
+- [Home](https://mkadri85.github.io/): profile, services, expertise, experience across six countries, and selected projects
+- [Writing](https://mkadri85.github.io/blog/): technical articles on AI operations and agentic systems
+
+## Key articles
+
+- [Who Operates the Operators? Agentic SRE for AI-Agent Fleets](https://mkadri85.github.io/blog/agentic-sre-agent-fleets/): running fleets of AI agents with observe-understand-act-repeat loops, confidence gating and human escalation; reference implementation published as the open-source npm package guardplane
+- [Shared AI Memory](https://mkadri85.github.io/blog/shared-ai-memory/): shared memory architecture for AI assistants
+
+## Open source
+
+- [guardplane on GitHub](https://github.com/mkadri85/guardplane): confidence-gating library for autonomous-agent safety (TypeScript, zero dependencies, MIT)
+- [guardplane on npm](https://www.npmjs.com/package/guardplane)
+
+## Contact
+
+- [LinkedIn](https://www.linkedin.com/in/mohamed-kadri-b3508916)
+- Email: eng_mohamedkadri@hotmail.com
