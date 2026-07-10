@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mohamed Kadri - Senior Telecom Project Manager, AIOps and AI/Cloud Engineer | Dubai</title>
-<meta name="description" content="Mohamed Kadri - Senior Telecom and Microwave Project Manager and AIOps leader in Dubai. 17 years across transmission delivery, NOC digital transformation, and AI and cloud product builds.">
+<title>Mohamed Kadri | Cloud &amp; Digital Transformation Leader, Dubai</title>
+<meta name="description" content="Senior delivery and transformation leader in Dubai. 17 years across telecom, AIOps and cloud migration, now building AI and cloud products end to end.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/">
 
@@ -68,7 +68,20 @@
   .navlinks a{transition:color .2s}.navlinks a:hover{color:var(--ink)}
   .nav-cta{border:1px solid var(--line);padding:8px 16px;border-radius:999px;font-size:13.5px;color:var(--ink);transition:.2s}
   .nav-cta:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--glow)}
-  @media(max-width:720px){.navlinks{display:none}}
+  .nav-right{display:flex;align-items:center;gap:10px}
+  .nav-burger{display:none;background:none;border:1px solid var(--line);border-radius:10px;
+    color:var(--ink);width:38px;height:38px;font-size:19px;line-height:1;cursor:pointer;
+    align-items:center;justify-content:center;transition:.2s}
+  .nav-burger:hover{border-color:var(--accent)}
+  @media(max-width:720px){
+    .nav-burger{display:inline-flex}
+    .navlinks{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;
+      gap:0;background:rgba(10,13,19,.97);backdrop-filter:blur(12px);
+      border-bottom:1px solid var(--line);padding:6px 24px 14px}
+    .navlinks a{padding:12px 0;border-top:1px solid var(--line);font-size:15px;color:var(--ink)}
+    .navlinks a:first-child{border-top:0}
+    .navlinks.open{display:flex}
+  }
 
   /* Hero */
   .hero{position:relative;padding:96px 0 84px;overflow:hidden}
@@ -217,7 +230,7 @@
 <header id="hdr">
   <nav class="wrap">
     <a class="brand" href="#top" aria-label="Mohamed Kadri">Mohamed Kadri</a>
-    <div class="navlinks">
+    <div class="navlinks" id="navlinks">
       <a href="#about">About</a>
       <a href="#services">Services</a>
       <a href="#expertise">Expertise</a>
@@ -226,7 +239,10 @@
       <a href="/blog/">Writing</a>
       <a href="#contact">Contact</a>
     </div>
-    <a class="nav-cta" href="#contact">Get in touch</a>
+    <div class="nav-right">
+      <a class="nav-cta" href="#contact">Get in touch</a>
+      <button class="nav-burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="navlinks">&#9776;</button>
+    </div>
   </nav>
 </header>
 
@@ -596,6 +612,25 @@
     size(); frame();
     addEventListener('resize', () => { cancelAnimationFrame(raf); size(); frame(); }, { passive: true });
   })();
+</script>
+<script>
+(function(){
+  var burger = document.getElementById('burger');
+  var links = document.getElementById('navlinks');
+  if (!burger || !links) return;
+  burger.addEventListener('click', function(){
+    var open = links.classList.toggle('open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    burger.innerHTML = open ? '&#10005;' : '&#9776;';
+  });
+  links.querySelectorAll('a').forEach(function(a){
+    a.addEventListener('click', function(){
+      links.classList.remove('open');
+      burger.setAttribute('aria-expanded', 'false');
+      burger.innerHTML = '&#9776;';
+    });
+  });
+})();
 </script>
 </body>
 </html>
