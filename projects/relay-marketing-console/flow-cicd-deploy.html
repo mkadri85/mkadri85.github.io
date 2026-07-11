@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relay - the merge is the deploy</title>
+<link rel="canonical" href="https://mkadri85.github.io/projects/relay-marketing-console/flow-cicd-deploy.html">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<style>
+  :root{--bg:#0a0e16;--panel:#121a29;--panel2:#17202f;--line:#243044;--ink:#e7e9ee;--mut:#9aa3b2;--dim:#6b7280;--accent:#4f8fc9;--warn:#d4a72d}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1020px;margin:0 auto;padding:48px 24px 80px}
+  .nav{font-size:13px;color:var(--dim);margin-bottom:26px}.nav a{color:var(--mut);text-decoration:none}.nav a:hover{color:var(--accent)}
+  .eyebrow{color:var(--accent);font-weight:600;letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+  h1{font-size:30px;margin:8px 0 6px}h1 b{color:var(--accent)}
+  .sub{color:var(--mut);max-width:740px;margin:0 0 30px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:20px 0}
+  .card h2{margin:0 0 16px;font-size:18px}
+  .pipe{display:flex;align-items:stretch;gap:10px;flex-wrap:wrap}
+  .stg{flex:1;min-width:120px;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:13px 14px;position:relative}
+  .stg h3{margin:0 0 4px;font-size:13.5px}.stg p{margin:0;color:var(--mut);font-size:12.5px}
+  .stg .n{position:absolute;top:-9px;left:12px;background:var(--bg);border:1px solid var(--line);color:var(--accent);font-size:11px;padding:1px 7px;border-radius:20px}
+  .arrow{align-self:center;color:var(--dim);font-size:18px}
+  .callout{border-left:3px solid var(--warn);padding:4px 0 4px 14px;color:var(--mut);font-size:13.5px;margin:12px 0}
+  .callout b{color:var(--ink)}
+  code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:12.5px;color:#cfe9e4}
+  .foot{color:var(--dim);font-size:12px;margin-top:40px;border-top:1px solid var(--line);padding-top:16px}
+
+  .pn{border-bottom:1px solid var(--line);background:rgba(10,14,22,.85)}
+  .pn-wrap{max-width:1020px;margin:0 auto;padding:12px 24px;display:flex;justify-content:space-between;align-items:center}
+  .pn-brand{font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:-.02em}
+  .pn-links a{color:var(--mut);text-decoration:none;font-size:13.5px;margin-left:18px}
+  .pn-links a:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="pn"><div class="pn-wrap"><a class="pn-brand" href="/">Mohamed Kadri</a><span class="pn-links"><a href="/#projects">Projects</a><a href="/blog/">Writing</a><a href="/#contact">Contact</a></span></div></div>
+<div class="wrap">
+  <div class="nav"><a href="index.html">&larr; Relay docs</a> &nbsp;/&nbsp; CI/CD to Cloud Run</div>
+  <div class="eyebrow">Capability - delivery pipeline</div>
+  <h1>The merge <b>is the deploy</b></h1>
+  <p class="sub">No separate CD system. A push to main runs the full pipeline in Cloud Build and lands live,
+    with a guard that stops a subtle failure mode where new code builds but never takes traffic.</p>
+
+  <div class="card">
+    <h2>Cloud Build pipeline</h2>
+    <div class="pipe">
+      <div class="stg"><span class="n">1</span><h3>Test</h3><p><code>npm ci</code> + <code>jest</code>. Fail fast before building.</p></div>
+      <div class="arrow">&rarr;</div>
+      <div class="stg"><span class="n">2</span><h3>Build</h3><p>Docker image on Debian-slim + Playwright Chromium.</p></div>
+      <div class="arrow">&rarr;</div>
+      <div class="stg"><span class="n">3</span><h3>Push</h3><p>Image to the container registry.</p></div>
+      <div class="arrow">&rarr;</div>
+      <div class="stg"><span class="n">4</span><h3>Deploy</h3><p><code>gcloud run deploy</code> with 2Gi for the renderer.</p></div>
+      <div class="arrow">&rarr;</div>
+      <div class="stg"><span class="n">5</span><h3>Pin traffic</h3><p><code>update-traffic --to-latest</code>.</p></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>The failure mode stage 5 prevents</h2>
+    <div class="callout">After enough tagged deploys, a service's traffic spec can become <b>pinned to a
+      revision by name</b> instead of "latest". Once that happens, a plain <code>gcloud run deploy</code>
+      creates the new revision but does not route to it - Cloud Run marks it <b>Retired</b> within seconds
+      and keeps serving the old code. The build is green, the site is stale, and it is easy to miss.</div>
+    <p style="color:var(--mut);font-size:13.5px;margin:0">The explicit <code>update-traffic --to-latest</code> step
+      re-establishes auto-promote on every merge, so a one-off rollback that pinned traffic by name cannot
+      silently freeze future deploys. Belt and suspenders alongside the service-level
+      <code>latestRevision: true</code>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Cloud Run runtime shape</h2>
+    <div class="pipe">
+      <div class="stg"><h3>min instances 0</h3><p>Scales to zero when idle; cost follows traffic.</p></div>
+      <div class="stg"><h3>max instances 10</h3><p>Bounded autoscale.</p></div>
+      <div class="stg"><h3>2Gi / 1 vCPU</h3><p>Headroom for a Chromium subprocess per render.</p></div>
+      <div class="stg"><h3>health check</h3><p><code>/health</code> probed every 30s.</p></div>
+    </div>
+  </div>
+
+  <div class="foot">Relay - anonymized engineering case study. Pipeline in <code>../cloudbuild.yaml</code>.</div>
+</div>
+</body>
+</html>

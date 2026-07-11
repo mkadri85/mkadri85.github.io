@@ -14,6 +14,10 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 - [Who Operates the Operators? Agentic SRE for AI-Agent Fleets](https://mkadri85.github.io/blog/agentic-sre-agent-fleets/): running fleets of AI agents with observe-understand-act-repeat loops, confidence gating and human escalation; reference implementation published as the open-source npm package guardplane
 - [Shared AI Memory](https://mkadri85.github.io/blog/shared-ai-memory/): shared memory architecture for AI assistants
 
+## Project showcases
+
+- [Relay Marketing Console walkthrough](https://mkadri85.github.io/projects/relay-marketing-console/): architecture and flow walkthroughs of a production marketing platform (WhatsApp campaign engine, AI chat inbox, creative studio, BigQuery ETL) on Google Cloud Run
+
 ## Open source
 
 - [guardplane on GitHub](https://github.com/mkadri85/guardplane): confidence-gating library for autonomous-agent safety (TypeScript, zero dependencies, MIT)
