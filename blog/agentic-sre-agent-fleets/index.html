@@ -57,9 +57,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0a0d13; --bg2:#0e121a; --panel:#121722; --line:#222a39;
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
     --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
-    --accent:#34e0c8; --accent2:#6aa8ff; --violet:#9a7bff; --warn:#ff6a6a; --amber:#ffb454;
+    --accent:#4f8fc9; --accent2:#77aede; --violet:#4f8fc9; --warn:#ff6a6a; --amber:#ffb454;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
@@ -74,7 +74,7 @@
     background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
   header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
     max-width:1240px;margin:0 auto;padding:0 24px}
-  .brand{font-family:'Great Vibes',cursive;font-size:28px;color:var(--ink)}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
   .brand:hover{text-decoration:none}
   .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
   .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
@@ -128,7 +128,7 @@
   /* hero banner (inline SVG, swap for a real image before publish) */
   .herobox{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:
     radial-gradient(120% 140% at 78% 18%, rgba(255,106,106,.10), transparent 42%),
-    radial-gradient(120% 140% at 20% 90%, rgba(52,224,200,.10), transparent 45%), var(--bg2)}
+    radial-gradient(120% 140% at 20% 90%, rgba(79,143,201,.10), transparent 45%), var(--bg2)}
   .herobox svg{display:block;width:100%;height:auto}
 
   /* animated incident walkthrough */
@@ -161,7 +161,7 @@
   .node:nth-child(4){animation-delay:9s}
   @keyframes node{0%,100%{border-color:var(--line);box-shadow:none}
     2%{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 8px 26px -14px var(--accent)}
-    18%{border-color:var(--accent);box-shadow:0 0 0 1px rgba(52,224,200,.4)}
+    18%{border-color:var(--accent);box-shadow:0 0 0 1px rgba(79,143,201,.4)}
     24%{border-color:var(--line);box-shadow:none}}
   .branch{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .out{border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;background:var(--panel)}
