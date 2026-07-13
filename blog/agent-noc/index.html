@@ -137,6 +137,11 @@
   .demo-frame{width:100%;height:1250px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
   .refs{font-size:13.5px;color:var(--mut)}
   .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
 </style>
 </head>
 <body>
@@ -305,6 +310,15 @@
   <p>The telecom industry is currently pointing agents at the NOC - every vendor keynote promises a dark NOC run by AI. That direction is real, and I work inside it. This article argued the reverse arrow: point the NOC at the agents. Whoever is operating your agent fleet next year - a platform team, an SRE group, or an agent supervising other agents - they will need the discipline either way. It exists. It is documented. Telecom already paid for it.</p>
 
   <p class="closing">Operate the fleet, <span class="grad">or the fleet operates you.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> spent 17 years operating and transforming Tier-1 telecom networks,
+      including leading a NOC's L2-to-L3 autonomy transition (75 percent of Level-1 incidents automated).
+      He now builds AI and cloud products, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
 
   <hr>
 
