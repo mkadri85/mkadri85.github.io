@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Agent NOC Console - operate an AI agent fleet | Mohamed Kadri</title>
+<meta name="description" content="Interactive demo: operate a fleet of AI agents with NOC discipline. Baseline-relative burn rates, propose-only demotion and a kill switch, running the real guardplane library from npm.">
+<link rel="canonical" href="https://mkadri85.github.io/projects/agent-noc/">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<style>
+  :root{--bg:#0a0e16;--panel:#121a29;--panel2:#17202f;--line:#243044;--ink:#eef1f6;
+    --mut:#9aa6b8;--dim:#6a7689;--accent:#4f8fc9;--accent2:#77aede;
+    --ok:#4fc98f;--warn:#c9a54f;--bad:#c96b4f}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+  .pn{border-bottom:1px solid var(--line);background:rgba(10,14,22,.85)}
+  .pn-wrap{max-width:1080px;margin:0 auto;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+  .pn-brand{font-weight:700;color:var(--ink);text-decoration:none;letter-spacing:-.02em}
+  .pn-links a{color:var(--mut);text-decoration:none;font-size:13.5px;margin-left:16px}
+  .pn-links a:hover{color:var(--ink)}
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 20px 60px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--mut);font-size:14.5px;max-width:760px;margin:0 0 6px}
+  .honesty{font-size:12.5px;color:var(--dim);margin:0 0 18px}
+  .honesty code{color:var(--accent2)}
+  .badge{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;
+    padding:2px 10px;color:var(--mut);margin-left:8px;vertical-align:2px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 18px}
+  button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);border-radius:9px;
+    padding:7px 14px;font-size:13px;cursor:pointer;font-family:inherit;transition:.15s}
+  button:hover{border-color:var(--accent)}
+  button.danger{border-color:#5a3030}
+  button.danger:hover{border-color:var(--bad)}
+  button.small{padding:4px 10px;font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .card.demoted{border-color:var(--warn)}
+  .card.killed{border-color:var(--bad);opacity:.75}
+  .card h3{margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:center}
+  .mode{font-size:10.5px;font-weight:700;letter-spacing:.08em;border-radius:6px;padding:2px 8px}
+  .mode.active{background:rgba(79,201,143,.12);color:var(--ok)}
+  .mode.propose{background:rgba(201,165,79,.15);color:var(--warn)}
+  .mode.killed{background:rgba(201,107,79,.15);color:var(--bad)}
+  .stats{display:flex;gap:14px;margin:10px 0 8px;font-size:12px;color:var(--mut)}
+  .stats b{color:var(--ink);font-weight:600;display:block;font-size:14px}
+  canvas.spark{width:100%;height:34px;display:block;margin:2px 0 10px}
+  .row{display:flex;gap:8px}
+  .reason{font-size:11.5px;color:var(--warn);min-height:15px;margin:6px 0 0}
+  .cols{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+  @media(max-width:800px){.cols{grid-template-columns:1fr}}
+  .panelbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .panelbox h2{font-size:13px;margin:0 0 10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+  #log{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:var(--mut);
+    height:210px;overflow-y:auto;line-height:1.7}
+  #log .t-demote{color:var(--warn)} #log .t-kill{color:var(--bad)}
+  #log .t-promote{color:var(--ok)} #log .t-escalate{color:var(--accent2)}
+  #topo{width:100%;height:230px}
+  .simnote{font-size:11px;color:var(--dim);margin-top:6px}
+  .foot{margin-top:26px;font-size:13px;color:var(--dim)}
+  .foot a{color:var(--accent2);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="pn"><div class="pn-wrap">
+  <a class="pn-brand" href="/">Mohamed Kadri</a>
+  <span class="pn-links"><a href="/blog/agentic-sre-agent-fleets/">The article</a>
+  <a href="https://github.com/mkadri85/guardplane">guardplane</a><a href="/#contact">Contact</a></span>
+</div></div>
+
+<div class="wrap">
+  <h1>The Agent NOC Console <span class="badge" id="src-badge">loading library...</span></h1>
+  <p class="sub">Six AI agents doing their jobs. Watch each one against its <b>own baseline</b>:
+    inject drift into an agent and the burn-rate breaker demotes it to propose-only before it does damage.
+    Alarm on the derivative, not the level.</p>
+  <p class="honesty">This page runs the real <code>guardplane@0.2.0</code> library, unmodified, loaded from npm
+    (view source). The agents and their failures are simulated; the signal plane, burn-rate breaker,
+    confidence gate and kill switch ruling on them are the published package.</p>
+
+  <div class="toolbar">
+    <button id="pause-btn">Pause simulation</button>
+    <button class="danger" id="killall-btn">Trip global kill switch</button>
+    <button id="resetall-btn">Reset everything</button>
+    <span style="font-size:12px;color:var(--dim)" id="clock"></span>
+  </div>
+
+  <div class="grid" id="fleet"></div>
+
+  <div class="cols">
+    <div class="panelbox">
+      <h2>Event log</h2>
+      <div id="log"></div>
+    </div>
+    <div class="panelbox">
+      <h2>Dependency topology</h2>
+      <svg id="topo" viewBox="0 0 480 230"></svg>
+      <div class="simnote">Simulated panel: drift in an upstream agent degrades its dependents,
+        so correlated demotions appear downstream. Automatic cross-agent correlation is not in
+        guardplane yet - that is v0.3 territory, and the article explains why it matters.</div>
+    </div>
+  </div>
+
+  <p class="foot">Companion demo for
+    <a href="/blog/agentic-sre-agent-fleets/">Who Operates the Operators?</a> - built with
+    <a href="https://github.com/mkadri85/guardplane">guardplane</a> (MIT, zero dependencies).</p>
+</div>
+
+<script type="module">
+// ---- load the real library: CDN first, vendored byte-copy as fallback ----
+let gp, src;
+try {
+  gp = await import("https://cdn.jsdelivr.net/npm/guardplane@0.2.0/dist/index.js");
+  src = "jsDelivr (npm, unmodified dist)";
+} catch {
+  try {
+    gp = await import("https://esm.sh/guardplane@0.2.0");
+    src = "esm.sh (npm)";
+  } catch {
+    gp = await import("./vendor/index.js");
+    src = "vendored copy of the published dist";
+  }
+}
+document.getElementById("src-badge").textContent = "library: " + src;
+
+// ---- simulated fleet ----
+const AGENTS = [
+  { id: "kb-writer",      x: 70,  y: 40,  deps: [] },
+  { id: "support-triage", x: 240, y: 40,  deps: ["kb-writer"] },
+  { id: "billing-agent",  x: 410, y: 40,  deps: ["support-triage"] },
+  { id: "deploy-bot",     x: 70,  y: 165, deps: [] },
+  { id: "ops-remediator", x: 240, y: 165, deps: ["deploy-bot", "kb-writer"] },
+  { id: "qa-reviewer",    x: 410, y: 165, deps: ["ops-remediator"] },
+];
+const BASE_FAIL = 0.05, DRIFT_FAIL = 0.45, DEP_PENALTY = 0.18;
+const state = Object.fromEntries(AGENTS.map(a => [a.id, { drifted: false, history: [] }]));
+
+let simNow = 0;
+const now = () => simNow;
+
+const log = (cls, msg) => {
+  const el = document.getElementById("log");
+  const line = document.createElement("div");
+  line.className = cls;
+  line.textContent = `${(simNow / 1000).toFixed(0).padStart(4, " ")}s  ${msg}`;
+  el.prepend(line);
+  while (el.childElementCount > 120) el.lastChild.remove();
+};
+
+const plane = gp.controlPlane({
+  detectors: [],
+  actions: { reroute() {}, rollback() {}, pause() {} },
+  onEscalate: () => {},
+  now,
+  burnRate: {
+    // tuned for the demo's small windows: ~32 samples per window at 380ms
+    // ticks, so a 3x ratio needs a real signal, not two unlucky rolls
+    tripRatio: 3, currentWindowMs: 12_000, minCurrentSamples: 14,
+    minBaselineSamples: 25, absoluteCeiling: 0.6, cooldownMs: 20_000,
+  },
+  onDemote: ({ agentId, snapshot }) =>
+    log("t-demote", `DEMOTED ${agentId} -> propose-only: ${snapshot.reason}`),
+});
+plane.burnRate.onPromote((id) => log("t-promote", `PROMOTED ${id} -> active (recovered)`));
+plane.killSwitch.onTrip((scope) => log("t-kill", `KILL SWITCH tripped: ${scope}`));
+
+const handles = Object.fromEntries(AGENTS.map(a => [a.id, plane.wrap(a.id)]));
+
+function failProbability(a) {
+  let p = state[a.id].drifted ? DRIFT_FAIL : BASE_FAIL;
+  for (const d of a.deps) if (state[d].drifted) p += DEP_PENALTY; // simulated propagation
+  return Math.min(p, 0.9);
+}
+
+function tick() {
+  simNow += 750;
+  for (const a of AGENTS) {
+    const ok = Math.random() >= failProbability(a);
+    const obs = handles[a.id].observe({ type: "tool_call", ok, tool: "work" });
+    const h = state[a.id].history;
+    h.push(ok ? 0 : 1);
+    if (h.length > 60) h.shift();
+    if (!ok && obs.mode === "propose_only") {
+      // failure while demoted: contained as a proposal, no action fired
+    }
+  }
+  render();
+}
+
+// ---- rendering ----
+const fleetEl = document.getElementById("fleet");
+const cards = {};
+for (const a of AGENTS) {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `
+    <h3>${a.id} <span class="mode active">ACTIVE</span></h3>
+    <div class="stats">
+      <span>baseline<b class="b">-</b></span>
+      <span>current<b class="c">-</b></span>
+      <span>burn<b class="r">-</b></span>
+    </div>
+    <canvas class="spark" width="270" height="34"></canvas>
+    <div class="row">
+      <button class="small drift">Inject drift</button>
+      <button class="small reset-demo" style="display:none">Reset to active</button>
+      <button class="small danger kill">Kill</button>
+    </div>
+    <div class="reason"></div>`;
+  fleetEl.appendChild(card);
+  cards[a.id] = card;
+  card.querySelector(".drift").addEventListener("click", (e) => {
+    const st = state[a.id];
+    st.drifted = !st.drifted;
+    e.target.textContent = st.drifted ? "Stop drift" : "Inject drift";
+    log(st.drifted ? "t-demote" : "t-promote",
+        st.drifted ? `operator injected drift into ${a.id}` : `${a.id} drift source removed`);
+  });
+  card.querySelector(".reset-demo").addEventListener("click", () => plane.burnRate.reset(a.id));
+  card.querySelector(".kill").addEventListener("click", (e) => {
+    if (plane.killSwitch.isTripped(a.id)) { plane.killSwitch.reset(a.id); e.target.textContent = "Kill"; }
+    else { plane.killSwitch.trip(a.id); e.target.textContent = "Un-kill"; }
+  });
+}
+
+function render() {
+  document.getElementById("clock").textContent = `sim time ${(simNow / 1000).toFixed(0)}s`;
+  const fleet = plane.fleet();
+  for (const snap of fleet.agents) {
+    const card = cards[snap.agentId];
+    if (!card) continue;
+    const killed = snap.killed;
+    card.classList.toggle("demoted", snap.mode === "propose_only" && !killed);
+    card.classList.toggle("killed", killed);
+    const modeEl = card.querySelector(".mode");
+    if (killed) { modeEl.textContent = "KILLED"; modeEl.className = "mode killed"; }
+    else if (snap.mode === "propose_only") { modeEl.textContent = "PROPOSE-ONLY"; modeEl.className = "mode propose"; }
+    else { modeEl.textContent = "ACTIVE"; modeEl.className = "mode active"; }
+    card.querySelector(".b").textContent = (snap.baseline * 100).toFixed(1) + "%";
+    card.querySelector(".c").textContent = snap.current === null ? "-" : (snap.current * 100).toFixed(0) + "%";
+    card.querySelector(".r").textContent = snap.burnRate === null ? "-" : snap.burnRate.toFixed(1) + "x";
+    card.querySelector(".reason").textContent = snap.reason ?? "";
+    card.querySelector(".reset-demo").style.display = snap.mode === "propose_only" ? "" : "none";
+    drawSpark(card.querySelector("canvas"), state[snap.agentId].history);
+  }
+  drawTopo(fleet);
+}
+
+function drawSpark(cv, hist) {
+  const ctx = cv.getContext("2d");
+  ctx.clearRect(0, 0, cv.width, cv.height);
+  ctx.strokeStyle = "#243044"; ctx.beginPath();
+  ctx.moveTo(0, cv.height - 1); ctx.lineTo(cv.width, cv.height - 1); ctx.stroke();
+  const w = cv.width / 60;
+  hist.forEach((fail, i) => {
+    ctx.fillStyle = fail ? "#c96b4f" : "#2c5a7c";
+    const h = fail ? 26 : 10;
+    ctx.fillRect(i * w, cv.height - h, Math.max(1, w - 1.5), h);
+  });
+}
+
+function drawTopo(fleet) {
+  const svg = document.getElementById("topo");
+  const byId = Object.fromEntries(fleet.agents.map(s => [s.agentId, s]));
+  const color = (s) => !s ? "#243044" : s.killed ? "#c96b4f" : s.mode === "propose_only" ? "#c9a54f" : "#4fc98f";
+  let el = "";
+  for (const a of AGENTS) for (const d of a.deps) {
+    const b = AGENTS.find(x => x.id === d);
+    el += `<line x1="${b.x}" y1="${b.y}" x2="${a.x}" y2="${a.y}" stroke="#243044" stroke-width="1.5"/>`;
+  }
+  for (const a of AGENTS) {
+    const s = byId[a.id];
+    el += `<circle cx="${a.x}" cy="${a.y}" r="11" fill="${color(s)}" opacity="0.9"/>
+      <text x="${a.x}" y="${a.y + 26}" fill="#9aa6b8" font-size="10" text-anchor="middle">${a.id}</text>`;
+  }
+  svg.innerHTML = el;
+}
+
+// ---- controls ----
+let timer = setInterval(tick, 380);
+document.getElementById("pause-btn").addEventListener("click", (e) => {
+  if (timer) { clearInterval(timer); timer = null; e.target.textContent = "Resume simulation"; }
+  else { timer = setInterval(tick, 380); e.target.textContent = "Pause simulation"; }
+});
+document.getElementById("killall-btn").addEventListener("click", () => plane.killSwitch.trip());
+document.getElementById("resetall-btn").addEventListener("click", () => {
+  plane.killSwitch.reset();
+  for (const a of AGENTS) {
+    plane.killSwitch.reset(a.id);
+    plane.burnRate.reset(a.id);
+    state[a.id].drifted = false;
+    cards[a.id].querySelector(".drift").textContent = "Inject drift";
+    cards[a.id].querySelector(".kill").textContent = "Kill";
+  }
+  log("t-promote", "operator reset: fleet back to active");
+});
+log("t-promote", "Agent NOC online: 6 agents learning their baselines (~20s warm-up)");
+</script>
+</body>
+</html>
