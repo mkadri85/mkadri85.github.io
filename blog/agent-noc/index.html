@@ -124,7 +124,7 @@
   footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
     color:var(--dim);font-size:13px;text-align:center}
   figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
-  .demo-frame{width:100%;height:820px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
+  .demo-frame{width:100%;height:1250px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
   .refs{font-size:13.5px;color:var(--mut)}
   .refs li{margin-bottom:7px}
 </style>
@@ -258,7 +258,23 @@
 
   <p>Arguments about operations discipline are better experienced than read, so here is a small Agent NOC you can run. Six simulated agents work against their own learned baselines. Inject drift into one and watch the burn-rate breaker catch it - not because its failure rate is high in absolute terms, but because it is abnormal <em>for that agent</em> - and demote it to propose-only before it can act. The kill switch is yours too.</p>
 
-  <iframe class="demo-frame" src="/projects/agent-noc/" title="The Agent NOC Console - interactive demo" loading="lazy"></iframe>
+  <iframe class="demo-frame" id="noc-frame" src="/projects/agent-noc/" title="The Agent NOC Console - interactive demo" loading="lazy"></iframe>
+  <script>
+  (function(){
+    var f = document.getElementById("noc-frame");
+    function fit(){
+      try {
+        var h = f.contentDocument.documentElement.scrollHeight;
+        if (h > 400) f.style.height = (h + 24) + "px";
+      } catch (e) { /* cross-origin fallback: keep CSS height */ }
+    }
+    f.addEventListener("load", function(){
+      fit();
+      try { new ResizeObserver(fit).observe(f.contentDocument.body); } catch (e) {}
+      setTimeout(fit, 1500);
+    });
+  })();
+  </script>
   <p style="font-size:13.5px;color:var(--dim);margin-top:0">Cramped in the frame? <a href="/projects/agent-noc/">Open the full console</a>.</p>
 
   <p>The agents and their failures are simulated. The control plane ruling on them is not: the page imports <a href="https://github.com/mkadri85/guardplane">guardplane</a> 0.2, unmodified, from npm. The new release ships the burn-rate breaker this article argues for - each agent tracked against its own trailing baseline, with three guards learned from the SRE burn-rate practice <a href="#ref-12">[12]</a> and from watching real baselines get poisoned: learning freezes during an active incident, improvement is learned fast while degradation is learned slowly, and an absolute ceiling catches the slow boil that a ratio can never see. It is a few hundred lines, zero dependencies, MIT. The point is not the library. The point is that the discipline fits in a few hundred lines once you know what it is supposed to do - the knowing is the thirty years.</p>
