@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your AI Agents Need a NOC - Mohamed Kadri</title>
-<meta name="description" content="Telecom spent six years and industry-wide standards getting 4 percent of operators to Level 4 autonomy. AI agent teams are speed-running the same curve without the guardrails. What thirty years of NOC discipline transfers to agent fleets, what breaks, and the tooling gap nobody has closed.">
+<meta name="description" content="Why AI agents need a NOC before they need more autonomy: what telecom operations discipline transfers to agent fleets, and the assurance gap no tool has closed.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/agent-noc/">
 
@@ -48,6 +48,16 @@
   "dateModified": "2026-07-13",
   "mainEntityOfPage": "https://mkadri85.github.io/blog/agent-noc/"
 }
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is the first real safety gate before letting an AI agent act on its own?","acceptedAnswer":{"@type":"Answer","text":"Earned autonomy per situation-action pair: an agent starts propose-only, and a specific action graduates to auto-execute only after running cleanly under supervision enough times. Reversible plus seen-before equals allowed; everything novel drafts for a human."}},
+{"@type":"Question","name":"How do you detect that an AI agent is degrading before it causes damage?","acceptedAnswer":{"@type":"Answer","text":"Alarm on the derivative, not the level: track each agent's failure rate against its own trailing baseline and trip a breaker when the burn rate exceeds about 2x, with an absolute ceiling as a backstop for slow drift."}},
+{"@type":"Question","name":"What is the difference between AgentOps and AIOps?","acceptedAnswer":{"@type":"Answer","text":"AIOps applies AI to operating infrastructure; AgentOps is the discipline of operating AI agents themselves - autonomy levels, error budgets, escalation and kill switches."}},
+{"@type":"Question","name":"Do AI agents need a kill switch?","acceptedAnswer":{"@type":"Answer","text":"Yes, built before the incident, at per-agent and fleet scope, checked in the execution path so a tripped switch blocks the next action without a deploy. Test it on a schedule."}},
+{"@type":"Question","name":"How many autonomy levels should an AI agent system define?","acceptedAnswer":{"@type":"Answer","text":"Telecom's TM Forum framework uses six levels, L0 to L5. The count matters less than writing levels down and grading each agent honestly."}}
+]}
 </script>
 
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -160,6 +170,7 @@
       <li><a href="#gap">Your observability stack is an element manager from 1998</a></li>
       <li><a href="#console">Operate one right now</a></li>
       <li><a href="#manifesto">The Agent NOC, in one page</a></li>
+      <li><a href="#faq">Questions this article answers</a></li>
     </ol>
   </div>
 
@@ -294,6 +305,25 @@
   <p>The telecom industry is currently pointing agents at the NOC - every vendor keynote promises a dark NOC run by AI. That direction is real, and I work inside it. This article argued the reverse arrow: point the NOC at the agents. Whoever is operating your agent fleet next year - a platform team, an SRE group, or an agent supervising other agents - they will need the discipline either way. It exists. It is documented. Telecom already paid for it.</p>
 
   <p class="closing">Operate the fleet, <span class="grad">or the fleet operates you.</span></p>
+
+  <hr>
+
+  <h2 id="faq">Questions this article answers</h2>
+
+  <h3>What is the first real safety gate before letting an AI agent act on its own?</h3>
+  <p>Earned autonomy per (situation, action) pair: an agent starts propose-only, and a specific action graduates to auto-execute only after it has run cleanly under supervision enough times. Reversibility plus seen-before equals allowed; everything novel drafts for a human.</p>
+
+  <h3>How do you detect that an AI agent is degrading before it causes damage?</h3>
+  <p>Alarm on the derivative, not the level: track each agent's failure rate against its own trailing baseline and trip a breaker when the burn rate exceeds about 2x, with an absolute ceiling as a backstop for slow drift. Per-action checks catch bad calls; only baseline-relative signals catch a degrading agent.</p>
+
+  <h3>What is the difference between AgentOps and AIOps?</h3>
+  <p>AIOps applies AI to operating infrastructure; AgentOps is the discipline of operating AI agents themselves - their autonomy levels, error budgets, escalation and kill switches. This article argues AgentOps should import telecom NOC practice rather than reinvent it.</p>
+
+  <h3>Do AI agents need a kill switch?</h3>
+  <p>Yes, built before the incident, at two scopes: per-agent and fleet-wide, checked in the execution path so a tripped switch blocks the next action without a deploy. A gate you have never watched deny something is decoration, so test it on a schedule.</p>
+
+  <h3>How many autonomy levels should an AI agent system define?</h3>
+  <p>Telecom's TM Forum framework uses six (L0 manual to L5 fully autonomous), and after six years only about 4 percent of operators have certified L4 anywhere. The exact count matters less than writing levels down and grading each agent honestly - ungraded autonomy defaults to whatever the worst prompt allows.</p>
 
   <hr>
 
