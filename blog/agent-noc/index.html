@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your AI Agents Need a NOC - Mohamed Kadri</title>
+<meta name="description" content="Telecom spent six years and industry-wide standards getting 4 percent of operators to Level 4 autonomy. AI agent teams are speed-running the same curve without the guardrails. What thirty years of NOC discipline transfers to agent fleets, what breaks, and the tooling gap nobody has closed.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/agent-noc/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/agent-noc/">
+<meta property="og:title" content="Your AI Agents Need a NOC">
+<meta property="og:description" content="Telecom paid thirty years for the operations discipline AI agent teams are now reinventing badly. What transfers, what breaks, and the assurance gap nobody has closed.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/agent-noc-hero.png">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/agent-noc-hero.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1536">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="A network operations center whose wall of screens shows AI agents instead of network elements">
+<meta property="article:published_time" content="2026-07-13">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI operations">
+<meta property="article:tag" content="AgentOps">
+<meta property="article:tag" content="AI agent reliability">
+<meta property="article:tag" content="autonomous networks">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your AI Agents Need a NOC">
+<meta name="twitter:description" content="Telecom paid thirty years for the operations discipline AI agent teams are now reinventing badly. What transfers, what breaks, and the assurance gap nobody has closed.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/agent-noc-hero.png">
+<meta name="twitter:image:alt" content="A network operations center whose wall of screens shows AI agents instead of network elements">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Your AI Agents Need a NOC",
+  "description": "What thirty years of telecom network-operations discipline transfers to AI agent fleets, what breaks in translation, and the assurance-tooling gap nobody has closed.",
+  "image": "https://mkadri85.github.io/assets/agent-noc-hero.png",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-13",
+  "dateModified": "2026-07-13",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/agent-noc/"
+}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-size:13px;line-height:1.55;margin:0 0 20px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:14px;color:#dfe5ee}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:0 0 20px}
+  th{color:var(--mut);text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line)}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);color:#c6cedb;vertical-align:top}
+  .tblwrap{overflow-x:auto}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .demo-frame{width:100%;height:820px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+</style>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">AgentOps / AI agent reliability</div>
+  <h1>Your AI Agents Need a NOC</h1>
+  <p class="subtitle">Telecom spent six years and three standards bodies getting 4 percent of operators to Level 4 autonomy. AI agent teams are speed-running the same curve in months, without the guardrails. Here is what thirty years of network-operations discipline actually transfers.</p>
+  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 15 min read</div>
+
+  <figure class="hero">
+    <img src="/assets/agent-noc-hero.png" alt="A network operations center whose wall of screens shows AI agents instead of network elements" width="1536" height="1024">
+    <figcaption>The same room, a different fleet. Operations discipline does not care what it is operating.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#lesson">The lesson telecom already paid for</a></li>
+      <li><a href="#four-percent">Six years to reach 4 percent</a></li>
+      <li><a href="#adoption">Autonomy is an adoption problem</a></li>
+      <li><a href="#transfers">The Agent NOC: what transfers</a></li>
+      <li><a href="#breaks">What breaks in translation</a></li>
+      <li><a href="#gap">Your observability stack is an element manager from 1998</a></li>
+      <li><a href="#console">Operate one right now</a></li>
+      <li><a href="#manifesto">The Agent NOC, in one page</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">In April 2026, a coding agent deleted a software company's production database and its backups in about nine seconds <a href="#ref-1">[1]</a>. Nine months earlier, a different agent at a different company ignored an explicit code freeze and wiped a production database it had been told not to touch <a href="#ref-2">[2]</a>. Two incidents, two vendors, one shape: an agent took a real action on an incomplete view of the world, and nothing stood between its intent and the damage.</p>
+
+  <p>Gartner now predicts that more than 40 percent of agentic AI projects will be canceled by the end of 2027, and one of the three reasons it names is inadequate risk controls <a href="#ref-3">[3]</a>. The industry's answer so far has been better prompts, better evals, and better traces. Those are all upstream of the actual problem.</p>
+
+  <p>The actual problem is that we are putting autonomous systems into production without an operations discipline, and there is exactly one industry that has spent the last three decades building that discipline for systems too large for humans to babysit: telecom. I spent seventeen years inside it, in the network operations centers of Tier-1 carriers. The AI industry is speed-running a lesson telecom paid thirty years to learn.</p>
+
+  <h2 id="lesson">The lesson telecom already paid for</h2>
+
+  <p>A mobile network is a fleet of millions of semi-autonomous elements that fail constantly, individually and in cascades, around the clock. Nobody can watch them all. So telecom built the NOC: a discipline, not a room. Alarms are collected, deduplicated and correlated so ten thousand sympathetic alerts collapse into one actionable signal. Root cause is traced through the network topology, because the element screaming loudest is rarely the one that is broken. Every service has an SLA and every SLA has consequences. Fixes are codified in runbooks, and runbooks that prove themselves are automated. Changes happen in maintenance windows; freezes are enforced by tooling, not by memos.</p>
+
+  <p>None of that was invented for elegance. Every rule is scar tissue from an outage.</p>
+
+  <p>When the industry decided to push past human-scale operations altogether, it did something the AI world has not done yet: it wrote down what autonomy means. TM Forum's Autonomous Networks framework (IG1252) defines six levels, L0 to L5, from manual operations to full closed-loop autonomy, and an evaluation methodology for grading real systems against them <a href="#ref-4">[4]</a>. 3GPP and ETSI aligned behind the same direction <a href="#ref-5">[5]</a>. Vendors built product lines around climbing those levels. This is the most systematic attempt any industry has made at answering the exact question every AI team now faces: <strong>how much do you let the machine do on its own, and how do you prove it earned that?</strong></p>
+
+  <h2 id="four-percent">Six years to reach 4 percent</h2>
+
+  <p>Here is the number that should calibrate everyone building agents. After six-plus years of that industry-wide, standards-backed, executive-sponsored effort, TM Forum's own survey of operators found roughly 21 percent had reached Level 3 or above overall, and only about 4 percent had reached Level 4 anywhere in their operations <a href="#ref-6">[6]</a>. Target dates for broad L4 adoption quietly slipped from 2025 to 2030 <a href="#ref-7">[7]</a>. A recent reference-architecture paper on AI agents for autonomous networks describes the industry consensus bluntly: copilot-style deployments hit an autonomy ceiling around L3, where a human still approves anything that matters <a href="#ref-8">[8]</a>.</p>
+
+  <p>I lived that climb. On a Tier-1 operator account I led the L2-to-L3 transition for network operations: an AIOps platform with ML anomaly detection and topology-based root-cause analysis that eventually automated 75 percent of Level-1 incident handling at a 99.6 percent SLA. Getting there took years, not sprints, and the gating factor was never the models. It was proving, incident type by incident type, that the automation could be trusted with the next increment of authority.</p>
+
+  <div class="callout">
+    <p><strong>The calibration:</strong> a trillion-dollar industry with standardized autonomy levels, certification programs and purpose-built vendor stacks needed six years to get 4 percent of its members to Level 4. An agent startup claiming full autonomy in month three has not discovered a shortcut. It has skipped the part where trust gets built - and the cancellation statistics suggest the bill arrives on schedule.</p>
+  </div>
+
+  <h2 id="adoption">Autonomy is an adoption problem</h2>
+
+  <p>Why did telecom's autonomy targets slip five years? Not capability. The uncomfortable answer is that autonomy is not a technology problem. It is an adoption problem, and adoption science called this decades ago.</p>
+
+  <p>The unified theory of technology acceptance (UTAUT) models why people actually use a new system: performance expectancy, effort expectancy, social influence, facilitating conditions <a href="#ref-9">[9]</a>. Rogers' diffusion-of-innovations theory adds the attributes of the technology itself: relative advantage, compatibility, complexity, trialability, observability <a href="#ref-10">[10]</a>. And across the empirical literature, one variable keeps dominating high-stakes contexts: <strong>trust</strong>. I spent my MBA research measuring exactly this, reviewing thirty-eight studies of why citizens in developing countries refuse e-government services that work perfectly well; trust in the institution and trust in the technology beat every other factor <a href="#ref-11">[11]</a>.</p>
+
+  <p>Now read the agent-autonomy problem through that lens. Performance expectancy: will the agent actually resolve the incident? Effort expectancy: how much babysitting does it need? Social influence: did anyone else's agent just delete production? Facilitating conditions: is there tooling to see what it is doing? And trust, the master variable: has this specific agent, on this specific class of action, earned it?</p>
+
+  <p>Rogers' five factors read like an agent-rollout playbook written thirty years early. Trialability is propose-only mode. Observability is the trace and the signal plane. Complexity is the integration burden. Which means the NOC disciplines that telecom evolved are not bureaucracy. They are <strong>trust-manufacturing machinery</strong>: graduated autonomy levels, earned per scenario, with evidence. That is what an operations discipline is for.</p>
+
+  <h2 id="transfers">The Agent NOC: what transfers</h2>
+
+  <p>Call it the Agent NOC: the same operations discipline, pointed at a fleet of AI agents instead of a fleet of network elements. Most of it maps one to one.</p>
+
+  <div class="tblwrap"><table>
+    <tr><th>Telecom NOC</th><th>Agent fleet equivalent</th></tr>
+    <tr><td>Alarms from network elements</td><td>Agent events: tool errors, token spend spikes, low-confidence outputs, guardrail hits</td></tr>
+    <tr><td>Alarm correlation and deduplication</td><td>Behavioral pattern analysis: "agent A degrades whenever upstream agent B touches finance data"</td></tr>
+    <tr><td>Topology-based root cause</td><td>Root cause traced through the agent dependency graph: agent, tool, API, downstream agent</td></tr>
+    <tr><td>Per-service SLA and error budget</td><td>Per-agent semantic SLOs: task completion rate, factual accuracy, guardrail adherence - with a budget</td></tr>
+    <tr><td>Burn-rate alerting on the error budget</td><td>Baseline-relative burn rate per agent: alarm on the derivative, not the level <a href="#ref-12">[12]</a></td></tr>
+    <tr><td>Runbook graduation: manual, then supervised, then automated</td><td>Earned autonomy per (situation, action) pair - what the autogenic-networks literature calls solution banking <a href="#ref-13">[13]</a></td></tr>
+    <tr><td>Tier 1 / Tier 2 / Tier 3 escalation</td><td>Agent shepherds (monitor and apply runbooks), agent mechanics (diagnose and re-prompt), model engineers (retrain and rebuild)</td></tr>
+    <tr><td>Maintenance windows and change freezes, enforced in tooling</td><td>The thing whose absence deleted a production database during a declared freeze <a href="#ref-2">[2]</a></td></tr>
+    <tr><td>Service-level monitoring, not element-level</td><td>Watch the outcome the user experiences, not the HTTP 200 the agent returned</td></tr>
+  </table></div>
+
+  <h3>Runbook graduation is the whole game</h3>
+
+  <p>In a NOC, no automation is born trusted. A new incident type is handled by a human following a runbook. When the runbook proves stable, it becomes a script a human triggers. When the script proves stable across enough executions, it earns the right to trigger itself - for that incident type only. Autonomy attaches to the (situation, action) pair, never to the system as a whole.</p>
+
+  <p>The research frontier has now formalized the same idea for AI-driven management. A 2026 paper from Nokia Bell Labs and the University of Ottawa, accepted in IEEE Network, proposes "autogenic" network management - systems that generate their own automation - and its practical deployment mechanism is exactly runbook graduation: validated solutions from human-supervised agents accumulate in a trusted repository, recurring scenarios are handled autonomously from proven patterns, novel ones still get a human. They call it solution banking <a href="#ref-13">[13]</a>. A companion line of work, the Hierarchical Agent-native Network Architecture (HANA), organizes the operating side: an orchestrator over specialized executive agents with a shared memory, validated on a live 5G core with an 86 percent MTTR reduction reported <a href="#ref-14">[14]</a>.</p>
+
+  <p>And this is not just theory. Huawei and China Mobile report a commercially deployed Level-4 "Dark NOC" where intelligent agents run network operations: fault-diagnosis automation lifted from 60 to 90 percent, mean time to repair down 30 percent, and - the detail I find most telling - hallucination rates in the operations assistant driven down to 3 percent before the system was allowed to matter, measured against a defined indicator framework <a href="#ref-15">[15]</a>. Huawei's operations platform ships with more than 20 scenario agents whose risk-identification and diagnosis accuracy figures are published up front, as claimed capability boundaries, before autonomy is granted <a href="#ref-16">[16]</a>. Treat vendor numbers as vendor numbers - but notice the pattern: <strong>accuracy disclosed first, authority granted second.</strong> That ordering is the discipline.</p>
+
+  <h3>Watch the service, not the element</h3>
+
+  <p>The subtlest transfer is the one telecom fought hardest for. Element monitoring says the base station is up. Service monitoring says the customer's call still dropped. Telecom formalized the difference as a three-layer indicator hierarchy - network KPIs feeding service-quality KQIs feeding customer-experience indices <a href="#ref-17">[17]</a> - because green elements and a broken service is the default failure mode of any complex system.</p>
+
+  <p>Agent fleets have the identical problem, and it is the most dangerous one they have: the agent that returns HTTP 200, on time, error-free - and approved a transaction it should have refused. Latency dashboards will never catch it. Only service-level judgment does: task-level correctness, checked downstream of the agent, against what the outcome was supposed to be.</p>
+
+  <h2 id="breaks">What breaks in translation</h2>
+
+  <p>An honest mapping names its failures. Two things do not transfer, and they are both fundamental.</p>
+
+  <p><strong>Determinism.</strong> A microwave link fails the same way every time; that is why runbooks converge. An LLM agent is non-deterministic and its logic is not fixed: a model update can subtly shift behavior across an entire fleet without a single error being thrown. Classic root-cause analysis assumes a stable system with discrete faults. Against gradual reasoning drift there is no root cause to find - which is why agent operations must alarm on distributions and trends, not on events. The hidden-technical-debt literature warned about exactly this property of ML systems a decade ago: change anything, and you change everything <a href="#ref-18">[18]</a>.</p>
+
+  <p><strong>Fixed topology.</strong> A NOC's correlation power comes from knowing the network graph. In a multi-agent system the collaboration topology is partly emergent - it exists per task, assembled at runtime. Pathologies can arise from the interaction pattern of individually healthy agents, and a static dependency map cannot see them. This is a genuinely open problem, and anyone selling you a finished answer to it is early <a href="#ref-19">[19]</a>.</p>
+
+  <p>Both breaks point the same direction: the NOC disciplines that transfer are the ones about <strong>authority and evidence</strong> - who may act, on what, with what proof. The ones that need reinvention are the ones about <strong>causality</strong>. Import the former today; research the latter honestly.</p>
+
+  <h2 id="gap">Your observability stack is an element manager from 1998</h2>
+
+  <p>The AgentOps tooling wave - LangSmith, Langfuse, Arize, AgentOps, Weave and their peers - has built genuinely good tracing: step-level replay, token accounting, eval pipelines. OpenTelemetry now has GenAI semantic conventions for agent spans <a href="#ref-20">[20]</a>. In telecom terms, this is exactly where network management stood in the late 1990s: excellent element managers, no service assurance. Per-agent debuggers, no fleet operations.</p>
+
+  <p>Held against NOC discipline, five gaps are still open across the category:</p>
+
+  <ol>
+    <li><strong>No correlation layer.</strong> Traces are per-agent silos. Nothing collapses a cascade across the agent dependency graph into one incident with one probable cause.</li>
+    <li><strong>No service-level judgment.</strong> The silent wrong-action failure - clean trace, harmful outcome - is invisible to every latency and error metric on the dashboard.</li>
+    <li><strong>No enforced budgets.</strong> Semantic SLOs and per-agent error budgets exist in blog posts, not in enforcement paths that demote an agent when the budget burns.</li>
+    <li><strong>No maintenance windows.</strong> Change freezes for agents are policy documents. The Replit incident is what a policy document looks like when tested by an autonomous system <a href="#ref-2">[2]</a>.</li>
+    <li><strong>No earned autonomy.</strong> Tools observe agents; almost none holds the authority ladder - propose-only to supervised to autonomous, per scenario, with automatic demotion on evidence.</li>
+  </ol>
+
+  <p>Gartner's market framing agrees from the demand side: it projects "guardian agents" - AI that supervises AI - to reach 10 to 15 percent of the agentic AI market by 2030 <a href="#ref-21">[21]</a>. The assurance layer is not a nice-to-have. It is the missing product category.</p>
+
+  <h2 id="console">Operate one right now</h2>
+
+  <p>Arguments about operations discipline are better experienced than read, so here is a small Agent NOC you can run. Six simulated agents work against their own learned baselines. Inject drift into one and watch the burn-rate breaker catch it - not because its failure rate is high in absolute terms, but because it is abnormal <em>for that agent</em> - and demote it to propose-only before it can act. The kill switch is yours too.</p>
+
+  <iframe class="demo-frame" src="/projects/agent-noc/" title="The Agent NOC Console - interactive demo" loading="lazy"></iframe>
+  <p style="font-size:13.5px;color:var(--dim);margin-top:0">Cramped in the frame? <a href="/projects/agent-noc/">Open the full console</a>.</p>
+
+  <p>The agents and their failures are simulated. The control plane ruling on them is not: the page imports <a href="https://github.com/mkadri85/guardplane">guardplane</a> 0.2, unmodified, from npm. The new release ships the burn-rate breaker this article argues for - each agent tracked against its own trailing baseline, with three guards learned from the SRE burn-rate practice <a href="#ref-12">[12]</a> and from watching real baselines get poisoned: learning freezes during an active incident, improvement is learned fast while degradation is learned slowly, and an absolute ceiling catches the slow boil that a ratio can never see. It is a few hundred lines, zero dependencies, MIT. The point is not the library. The point is that the discipline fits in a few hundred lines once you know what it is supposed to do - the knowing is the thirty years.</p>
+
+  <h2 id="manifesto">The Agent NOC, in one page</h2>
+
+  <ul>
+    <li><strong>Define autonomy levels and grade yourself honestly.</strong> Telecom needed L0-L5 in writing before it could climb. If you cannot say what level each agent operates at, it operates at whatever level the worst prompt allows <a href="#ref-4">[4]</a>.</li>
+    <li><strong>Autonomy is earned per (situation, action) pair.</strong> Never granted globally. Runbook graduation, solution banking, propose-only first <a href="#ref-13">[13]</a>.</li>
+    <li><strong>Alarm on the derivative.</strong> Baselines per agent, burn rates against the budget, demotion as an automatic consequence - not a meeting <a href="#ref-12">[12]</a>.</li>
+    <li><strong>Watch the service, not the element.</strong> Task-level correctness downstream of the agent. The 200 OK is not the outcome <a href="#ref-17">[17]</a>.</li>
+    <li><strong>Enforce windows and freezes in tooling.</strong> An agent cannot violate a freeze that is checked in its execution path <a href="#ref-2">[2]</a>.</li>
+    <li><strong>Build the off switch before the incident.</strong> Global and per-agent, tested regularly - a gate you have never seen deny anything is decoration.</li>
+    <li><strong>Staff the tiers.</strong> Shepherds, mechanics, model engineers. The room is optional; the escalation ladder is not.</li>
+  </ul>
+
+  <p>The telecom industry is currently pointing agents at the NOC - every vendor keynote promises a dark NOC run by AI. That direction is real, and I work inside it. This article argued the reverse arrow: point the NOC at the agents. Whoever is operating your agent fleet next year - a platform team, an SRE group, or an agent supervising other agents - they will need the discipline either way. It exists. It is documented. Telecom already paid for it.</p>
+
+  <p class="closing">Operate the fleet, <span class="grad">or the fleet operates you.</span></p>
+
+  <hr>
+
+  <h2 id="refs">References</h2>
+  <ol class="refs">
+    <li id="ref-1">The Register: <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/">Cursor/Opus agent deletes PocketOS production database and backups</a> (Apr 2026). Also covered by <a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane">Fast Company</a>.</li>
+    <li id="ref-2">The Register: <a href="https://www.theregister.com/2025/07/21/replit_saastr_vibe_coding_incident/">Replit AI agent deletes SaaStr production database during an explicit code freeze</a> (Jul 2025).</li>
+    <li id="ref-3">Gartner press release: <a href="https://www.gartner.com/en/newsroom/press-releases/2025-06-25-gartner-predicts-over-40-percent-of-agentic-ai-projects-will-be-canceled-by-end-of-2027">Over 40 percent of agentic AI projects will be canceled by end of 2027</a> (Jun 2025).</li>
+    <li id="ref-4">TM Forum: <a href="https://www.tmforum.org/resources/introductory-guide/ig1252-autonomous-network-levels-evaluation-methodology-v1-2-0/">IG1252 Autonomous Network Levels Evaluation Methodology</a>; <a href="https://www.tmforum.org/resources/introductory-guide/ig1392-autonomous-networks-levels-assessment-and-certification-whitepaper-v2-0-0/">IG1392 AN Levels Assessment and Certification</a>.</li>
+    <li id="ref-5">ETSI: <a href="https://www.etsi.org/deliver/etsi_gr/ENI/001_099/051/04.01.01_60/gr_ENI051v040101p.pdf">GR ENI 051: AI Agents based Next-generation Network Slicing</a> (2025); 3GPP TR 22.870 6G study.</li>
+    <li id="ref-6">Fierce Network on TM Forum survey data: <a href="https://www.fierce-network.com/cloud/telcos-hit-level-4-autonomous-network-milestone-says-tm-forum">Telcos hit Level 4 autonomous network milestone</a> (2025).</li>
+    <li id="ref-7">RCR Wireless: <a href="https://www.rcrwireless.com/20250807/automation/the-race-to-level-4">The race to Level 4</a> (Aug 2025); TM Forum: <a href="https://info.tmforum.org/rs/021-WLD-815/images/TM_Forum_-_A_regional_guide_to_autonomous_networks_progress.pdf">A regional guide to autonomous networks progress</a> (PDF).</li>
+    <li id="ref-8">arXiv: <a href="https://arxiv.org/abs/2509.08312">Leveraging AI Agents for Autonomous Networks: A Reference Architecture</a> (2025).</li>
+    <li id="ref-9">Venkatesh, Morris, Davis and Davis: <a href="https://doi.org/10.2307/30036540">User Acceptance of Information Technology: Toward a Unified View</a>, MIS Quarterly 27(3), 2003.</li>
+    <li id="ref-10">Rogers, E. M.: Diffusion of Innovations, 5th ed., Free Press, 2003.</li>
+    <li id="ref-11">Kadri, M.: <a href="https://mkadri85.github.io/papers/kadri-2018-egovernment-adoption.pdf">Factors affecting electronic government adoption and acceptance in developing countries</a>, MBA thesis, ESLSCA Business School, 2018.</li>
+    <li id="ref-12">Google SRE Workbook, ch. 5: <a href="https://sre.google/workbook/alerting-on-slos/">Alerting on SLOs (multi-window, multi-burn-rate)</a>.</li>
+    <li id="ref-13">Djukic, Acharya, Kennouche and Kantarci: <a href="https://arxiv.org/abs/2607.06786">From Agentic to Autogenic Network Management for AI-Native 6G and Beyond: A Standards Perspective</a>, accepted in IEEE Network (2026).</li>
+    <li id="ref-14">arXiv: <a href="https://arxiv.org/abs/2605.20608">From Automated to Autonomous: Hierarchical Agent-native Network Architecture (HANA)</a> (2026).</li>
+    <li id="ref-15">TM Forum case study: <a href="https://inform.tmforum.org/research-and-analysis/case-studies/china-mobile-achieves-level-4-an-in-network-operation-center-with-intelligent-agents">China Mobile achieves Level 4 AN in network operation center with intelligent agents</a>; Huawei: <a href="https://www.huawei.com/en/news/2025/6/dtw-dark-noc-award">Dark NOC TM Forum Excellence Award</a> (2025). Vendor-reported figures.</li>
+    <li id="ref-16">Huawei: <a href="https://www.huawei.com/en/news/2026/3/mwc-ai-solution">AUTINOps AI-Native intelligent operations launch</a> (MWC 2026). Vendor-reported figures.</li>
+    <li id="ref-17">Huawei SmartCare CEM: <a href="https://carrier.huawei.com/en/trends-and-insights/CEM">the CEI-KQI-KPI indicator hierarchy</a>.</li>
+    <li id="ref-18">Sculley et al.: <a href="https://papers.nips.cc/paper/2015/hash/86df7dcfd896fcaf2674f757a2463eba-Abstract.html">Hidden Technical Debt in Machine Learning Systems</a>, NeurIPS 2015.</li>
+    <li id="ref-19">Han et al.: <a href="https://arxiv.org/abs/2402.03578">LLM Multi-Agent Systems: Challenges and Open Problems</a> (2024).</li>
+    <li id="ref-20">OpenTelemetry: <a href="https://opentelemetry.io/blog/2025/ai-agent-observability/">AI agent observability and GenAI semantic conventions</a> (2025).</li>
+    <li id="ref-21">Gartner press release: <a href="https://www.gartner.com/en/newsroom/press-releases/2025-06-11-gartner-predicts-that-guardian-agents-will-capture-10-15-percent-of-the-agentic-ai-market-by-2030">Guardian agents will capture 10-15 percent of the agentic AI market by 2030</a> (Jun 2025).</li>
+  </ol>
+
+  <hr>
+
+  <p>Part of a series on operating AI in production: <a href="/blog/agentic-sre-agent-fleets/">Who Operates the Operators?</a> introduced the incident loop for agent fleets; <a href="/blog/shared-ai-memory/">One Repository, One Shared Brain</a> covered the memory layer. The runnable companion to all three is <a href="https://github.com/mkadri85/guardplane">guardplane</a>.</p>
+
+</article>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>
