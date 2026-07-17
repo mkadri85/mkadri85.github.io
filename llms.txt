@@ -20,6 +20,9 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 
 - [Relay Marketing Console walkthrough](https://mkadri85.github.io/projects/relay-marketing-console/): architecture and flow walkthroughs of a production marketing platform (WhatsApp campaign engine, AI chat inbox, creative studio, BigQuery ETL) on Google Cloud Run
 
+- [The Loop Meets the Microwave Network](https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/): what an agentic closed loop must reason about on microwave backhaul - fade-vs-hardware diagnosis, blast-radius gates, QoS-aware reroutes, verify contracts
+- [MW loop live console](https://mkadri85.github.io/projects/mw-loop/): open multi-vendor microwave region simulation operated by a glass-box agentic loop (MIT)
+
 ## Open source
 
 - [guardplane on GitHub](https://github.com/mkadri85/guardplane): confidence-gating library for autonomous-agent safety (TypeScript, zero dependencies, MIT)
