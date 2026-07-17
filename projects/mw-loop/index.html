@@ -75,7 +75,7 @@
     <a href="/" target="_top">mkadri85.github.io</a>
   </nav>
 </header>
-<div class="note"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic, running live in your browser — no data leaves this page. <b>"Agentic"</b> here means software that closes the loop itself (observes, decides, acts, verifies) — not an SNMP agent. Simplifications, stated up front: ATPC assumed disabled, multipath/ducting and wet-radome effects out of scope — the article covers how each would change the runbook.</div>
+<div class="note"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic, running live in your browser — no data leaves this page. <b>"Agentic"</b> here means software that closes the loop itself (observes, decides, acts, verifies) — not an SNMP agent. Simplifications, stated up front: ATPC is modeled on traditional bands (TX rises to hold RSL until saturation; E-band runs without); multipath/ducting and wet-radome effects remain out of scope — the article covers how each would change the runbook.</div>
 
 <div class="wrap">
   <div>
@@ -105,7 +105,7 @@
         <button id="btnPause">Pause</button>
       </div>
       <div class="kpis">
-        <div class="kpi"><div class="v" id="kTick">0</div><div class="l">elapsed (sim)</div></div>
+        <div class="kpi"><div class="v" id="kTick">06:00</div><div class="l">sim clock (diurnal load)</div></div>
         <div class="kpi"><div class="v" id="kAlarms">0</div><div class="l">alarms emitted</div></div>
         <div class="kpi"><div class="v" id="kFind">0</div><div class="l">open findings</div></div>
         <div class="kpi"><div class="v" id="kIso">0</div><div class="l">sites isolated</div></div>
@@ -273,7 +273,7 @@
       if(orch.mode!=="active") light("L6");
       renderFindings(); renderProps(); renderLog(); renderInspector();
     }
-    $("kTick").textContent = sim.tick;
+    $("kTick").textContent = sim.clockHHMM();
     $("kAlarms").textContent = sim.alarms.length;
     $("kFind").textContent = findings.length;
     const isoSet = new Set();
@@ -314,12 +314,12 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
         <div style="background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px">
           <div style="font-size:11px;color:var(--dim)">A&rarr;B direction</div>
-          RSL <b style="color:var(--txt)">${p.ab.rsl} dBm</b> &middot; SNR ${p.ab.snr} dB<br>
+          RSL <b style="color:var(--txt)">${p.ab.rsl} dBm</b> &middot; SNR ${p.ab.snr} dB${p.atpc?` &middot; TX +${p.ab.txBoostDb} dB`:``}<br>
           ACM ${ACMn[p.ab.acm]} &middot; ES ${p.ab.es} &middot; ${p.ab.up?'<span style="color:var(--ok)">UP</span>':'<span style="color:var(--bad)">DOWN</span>'}
         </div>
         <div style="background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px">
           <div style="font-size:11px;color:var(--dim)">B&rarr;A direction</div>
-          RSL <b style="color:var(--txt)">${p.ba.rsl} dBm</b> &middot; SNR ${p.ba.snr} dB<br>
+          RSL <b style="color:var(--txt)">${p.ba.rsl} dBm</b> &middot; SNR ${p.ba.snr} dB${p.atpc?` &middot; TX +${p.ba.txBoostDb} dB`:``}<br>
           ACM ${ACMn[p.ba.acm]} &middot; ES ${p.ba.es} &middot; ${p.ba.up?'<span style="color:var(--ok)">UP</span>':'<span style="color:var(--bad)">DOWN</span>'}
         </div>
       </div>

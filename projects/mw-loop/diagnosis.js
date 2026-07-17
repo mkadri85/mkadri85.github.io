@@ -70,6 +70,12 @@
     const asym = Math.abs(dropAb - dropBa);
     const snrAb = p.ab.snr, snrBa = p.ba.snr;
 
+    if (p.atpc) {
+      const nearMax = Math.max(p.ab.txBoostDb, p.ba.txBoostDb) >= p.atpcRangeDb * 0.8;
+      say("ATPC / TX power", `ab TX +${p.ab.txBoostDb} dB, ba TX +${p.ba.txBoostDb} dB (range ${p.atpcRangeDb} dB)`,
+          nearMax ? "ATPC near saturation - a fade is being absorbed; RSL will fall next (early warning)" :
+          (p.ab.txBoostDb > 2 || p.ba.txBoostDb > 2) ? "ATPC actively compensating - path attenuation above clear-sky" : "TX at nominal - no compensation in play");
+    }
     say("probeLink RSL", `ab ${p.ab.rsl} dBm (drop ${dropAb.toFixed(1)}, ES ${p.ab.es}), ba ${p.ba.rsl} dBm (drop ${dropBa.toFixed(1)}, ES ${p.ba.es})`,
         worstDrop < THRESH.rslDropDb ? "no meaningful RSL degradation" :
         asym >= THRESH.rslAsymmetryDb ? "ASYMMETRIC drop -> points at hardware (H2)" : "symmetric drop -> points at path/environment (H1)");

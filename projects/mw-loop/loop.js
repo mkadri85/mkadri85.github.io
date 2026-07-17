@@ -211,6 +211,11 @@
       this.executed.push({ ...p, contract, verified: null, approvedByHuman: true });
       this.note("action", `${ACTIONS[p.plan.action].label} on ${p.plan.target} - EXECUTED after human approval`);
       if (p.plan.also) this.note("action", `${ACTIONS[p.plan.also.action].label} on ${p.plan.also.target} - EXECUTED (companion carries the evidence pack)`);
+      if (p.plan.action === "ACTIVATE_STANDBY") {
+        this.sim.computeRouting();
+        const t = this.sim.probeLink(p.plan.target);
+        this.note("action", `${t.serviceCount} services re-homed over ${p.plan.target} (now ${t.utilizationPct}% utilized, priority protected)`);
+      }
       return { ok: true };
     }
 

@@ -103,10 +103,11 @@
       standby: false,
       nominalRsl, fadeMargin, nominalSnr: 42,
       active: true, // standby links flipped to false right after build
+      atpc: band !== "80GHz", atpcRangeDb: band === "80GHz" ? 0 : 15, txNominalDbm: 20,
       // per-direction state: dir "ab" = received at b, dir "ba" = received at a
       dirs: {
-        ab: { rsl: nominalRsl, snr: 42, acm: 5, es: 0, ses: 0, up: true },
-        ba: { rsl: nominalRsl, snr: 42, acm: 5, es: 0, ses: 0, up: true },
+        ab: { rsl: nominalRsl, snr: 42, acm: 5, es: 0, ses: 0, up: true, txBoostDb: 0 },
+        ba: { rsl: nominalRsl, snr: 42, acm: 5, es: 0, ses: 0, up: true, txBoostDb: 0 },
       },
       faults: {}, // set by injectors
     };
@@ -169,12 +170,20 @@
       this.sites = t.sites; this.links = t.links;
       seedServices(this.sites);
       this.cells = []; this.tick = 0; this.alarms = []; this.events = [];
+      this.startMinutes = 6 * 60; // sim clock starts 06:00; 1 tick = 3 sim-minutes
       this.changeLog = [
         { tick: -600, obj: "B-H1~B-T6", txt: "ACM profile updated during MW window" },
       ];
       this._noiseSeed = 42;
     }
     rnd() { this._noiseSeed = (this._noiseSeed * 16807) % 2147483647; return this._noiseSeed / 2147483647; }
+    clockMinutes() { return (this.startMinutes + this.tick * 3) % 1440; }
+    clockHHMM() { const m = this.clockMinutes(); return String(Math.floor(m/60)).padStart(2,"0") + ":" + String(m%60).padStart(2,"0"); }
+    // diurnal load: quiet nights, evening busy hour peaking ~20:30
+    trafficFactor() {
+      const h = this.clockMinutes() / 60;
+      return +(0.45 + 0.55 * Math.exp(-Math.pow((h - 20.5 + (h < 8 ? 24 : 0)) / 5.5, 2))).toFixed(2);
+    }
 
     // route every tail's services toward its POP over active, up links (BFS
     // parent tree). Fills l.carried = {gbps, priorityGbps, services[]} per link.
@@ -198,9 +207,10 @@
         let cur = st.id;
         while (parent[cur]) {
           const hop = parent[cur];
+          const f = this.trafficFactor();
           for (const svc of st.services) {
-            hop.via.carried.gbps += svc.gbps;
-            hop.via.carried.priorityGbps += svc.priorityGbps;
+            hop.via.carried.gbps += svc.gbps * f;
+            hop.via.carried.priorityGbps += svc.priorityGbps; // priority is committed, not diurnal
             hop.via.carried.services.push(svc.name);
           }
           cur = hop.to;
@@ -266,33 +276,40 @@
         const rainDb = rainAttenuationDb(l, this.sites, this.cells);
         for (const dk of ["ab", "ba"]) {
           const d = l.dirs[dk];
-          let rsl = l.nominalRsl - rainDb + (this.rnd() - 0.5) * 1.2; // both dirs share rain
-          let snr = l.nominalSnr - rainDb + (this.rnd() - 0.5) * 1.0;
+          // total path attenuation beyond clear-sky for this direction
+          let attDb = rainDb; // both dirs share rain
           if (l.faults.odu && l.faults.odu.dir === dk) {
             const f = l.faults.odu;
             if (f.progressive && f.appliedDb < f.db) f.appliedDb += 0.15; // slow drift
-            rsl -= f.appliedDb; snr -= f.appliedDb * 0.8;
+            attDb += f.appliedDb;
           }
-          if (l.faults.odu2 && l.faults.odu2.dir === dk) {
-            rsl -= l.faults.odu2.appliedDb; snr -= l.faults.odu2.appliedDb * 0.8;
-          }
-          if (l.faults.config) { rsl -= l.faults.config.db; snr -= l.faults.config.db; }
+          if (l.faults.odu2 && l.faults.odu2.dir === dk) attDb += l.faults.odu2.appliedDb;
+          if (l.faults.config) attDb += l.faults.config.db;
+          // ATPC: far-end TX rises to hold target RSL until it saturates - the
+          // NMS sees TX power climb FIRST; RSL only falls once ATPC is
+          // exhausted (what a transmission engineer expects to see)
+          const boost = l.atpc ? Math.min(attDb, l.atpcRangeDb) : 0;
+          d.txBoostDb = +boost.toFixed(1);
+          const residual = attDb - boost;
+          let rsl = l.nominalRsl - residual + (this.rnd() - 0.5) * 1.2;
+          let snr = l.nominalSnr - residual + (this.rnd() - 0.5) * 1.0;
           if (l.faults.interference && l.faults.interference.dir === dk) {
             snr -= l.faults.interference.snrLossDb; // RSL untouched: the signature
           }
           d.rsl = +rsl.toFixed(1); d.snr = +snr.toFixed(1);
           // ACM selection: highest index whose snrMin fits
-          let acm = 0; for (let i = ACM.length - 1; i >= 0; i--) { if (snr >= ACM[i].snrMin) { acm = i; break; } }
+          let acm = 0; for (let i = ACM.length - 1; i >= 0; i--) { if (d.snr >= ACM[i].snrMin) { acm = i; break; } }
           const prevAcm = d.acm; d.acm = acm;
-          const margin = rsl - (l.nominalRsl - l.fadeMargin);
-          const wasUp = d.up; d.up = margin > 0 && snr > ACM[0].snrMin - 3;
-          if (!d.up) { d.ses++; } else if (snr < ACM[1].snrMin) { d.es++; }
+          const margin = d.rsl - (l.nominalRsl - l.fadeMargin);
+          const wasUp = d.up; d.up = margin > 0 && d.snr > ACM[0].snrMin - 3;
+          if (!d.up) { d.ses++; } else if (d.snr < ACM[1].snrMin) { d.es++; }
           // alarms in island format
           const F = FMT[l.island] || FMT.X, far = dk === "ab" ? l.b : l.a;
           if (wasUp && !d.up) newAlarms.push(F("CRITICAL", "MW_LINK_DOWN", `${l.id}/${dk}`, `RSL ${d.rsl} dBm below threshold at ${far}`));
           if (!wasUp && d.up) newAlarms.push(F("CLEARED", "MW_LINK_DOWN", `${l.id}/${dk}`, "link restored"));
           if (d.up && prevAcm > acm) newAlarms.push(F("MAJOR", "ACM_DOWNSHIFT", `${l.id}/${dk}`, `${ACM[prevAcm].mod} -> ${ACM[acm].mod}, capacity ${(ACM[acm].capFactor * l.capacityGbps).toFixed(1)} Gbps`));
           if (d.up && margin < 6) newAlarms.push(F("MINOR", "RSL_LOW", `${l.id}/${dk}`, `RSL ${d.rsl} dBm, margin ${margin.toFixed(1)} dB`));
+          if (d.up && l.atpc && d.txBoostDb >= l.atpcRangeDb * 0.8 && margin >= 6) newAlarms.push(F("MINOR", "ATPC_NEAR_MAX", `${l.id}/${dk}`, `TX boost ${d.txBoostDb} dB of ${l.atpcRangeDb} dB - fade being absorbed`));
           if (d.up && d.snr < l.nominalSnr - 10 && d.rsl > l.nominalRsl - 4) newAlarms.push(F("MAJOR", "SNR_DEGRADED", `${l.id}/${dk}`, `SNR ${d.snr} dB with healthy RSL ${d.rsl} dBm`));
         }
         // both directions dead -> downstream sympathetic storm
@@ -332,6 +349,7 @@
         utilizationPct: this.utilizationPct(l),
         serviceCount: l.carried ? l.carried.services.length : 0,
         services: l.carried ? l.carried.services.slice(0, 40) : [],
+        atpc: l.atpc, atpcRangeDb: l.atpcRangeDb,
         ab: { ...l.dirs.ab }, ba: { ...l.dirs.ba },
       };
     }
