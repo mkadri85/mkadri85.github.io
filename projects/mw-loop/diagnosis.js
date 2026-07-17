@@ -70,12 +70,12 @@
     const asym = Math.abs(dropAb - dropBa);
     const snrAb = p.ab.snr, snrBa = p.ba.snr;
 
-    say("probeLink RSL", `ab ${p.ab.rsl} dBm (drop ${dropAb.toFixed(1)}), ba ${p.ba.rsl} dBm (drop ${dropBa.toFixed(1)})`,
+    say("probeLink RSL", `ab ${p.ab.rsl} dBm (drop ${dropAb.toFixed(1)}, ES ${p.ab.es}), ba ${p.ba.rsl} dBm (drop ${dropBa.toFixed(1)}, ES ${p.ba.es})`,
         worstDrop < THRESH.rslDropDb ? "no meaningful RSL degradation" :
         asym >= THRESH.rslAsymmetryDb ? "ASYMMETRIC drop -> points at hardware (H2)" : "symmetric drop -> points at path/environment (H1)");
 
     // healthy fast-path (but interference hides here: RSL fine, SNR bad)
-    const snrDegraded = Math.min(snrAb, snrBa) < 32;
+    const snrDegraded = Math.min(snrAb, snrBa) < 34; // aligned with interference signature gap
     if (worstDrop < THRESH.rslDropDb && !snrDegraded) {
       say("summary", "RSL and SNR within normal envelope", "link healthy");
       return { verdict: "HEALTHY", confidence: 0.95, evidence: ev, linkId };

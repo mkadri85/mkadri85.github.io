@@ -174,6 +174,13 @@
       l.faults.interference = { dir, snrLossDb };
       this.events.push({ tick: this.tick, kind: "fault", txt: `Interferer seeded near ${linkId} (${dir})` });
     }
+    injectConfigChange(linkId) {
+      const l = this.links.find(x => x.id === linkId); if (!l) return;
+      // a bad TX-power / profile change: modest symmetric RSL hit, dry path
+      l.faults.config = { db: 9 };
+      this.changeLog.push({ tick: this.tick, obj: linkId, txt: "TX power profile changed outside MW window" });
+      this.events.push({ tick: this.tick, kind: "fault", txt: `Bad config change applied on ${linkId}` });
+    }
     clearFaults() { this.links.forEach(l => (l.faults = {})); this.cells = []; }
 
     // -- topology math: what hangs below a link (blast radius) --
@@ -198,7 +205,7 @@
         for (const dk of ["ab", "ba"]) {
           const d = l.dirs[dk];
           let rsl = l.nominalRsl - rainDb + (this.rnd() - 0.5) * 1.2; // both dirs share rain
-          let snr = l.nominalSnr - rainDb * 0.9 + (this.rnd() - 0.5) * 1.0;
+          let snr = l.nominalSnr - rainDb + (this.rnd() - 0.5) * 1.0;
           if (l.faults.odu && l.faults.odu.dir === dk) {
             const f = l.faults.odu;
             if (f.progressive && f.appliedDb < f.db) f.appliedDb += 0.15; // slow drift
@@ -207,6 +214,7 @@
           if (l.faults.odu2 && l.faults.odu2.dir === dk) {
             rsl -= l.faults.odu2.appliedDb; snr -= l.faults.odu2.appliedDb * 0.8;
           }
+          if (l.faults.config) { rsl -= l.faults.config.db; snr -= l.faults.config.db; }
           if (l.faults.interference && l.faults.interference.dir === dk) {
             snr -= l.faults.interference.snrLossDb; // RSL untouched: the signature
           }
