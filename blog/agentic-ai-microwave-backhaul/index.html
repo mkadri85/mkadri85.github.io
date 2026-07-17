@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agentic AI for Microwave Backhaul: Closing the Loop - Mohamed Kadri</title>
+<meta name="description" content="Everyone draws the AI closed loop on RAN and core. What must it actually reason about on microwave backhaul - and an open demo that runs the whole loop live.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/">
+<meta property="og:title" content="The Loop Meets the Microwave Network">
+<meta property="og:description" content="Vendors sell closed-loop ambitions for transport. None of them show what the loop must reason about on a microwave network - and none of it is open. This one is.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/mw-loop-hero.png">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/mw-loop-hero.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1536">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="A rain cell crossing a microwave backhaul region on an operations map, with an agent console diagnosing links">
+<meta property="article:published_time" content="2026-07-17">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI operations">
+<meta property="article:tag" content="agentic AI">
+<meta property="article:tag" content="microwave backhaul">
+<meta property="article:tag" content="closed-loop automation">
+<meta property="article:tag" content="autonomous networks">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Loop Meets the Microwave Network">
+<meta name="twitter:description" content="What an agentic closed loop must actually reason about on microwave backhaul - with an open, runnable demo.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/mw-loop-hero.png">
+<meta name="twitter:image:alt" content="A rain cell crossing a microwave backhaul region on an operations map">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "The Loop Meets the Microwave Network",
+  "description": "What an agentic AI closed loop must actually reason about on microwave backhaul: rain fade vs hardware ambiguity, multi-vendor OSS islands, blast-radius-gated actions, and verification - with an open live demo.",
+  "image": "https://mkadri85.github.io/assets/mw-loop-hero.png",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-17",
+  "dateModified": "2026-07-17",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How do you tell rain fade from a hardware failure on a microwave link?","acceptedAnswer":{"@type":"Answer","text":"Rain attenuates both directions of a link nearly equally, so a symmetric RSL drop with neighbouring links co-fading and rain over the path geometry points to weather. A one-direction RSL drop points to the hardware chain - ODU, IDU, cable - on that receive path. Interference shows a third signature: healthy RSL with degraded SNR. Check alarm history first: a recurring pattern reads differently from a first-ever event."}},
+{"@type":"Question","name":"What is agentic AI in network operations?","acceptedAnswer":{"@type":"Answer","text":"Software that closes the operational loop itself: it observes telemetry and alarms, reasons about cause, decides an action within policy, executes it through management interfaces, and verifies the outcome - escalating to humans for anything outside its earned authority. It is not an SNMP agent, and it is not a chatbot on top of a dashboard."}},
+{"@type":"Question","name":"What should an AI agent check before rerouting traffic in a transport network?","acceptedAnswer":{"@type":"Answer","text":"Three things: blast radius (how many sites depend on the object it is about to touch), protection-path capacity (does the standby link have headroom for the traffic being moved), and QoS priority (if everything does not fit, which classes are protected and which shed). A reroute that overloads the protection path makes the outage worse."}},
+{"@type":"Question","name":"Why is closed-loop automation harder on transmission than on RAN?","acceptedAnswer":{"@type":"Answer","text":"Blast radius and silos. Microwave backhaul is hub-and-spoke: one wrong action on a hub link can sever a whole region, not one cell. And brownfield transmission runs as vendor islands - each NMS correlates only its own equipment, so no single system sees the cross-vendor picture."}},
+{"@type":"Question","name":"Can AI stop truck rolls for rain fade?","acceptedAnswer":{"@type":"Answer","text":"Yes - if dispatch is treated as a gated, costed action instead of a free one. A loop that verifies weather evidence and neighbour co-fade before dispatching, and re-verifies after the cell passes, holds the truck for rain and rolls it only for the fault that remains."}}
+]}
+</script>
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80' fill='%234f8fc9' font-style='italic' font-weight='bold'>MK</text></svg>">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:18px 20px;overflow-x:auto;font-size:13px;line-height:1.55;margin:0 0 20px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;
+    padding:1px 6px;font-size:14px;color:#dfe5ee}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:0 0 20px}
+  th{color:var(--mut);text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line)}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);color:#c6cedb;vertical-align:top}
+  .tblwrap{overflow-x:auto}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .demo-frame{width:100%;height:1250px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+</head>
+<body>
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">Agentic AI / microwave backhaul operations</div>
+  <h1>The Loop Meets the Microwave Network</h1>
+  <p class="sub">Everyone draws the closed loop on RAN and core. Here is what it actually has to reason about on the network layer where a wrong action severs a region - and an open demo that runs it.</p>
+  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 14 min read</div>
+
+  <figure class="hero">
+    <img src="/assets/mw-loop-hero.png" alt="A rain cell crossing a microwave backhaul region on an operations map, with an agent console diagnosing links" width="1536" height="1024">
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <a href="#optus">One wrong action, ten million customers</a>
+    <a href="#loop">The loop everybody draws</a>
+    <a href="#solved">What is already solved - credit where due</a>
+    <a href="#different">Why the microwave layer is different</a>
+    <a href="#storm">A storm crosses a three-vendor region</a>
+    <a href="#missing">The missing layer</a>
+    <a href="#wrong">What my own first loop got wrong</a>
+    <a href="#demo">Operate it yourself</a>
+    <a href="#honest">What this does not solve</a>
+    <a href="#faq">Questions this article answers</a>
+    <a href="#refs">References</a>
+  </div>
+
+  <h2 id="optus">One wrong action, ten million customers</h2>
+  <p>On 8 November 2023, roughly ten million Australians lost connectivity for most of a day. The trigger inside the Optus network was not a cyberattack and not a fibre cut: a routine upstream change pushed routing updates that caused protective automation on about ninety edge routers to trigger simultaneously, and the safety mechanism became the outage <a href="#ref-1">[1]</a>. Two years earlier, Meta engineers issued an audit command that "unintentionally took down all the connections in our backbone network" - including the tooling they needed to recover <a href="#ref-2">[2]</a>.</p>
+  <p>Neither incident involved AI. Both involved automation acting at transport scale - the layer where actions do not fail one cell at a time, they sever regions. Keep that in mind, because the industry is now racing to put a much smarter kind of automation exactly there.</p>
+  <p>First, one definition, because in a microwave context the word is thirty years old: by <b>agentic AI</b> I do not mean an SNMP agent. I mean software that closes the operational loop itself - it observes telemetry, reasons about cause, decides an action within policy, executes it through the management layer, and verifies the outcome, escalating to humans for anything beyond its earned authority.</p>
+
+  <h2 id="loop">The loop everybody draws</h2>
+  <p>The loop itself is now standard whiteboard material: detect, correlate, plan, act, verify. TM Forum has formal guidance on agentic AI closed loops <a href="#ref-3">[3]</a>; ETSI ZSM has specified closed-loop architectures for years and published work on AI agents in zero-touch management this year <a href="#ref-4">[4]</a>. Every major vendor keynote shows some version of the same diagram.</p>
+  <p>I spent seventeen years inside telecom operations, a large part of it on transmission and microwave. My honest report from that seat: the loop is the easy part of the diagram. What the diagram never shows is the reasoning inside each box when the network under it is a microwave backhaul - and that is where closed-loop ambitions go to die quietly.</p>
+
+  <h2 id="solved">What is already solved - credit where due</h2>
+  <p>Let me be precise about what exists, because this article claims a gap, not an empty field.</p>
+  <p>Ericsson's Transport Automation Controller is the most microwave-specific AI product on the market: it classifies fading and interference events - rain, wind, multipath - on MINI-LINK networks, runs near-real-time root-cause analysis, and has been live since 2024 <a href="#ref-5">[5]</a>. Ericsson's own Microwave Outlook reports operators cutting site visits by 40 percent with automated alarm filtering, and claims propagation-event classification accuracy above 99 percent is achievable <a href="#ref-6">[6]</a>. Huawei's RTN microwave portfolio is managed under iMaster NCE-T, with closed-loop operations and a network digital map in the platform's marketing <a href="#ref-7">[7]</a>. Nokia announced an agentic AI framework in its Network Services Platform this June - agents grounded in a live network view, taking "guided, explainable actions within operator-defined policies," commercially available by the end of 2026 <a href="#ref-8">[8]</a>. Ceragon's Insight suite does AI-based predictive maintenance across multi-vendor wireless transport <a href="#ref-9">[9]</a>; Aviat's Health Assurance claims 95 percent of issues diagnosed before impact <a href="#ref-10">[10]</a>.</p>
+  <p>The academic side is ahead of most people's assumptions too: the Politecnico di Milano and SIAE line of work has classified microwave failure causes with machine learning since 2020 and released the only public microwave hardware-failure dataset <a href="#ref-11">[11]</a>; an LLM-driven agent has already run a live optical transport network in a published field trial <a href="#ref-12">[12]</a>. And the plumbing is standardized: RFC 8561 defines a YANG model for microwave radio links - its author list reads like the vendor map of this industry - and ETSI's mWT group published SDN profiles this February aimed explicitly at AI-assisted operation, with multi-vendor plugtests passing at 91 percent <a href="#ref-13">[13]</a>.</p>
+  <p>So: detection and prediction inside one vendor's stack - largely solved. Data models for multi-vendor microwave - standardized. Loop architectures - specified. Agentic framing - announced by every vendor this year.</p>
+  <p>Now the part nobody ships.</p>
+
+  <h2 id="different">Why the microwave layer is different</h2>
+  <p><b>Blast radius.</b> Microwave backhaul is hub-and-spoke economics: tails hang off hubs, hubs hang off fibre points of presence, and path diversity is often unaffordable. In the demo region below, one hub link carries eight downstream sites. On RAN, a wrong automated action degrades a cell. Here, it severs a district - which is why operators who happily automate radio parameters still hand-execute transport changes.</p>
+  <p><b>Vendor islands.</b> Brownfield transmission in most of MEA and Asia runs two or three vendors side by side - an Ericsson region, a Huawei region, a Ceragon overlay - each with its own NMS that correlates only its own equipment. Telefonica's engineers put it plainly in print: NMS-to-NMS interoperability is "very difficult," the interfaces "typically proprietary, non-programmable and closed" <a href="#ref-14">[14]</a>. Each island runs a good closed loop internally. Nobody closes the loop across them - and real incidents do not respect island borders.</p>
+  <p><b>Diagnostic ambiguity.</b> The microwave-specific problem that makes "just automate it" naive: completely different causes produce nearly identical symptoms. Rain fade, a dying outdoor unit, a new interferer, a drifting antenna, a bad config push - all present as "the link degraded." The academic literature calls the degradation effects "not easily-distinguishable" <a href="#ref-11">[11]</a>; every transmission engineer knows the 2am version of that sentence. The signatures that separate them are subtle: rain attenuates both directions of a path near-equally, hardware fails one receive chain at a time, interference degrades signal quality while receive level stays healthy. And the field is full of traps - links that "fail when it rains" because they were aligned wrong on day one and rain merely spends the margin that was never there <a href="#ref-15">[15]</a>, radios that stay pinned at low modulation after the rain has passed <a href="#ref-16">[16]</a>, interference that turns out to be the building's new sodium-vapor lamps warming up at dusk <a href="#ref-17">[17]</a>.</p>
+
+  <h2 id="storm">A storm crosses a three-vendor region</h2>
+  <p>Here is the scenario every closed-loop diagram skips, and the one the demo below runs live.</p>
+  <p>A rain cell enters a region carrying three vendor islands. Within minutes: E-band links inside the cell drop hard; 18 and 23 GHz links fade and their adaptive modulation steps down, trading capacity for survival; each island's NMS emits its own alarm storm in its own format; and sympathetic SITE UNREACHABLE alarms cascade from every tail site below a dead link. A national NOC can see a million alarms a day <a href="#ref-18">[18]</a>; a single fibre cut is famously "two thousand red indicators, one problem." This is that, times three formats.</p>
+  <p>The operator's actual first move - mine, for seventeen years - is not a probe. It is the alarm history: is this link a chronic flapper or is this event new? Then the differential diagnosis: both directions down or one? Receive level low, or level healthy while quality collapsed? Are the neighbours co-fading - and does the weather feed confirm a cell over this path geometry? Is there a change record on this object from last night?</p>
+  <p>Each of those questions is a probe an agent can execute, and the reasoning chain between them is a runbook that can be written down. That is precisely what the demo's diagnosis engine is: the runbook, executable, with every verdict carrying its evidence trail. Rain fade with radar confirmation and seven co-fading neighbours: watch, do not dispatch - the truck you do not roll for rain is the cheapest win in transmission opex, and customers have literally kept technicians' personal phone numbers because every no-fault-found dispatch was billed <a href="#ref-19">[19]</a>. A one-direction drop persisting after the cell exits: hardware on that receive chain - now dispatch, with the evidence attached.</p>
+  <p>The subtle case is the one that matters: a real hardware failure that begins during the storm. While everything co-fades, a few extra decibels of one-direction loss are invisible - to the runbook and to your best engineer. The discipline is not magic detection; it is the re-verify contract. Every storm-attributed verdict carries an obligation: re-run the diagnosis when the cell exits the path. The storm passes, the region recovers, one link does not - and what remains standing is the truth.</p>
+
+  <h2 id="missing">The missing layer</h2>
+  <p>Put the pieces together and the gap has a precise shape. It is not a smarter model, and it is not another single-vendor controller. It is a thin orchestration layer that:</p>
+  <ul>
+    <li><b>Correlates across the islands.</b> One topology graph over three NMS feeds, so co-fade and root cause can be computed where incidents actually live - across borders.</li>
+    <li><b>Diagnoses before it decides.</b> The differential-diagnosis runbook as a first-class, glass-box stage - not a confidence score from a black box, but evidence a transmission engineer would accept.</li>
+    <li><b>Gates every action on blast radius.</b> Before anything fires: how many sites hang below the object about to be touched? Reversible, high-confidence, small-radius actions may auto-execute. Everything else becomes a proposal for a human. The gate is policy-as-code, and it is the answer to the Optus lesson.</li>
+    <li><b>Checks the protection path before rerouting.</b> The pre-reroute questions every operator asks and no diagram shows: does the standby path have the capacity headroom for what is being moved - and if not, which traffic classes are protected and which shed, per QoS profile? History is full of failovers that made things worse, including backup capacity that turned out to ride the same failed asset <a href="#ref-20">[20]</a>.</li>
+    <li><b>Verifies and rolls back.</b> Every executed action carries a contract - what must be true afterwards, by when - and an automatic rollback if it is not. ETSI ZSM names verification as a loop stage; no microwave product documents it on live links.</li>
+    <li><b>Watches the watcher.</b> The orchestrator itself runs under a breaker: too many automatic actions in a window, or repeated verification failures, and the agent is demoted to propose-only. An agent that keeps being wrong loses autonomy - the same earned-autonomy doctrine I argued for agent fleets in general <a href="#ref-21">[21]</a>, pointed at itself.</li>
+  </ul>
+
+  <h2 id="wrong">What my own first loop got wrong</h2>
+  <p>I built the demo below, then had it adversarially reviewed before publishing - and the review caught my own loop committing the sins this article warns about. The first version dispatched field crews to rain outages within seconds: the hard-outage branch skipped the weather check, because restoration urgency felt like it should override diagnosis. It rerouted through whichever standby link appeared first in a list, topology unchecked - twice activating protection that could not physically reach the isolated sites, failing verification, and retrying. And it acted once per fault forever: a second identical storm got no response at all.</p>
+  <p>I am publishing those failures deliberately. Each one is exactly the class of error that turns closed-loop ambition into an Optus headline, and each was caught by the layers this article argues for: the weather evidence gate, topology-aware planning, and verification contracts. The loop that operates a network needs the same discipline pointed at itself - that is not a slogan, it is what my own test log says.</p>
+
+  <h2 id="demo">Operate it yourself</h2>
+  <p>The demo below is a simulated multi-vendor microwave region - three NMS islands, ITU-R rain physics, hub-and-spoke topology - operated by the real logic this article describes: the glass-box diagnosis runbook, the blast-radius and QoS gates, verify-and-rollback contracts, and the breaker over the agent itself. Press "Run the story" for the sixty-second version: a storm, a fault hiding inside it, a held truck roll, a gated reroute, and the re-verify that exposes the truth. The network is simulated; the logic is the contribution, and it is MIT-licensed - read it, break it, reuse it.</p>
+  <iframe class="demo-frame" id="mw-frame" src="/projects/mw-loop/" title="The Loop Meets the Microwave Network - live console" loading="lazy"></iframe>
+  <p class="frame-note">Cramped in the frame? <a href="/projects/mw-loop/" target="_top">Open the full console</a>.</p>
+
+  <h2 id="honest">What this does not solve</h2>
+  <p>Honesty section, because a demo is not a deployment. The simulation assumes ATPC is disabled - on real links, automatic transmit power control holds receive levels flat and absorbs fades until it saturates, so the first observable is transmit power rising, not receive level falling; a production runbook keys on both. Multipath and ducting on long-haul paths - the dominant fading mechanism at lower frequencies, and unlike rain, direction-asymmetric in time - are out of scope, as is the wet radome that keeps attenuating after the rain stopped, which is why the re-verify contract checks recovery rather than assuming it. A real region is tens of thousands of links, not twenty-six; the point of the demo is the reasoning, not the scale. And the deepest barrier is not technical at all: only about a third of operators run any closed loop in production, and the blockers surveys find are organizational trust, not algorithms <a href="#ref-22">[22]</a>. Trust is earned the way this loop earns it - one gated, verified, auditable action at a time.</p>
+  <p>The pieces exist. Per-vendor AI loops ship today; the YANG models are standardized; the autonomy frameworks are written; the agentic controllers are announced. What is missing is the thin, vendor-neutral layer that reasons across the islands, gates on blast radius and QoS, verifies its own work, and submits to its own breaker - on the network layer where a wrong action severs a region, not a cell. That layer is where transmission operations experience becomes an engineering spec. Consider this article, and the console above, that spec's first draft - in the open.</p>
+
+  <h2 id="faq">Questions this article answers</h2>
+  <div class="faq">
+    <h3>How do you tell rain fade from a hardware failure on a microwave link?</h3>
+    <p>Rain attenuates both directions near-equally and shows up as neighbour co-fade with weather over the path; hardware fails one receive chain (one-direction drop); interference degrades SNR while RSL stays healthy. Check alarm history first - chronic flapping reads differently from a first event. And re-verify after the storm: whatever remains is not rain.</p>
+    <h3>What is agentic AI in network operations?</h3>
+    <p>Software that closes the loop itself - observe, diagnose, decide within policy, act through the management layer, verify - with humans holding everything beyond its earned authority. Not an SNMP agent; not a chatbot.</p>
+    <h3>What should an AI agent check before rerouting traffic?</h3>
+    <p>Blast radius (what depends on the object), protection-path headroom (can the standby carry what moves), and QoS priority (what sheds if it does not fit). A reroute that overloads the protection path deepens the outage.</p>
+    <h3>Why is closed-loop automation harder on transmission than on RAN?</h3>
+    <p>One wrong action severs a region, not a cell - and brownfield transmission runs as vendor islands whose management systems do not talk, so no single loop sees the whole incident.</p>
+    <h3>Can AI stop truck rolls for rain fade?</h3>
+    <p>Yes, if dispatch is a gated, costed action: weather evidence and co-fade hold the truck; the re-verify after the cell passes rolls it only for the fault that remains.</p>
+  </div>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> spent 17 years operating and transforming Tier-1 telecom networks - much of it in transmission and microwave - including leading a NOC's L2-to-L3 autonomy transition (75 percent of Level-1 incidents automated). He now builds AI and cloud products, writes about operating AI in production, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <h2 id="refs">References</h2>
+  <ol class="refs">
+    <li id="ref-1">2023 Optus outage - triggered by routing updates causing protective shutdown of ~90 edge routers: <a href="https://en.wikipedia.org/wiki/2023_Optus_outage">Wikipedia overview</a>; analysis in <a href="https://jtde.telsoc.org/index.php/jtde/article/view/898">JTDE</a>.</li>
+    <li id="ref-2">Meta engineering postmortem, October 2021 backbone outage: <a href="https://engineering.fb.com/2021/10/05/networking-traffic/outage-details/">"More details about the October 4 outage"</a>.</li>
+    <li id="ref-3">TM Forum: <a href="https://www.tmforum.org/resources/guidebook/ig1414-agentic-ai-closed-loops-v1-1-0/">IG1414 Agentic AI Closed Loops</a>.</li>
+    <li id="ref-4">ETSI ZSM: <a href="https://www.etsi.org/deliver/etsi_gr/ZSM/001_099/020/01.01.01_60/gr_zsm020v010101p.pdf">GR ZSM 020 - AI agents in zero-touch management</a> (2026); closed-loop architecture in the ZSM 009 series.</li>
+    <li id="ref-5">Ericsson: <a href="https://www.ericsson.com/en/mobile-transport/transport-automation-controller">Transport Automation Controller</a> (vendor-reported); first live deployment at <a href="https://www.ericsson.com/en/press-releases/2/2024/8/ericssons-ai-powered-solution-to-boost-m1s-5g-standalone">M1 Singapore, 2024</a>.</li>
+    <li id="ref-6">Ericsson: <a href="https://www.ericsson.com/en/news/2025/10/microwave-outlook-2025-near-fiber-split-ai-and-2x-capacity">Microwave Outlook 2025</a> (vendor-reported figures).</li>
+    <li id="ref-7">Huawei: <a href="https://carrier.huawei.com/en/products/wireless-network/microwave/split-mount-microwave">OptiX RTN microwave</a> and iMaster NCE transport management (vendor-reported).</li>
+    <li id="ref-8">Nokia: <a href="https://www.nokia.com/newsroom/nokia-introduces-agentic-ai-framework-in-network-services-platform-to-enable-trust-based-ai-operations-for-ip-networks/">Agentic AI framework in NSP</a>, June 2026 (vendor-reported).</li>
+    <li id="ref-9">Ceragon: <a href="https://www.ceragon.com/news/ceragon-launches-ai-based-intelligence-and-management-software-suite-for-multi-vendor-wireless-transport-networks">Insight launch</a> (vendor-reported).</li>
+    <li id="ref-10">Aviat: <a href="https://aviatnetworks.com/hosted-software/health-assurance-software/">Health Assurance Software</a> (vendor-reported); their <a href="https://aviatnetworks.com/tips-tricks/5-things-you-should-know-about-rsl/">RSL troubleshooting guide</a> documents the overlapping-causes problem.</li>
+    <li id="ref-11">Musumeci et al., <a href="https://ieeexplore.ieee.org/document/9266116/">"Supervised and Semi-Supervised Learning for Failure Identification in Microwave Networks"</a>, IEEE TNSM 2021; Di Cicco et al., <a href="https://re.public.polimi.it/bitstream/11311/1267826/1/TNSM2024-SIAE.pdf">data-centric follow-up with the public hardware-failure dataset</a>, IEEE TNSM 2024.</li>
+    <li id="ref-12">Liu et al., <a href="https://arxiv.org/abs/2409.14605">"First Field Trial of LLM-Powered AI Agent for Lifecycle Management of Autonomous Driving Optical Networks"</a>, ECOC 2024.</li>
+    <li id="ref-13">IETF <a href="https://datatracker.ietf.org/doc/rfc8561/">RFC 8561 - A YANG Data Model for Microwave Radio Link</a>; ETSI <a href="https://www.etsi.org/deliver/etsi_ts/104100_104199/104143/01.01.01_60/ts_104143v010101p.pdf">TS 104 143</a> and the <a href="https://www.etsi.org/newsroom/news/2625-etsi-plugtests-advance-sdn-interoperability-for-wireless-transport/">5th mWT Plugtests</a>.</li>
+    <li id="ref-14">Contreras et al. (Telefonica), <a href="https://arxiv.org/pdf/1911.11220">iFUSION SDN transport architecture</a>.</li>
+    <li id="ref-15">MikroTik forum: <a href="https://forum.mikrotik.com/viewtopic.php?t=140670">60 GHz link "goes down when it rains" - aligned 12+ dB below achievable</a> (community account).</li>
+    <li id="ref-16">MikroTik forum: <a href="https://forum.mikrotik.com/t/wireless-wire-cube-60g-phy-rate-after-a-rainfall/264578">PHY rate pinned low after rainfall, "does not recover on its own"</a> (community account).</li>
+    <li id="ref-17">Hacker News: <a href="https://news.ycombinator.com/item?id=39901860">the sodium-vapor lamp interference hunt</a> (practitioner account).</li>
+    <li id="ref-18">Wang et al., alarm volumes in a national operator NOC: <a href="https://www.sciencedirect.com/science/article/abs/pii/S0020025517306059">Information Sciences 2017</a>; alarm compression evidence: <a href="https://www.frontiersin.org/journals/computer-science/articles/10.3389/fcomp.2023.1211739/full">Frontiers in Computer Science 2023</a>.</li>
+    <li id="ref-19">Hacker News: <a href="https://news.ycombinator.com/item?id=39904861">per-visit billing for no-fault-found dispatches on a rain-onset fault</a> (customer account).</li>
+    <li id="ref-20">Hacker News: <a href="https://news.ycombinator.com/item?id=15676466">the 1990s Sprint transatlantic failure - backup links bought over the same cable</a> (practitioner account).</li>
+    <li id="ref-21">Kadri, M.: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a> - the operations discipline for agent fleets; runnable companion: <a href="https://github.com/mkadri85/guardplane">guardplane</a>.</li>
+    <li id="ref-22">Analysys Mason for Oracle: <a href="https://www.analysysmason.com/contentassets/a3157d274dae4086ac3dcbc09fe3320f/analysys_mason_oss_closed_loop_automation_oct2022_rma01_rma02.pdf">closed-loop automation adoption and barriers</a>, 2022.</li>
+  </ol>
+
+  <div class="navlinks">
+    <a href="/blog/agent-noc/">&larr; Your AI Agents Need a NOC</a>
+    <a href="/blog/">All writing</a>
+  </div>
+</article>
+
+<script>
+  // auto-height for the embedded console
+  (function(){
+    var f = document.getElementById("mw-frame");
+    if (f) f.style.height = Math.max(760, Math.min(980, window.innerHeight * 0.9)) + "px";
+  })();
+</script>
+</body>
+</html>
