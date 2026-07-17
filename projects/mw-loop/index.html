@@ -96,24 +96,40 @@
   @keyframes sdot{0%,100%{opacity:1}50%{opacity:.3}}
   #L0{--sc:#54d0e0;--sbg:#0f2830}#L1{--sc:#4f8fc9;--sbg:#122238}#L2{--sc:#a888f0;--sbg:#1d1836}
   #L3{--sc:#e5b84b;--sbg:#2b2410}#L4{--sc:#3fca7c;--sbg:#0f2a1c}#L5{--sc:#54d0e0;--sbg:#0f2630}#L6{--sc:#e4574f;--sbg:#2e1512}
+  /* mobile app tab bar - hidden on desktop, becomes the primary nav on phones */
+  .mtabs{display:none}
+  .badge2{display:none;min-width:16px;padding:0 4px;margin-left:6px;border-radius:9px;font-size:10px;
+    font-weight:700;line-height:16px;background:var(--bad);color:#fff;vertical-align:1px}
+  .badge2.show{display:inline-block}
   footer{color:var(--dim);font-size:12.5px;text-align:center;padding:20px}
   /* tablet: map spans full width, the two panel stacks sit side by side beneath it */
   @media(max-width:1200px){.wrap{grid-template-columns:1fr 1fr}.wrap>:first-child{grid-column:1/-1}}
   @media(max-width:760px){
-    .wrap{grid-template-columns:1fr}.wrap>:first-child{grid-column:auto}
     .kpis{grid-template-columns:repeat(3,1fr)}
-    /* pipeline: wrap all 7 stages into a scannable 2-col grid instead of an off-screen scroll */
-    .pipe{padding:0 14px;margin-top:10px}
-    .pipe .lab{font-size:10px;margin-bottom:6px}
-    .pipeflow{flex-wrap:wrap;overflow:visible;gap:4px}
-    .stage{flex:1 1 calc(50% - 4px);min-width:0;padding:7px 10px}
-    .stage .st{font-size:12.5px}.stage .sd{font-size:10px}
+    /* --- mobile app shell: sticky compact pipeline + tab bar, one panel at a time --- */
+    /* sticky compact pipeline: a horizontal chip strip that stays put, shows loop state */
+    .pipe{position:sticky;top:0;z-index:40;background:var(--bg);margin:0;padding:7px 10px 5px}
+    .pipe .lab{display:none}
+    .pipeflow{flex-wrap:nowrap;overflow-x:auto;gap:5px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+    .stage{flex:0 0 auto;min-width:92px;padding:6px 10px;scroll-snap-align:start}
+    .stage .sd{display:none}
+    .stage .st{font-size:12.5px}
     .stage:not(:last-child):after{display:none}
-    /* touch targets: bigger, tappable */
+    /* sticky tab bar (its top offset is set by JS to sit under the pipeline) */
+    .mtabs{display:flex;position:sticky;z-index:39;background:var(--bg);gap:6px;
+      padding:7px 10px;border-bottom:1px solid var(--line);overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .mtabs button{flex:1 0 auto;background:var(--panel);border:1px solid var(--line);color:var(--dim);
+      border-radius:9px;padding:9px 12px;font-size:13px;font-weight:600;white-space:nowrap;cursor:pointer}
+    .mtabs button.on{background:var(--acc);border-color:var(--acc);color:#06101f}
+    /* one panel at a time: hide all tabbed cards, JS reveals the active tab's cards */
+    .wrap{display:block;padding:12px}
+    .wrap>div{display:contents}
+    .card[data-tab]{display:none;margin-top:0}
+    .card[data-tab].show{display:block;margin-bottom:12px}
+    /* touch targets + compact chrome */
     .controls{gap:7px}
     .controls button{padding:10px 13px;font-size:13.5px}
-    /* trim horizontal chrome */
-    .note{padding:8px 14px}.wrap{padding:12px 14px}
+    .note{padding:8px 14px}
     header{padding:12px 14px}header .brand{font-size:15px}header nav a{margin-left:11px;font-size:12px}
   }
 </style>
@@ -145,9 +161,16 @@
   </div>
 </div>
 
+<nav class="mtabs" id="mtabs" aria-label="dashboard sections">
+  <button data-t="net" class="on">Network</button>
+  <button data-t="diag">Diagnosis<span class="badge2" id="tbDiag"></span></button>
+  <button data-t="dec">Decisions<span class="badge2" id="tbDec"></span></button>
+  <button data-t="alarms">Alarms<span class="badge2" id="tbAlarms"></span></button>
+</nav>
+
 <div class="wrap">
   <div>
-    <div class="card">
+    <div class="card" data-tab="net">
       <h3>Multi-vendor microwave region — three NMS islands (three vendors' management systems that don't talk to each other)</h3>
       <div class="controls">
         <button class="primary" id="btnStory">▶ Run the story (60s)</button>
@@ -181,29 +204,29 @@
       </div>
       <svg id="map" viewBox="0 0 100 74" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
-    <div class="card" style="margin-top:14px">
+    <div class="card" data-tab="net" style="margin-top:14px">
       <h3>Link inspector — click any link on the map</h3>
       <div class="pad" id="inspector" style="color:var(--dim);font-size:13px">Click a link to see what a NOC would see: RSL/SNR both directions, ACM state, capacity at current modulation, utilization, and the services riding it.</div>
     </div>
   </div>
 
   <div>
-    <div class="card">
+    <div class="card" data-tab="diag">
       <h3>Layer 2 — glass-box diagnosis (click a finding for the evidence trail)</h3>
       <div id="findings"><div class="pad" style="color:var(--dim)">Region healthy. Inject a scenario on the left.</div></div>
     </div>
-    <div class="card" style="margin-top:14px">
+    <div class="card" data-tab="dec" style="margin-top:14px">
       <h3>Layer 3 — gated proposals awaiting a human</h3>
       <div id="props"><div class="pad" style="color:var(--dim)">Nothing pending. Actions inside policy fire automatically; anything bigger lands here.</div></div>
     </div>
   </div>
 
   <div>
-    <div class="card">
+    <div class="card" data-tab="dec">
       <h3>Decision log — actions, verifications, breaker</h3>
       <div class="log" id="log"></div>
     </div>
-    <div class="card" style="margin-top:14px">
+    <div class="card" data-tab="alarms" style="margin-top:14px">
       <h3>Raw alarm feeds — what the three islands actually emit</h3>
       <div class="sevbar" id="sevbar">
         <span class="sevpill sp-crit">Critical<span class="n" id="scCrit">0</span></span>
@@ -373,6 +396,7 @@
     // rises red as the incident spreads, drops back to green as the loop restores
     kv.style.color = svc.down === 0 ? "var(--ok)" : svc.down >= 6 ? "var(--bad)" : "var(--warn)";
     kv.title = svc.down ? `${svc.priorityDown} priority (EF/AF) of ${svc.down} down - ${svc.total} services total` : "all services reaching the POP";
+    updateTabBadges();
     $("kFind").textContent = findings.length;
     const isoSet = new Set();
     sim.links.filter(l=>l.active&&!l.dirs.ab.up&&!l.dirs.ba.up).forEach(l=>sim.sitesBelow(l.id).forEach(x=>isoSet.add(x)));
@@ -434,6 +458,28 @@
   const fitNote = ()=>{ if(honestNote) honestNote.open = window.innerWidth > 760; };
   fitNote();
   window.addEventListener("resize", fitNote);
+
+  // ---- mobile app shell: tab between focused panels instead of one long scroll ----
+  const mtabs = $("mtabs");
+  const pipeEl = document.querySelector(".pipe");
+  function showTab(t){
+    document.querySelectorAll(".card[data-tab]").forEach(c=>c.classList.toggle("show", c.dataset.tab===t));
+    mtabs.querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.t===t));
+  }
+  mtabs.querySelectorAll("button").forEach(b=>b.addEventListener("click", ()=>{ showTab(b.dataset.t); window.scrollTo({top:0,behavior:"instant"}); }));
+  showTab("net");
+  // dock the sticky tab bar directly beneath the sticky pipeline (height varies by device)
+  function dockTabs(){ mtabs.style.top = (window.innerWidth<=760 ? pipeEl.offsetHeight : 0) + "px"; }
+  dockTabs(); window.addEventListener("resize", dockTabs);
+
+  // badge notifications: surface activity on tabs you are not looking at (findings / proposals / criticals)
+  function updateTabBadges(){
+    const set=(id,n)=>{ const e=$(id); if(!e) return; e.textContent = n>99?"99+":(n||""); e.classList.toggle("show", n>0); };
+    set("tbDiag", findings.length);
+    set("tbDec", orch.proposals ? orch.proposals.length : 0);
+    set("tbAlarms", sim.alarms.filter(a=>(a.sev||"").toUpperCase()==="CRITICAL").length);
+  }
+  window.updateTabBadges = updateTabBadges;
 
   render();
 })();
