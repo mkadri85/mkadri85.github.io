@@ -20,6 +20,11 @@
   header nav a{margin-left:16px;color:var(--dim);font-size:13px}
   .note{background:#132036;border:1px solid var(--line);color:var(--dim);font-size:12.5px;padding:8px 22px}
   .note b{color:var(--txt)}
+  .note>summary{list-style:none;cursor:pointer;color:var(--txt);font-size:12.5px}
+  .note>summary::-webkit-details-marker{display:none}
+  .note .tapx{color:var(--dim);font-weight:400}
+  /* desktop: full text always visible, no disclosure affordance (identical to before) */
+  @media(min-width:761px){.note>summary{display:none}.note>.note-body{display:block}}
   .wrap{display:grid;grid-template-columns:minmax(430px,1.55fr) minmax(285px,1fr) minmax(285px,1fr);gap:14px;padding:14px 22px;max-width:1640px;margin:0 auto;align-items:start}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .card h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--line)}
@@ -94,7 +99,23 @@
   footer{color:var(--dim);font-size:12.5px;text-align:center;padding:20px}
   /* tablet: map spans full width, the two panel stacks sit side by side beneath it */
   @media(max-width:1200px){.wrap{grid-template-columns:1fr 1fr}.wrap>:first-child{grid-column:1/-1}}
-  @media(max-width:760px){.wrap{grid-template-columns:1fr}.wrap>:first-child{grid-column:auto}.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:760px){
+    .wrap{grid-template-columns:1fr}.wrap>:first-child{grid-column:auto}
+    .kpis{grid-template-columns:repeat(3,1fr)}
+    /* pipeline: wrap all 7 stages into a scannable 2-col grid instead of an off-screen scroll */
+    .pipe{padding:0 14px;margin-top:10px}
+    .pipe .lab{font-size:10px;margin-bottom:6px}
+    .pipeflow{flex-wrap:wrap;overflow:visible;gap:4px}
+    .stage{flex:1 1 calc(50% - 4px);min-width:0;padding:7px 10px}
+    .stage .st{font-size:12.5px}.stage .sd{font-size:10px}
+    .stage:not(:last-child):after{display:none}
+    /* touch targets: bigger, tappable */
+    .controls{gap:7px}
+    .controls button{padding:10px 13px;font-size:13.5px}
+    /* trim horizontal chrome */
+    .note{padding:8px 14px}.wrap{padding:12px 14px}
+    header{padding:12px 14px}header .brand{font-size:15px}header nav a{margin-left:11px;font-size:12px}
+  }
 </style>
 </head>
 <body>
@@ -106,7 +127,10 @@
     <a href="/" target="_top">mkadri85.github.io</a>
   </nav>
 </header>
-<div class="note"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic, running live in your browser — no data leaves this page. <b>"Agentic"</b> here means software that closes the loop itself (observes, decides, acts, verifies) — not an SNMP agent. Simplifications, stated up front: ATPC is modeled on traditional bands (TX rises to hold RSL until saturation; E-band runs without); multipath/ducting and wet-radome effects remain out of scope — the article covers how each would change the runbook.</div>
+<details class="note" id="honestNote" open>
+  <summary><b>Honest labeling</b> <span class="tapx">— simulated network, real logic · tap to read the caveats</span></summary>
+  <div class="note-body"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic, running live in your browser — no data leaves this page. <b>"Agentic"</b> here means software that closes the loop itself (observes, decides, acts, verifies) — not an SNMP agent. Simplifications, stated up front: ATPC is modeled on traditional bands (TX rises to hold RSL until saturation; E-band runs without); multipath/ducting and wet-radome effects remain out of scope — the article covers how each would change the runbook.</div>
+</details>
 
 <div class="pipe">
   <div class="lab">The agentic loop — <b>live pipeline</b>, each stage lights in its own colour as the region is handled</div>
@@ -404,6 +428,12 @@
       </div>
       <div style="margin-top:6px;font-size:12px">Services riding (${p.serviceCount}): <span style="color:var(--txt)">${svc||"none"}</span></div>`;
   }
+
+  // honest-labeling note: expanded on desktop, collapsed on phones to save vertical space
+  const honestNote = $("honestNote");
+  const fitNote = ()=>{ if(honestNote) honestNote.open = window.innerWidth > 760; };
+  fitNote();
+  window.addEventListener("resize", fitNote);
 
   render();
 })();
