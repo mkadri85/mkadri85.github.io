@@ -83,8 +83,8 @@
     L("C-H2", "C-T5", "80GHz", 10);  L("C-H2", "C-T6", "18GHz", 1.0);
     // cross-island protection candidates (normally standby; reroute targets)
     L("A-H2", "B-H2", "7GHz", 1.0, true); L("C-H2", "B-H2", "7GHz", 1.0, true);
-    links[links.length - 2].standby = true;
-    links[links.length - 1].standby = true;
+    links[links.length - 2].standby = true; links[links.length - 2].active = false;
+    links[links.length - 1].standby = true; links[links.length - 1].active = false;
     return { sites, links };
   }
 
@@ -99,6 +99,7 @@
       island: sa.island === sb.island ? sa.island : "X",
       standby: false,
       nominalRsl, fadeMargin, nominalSnr: 42,
+      active: true, // standby links flipped to false right after build
       // per-direction state: dir "ab" = received at b, dir "ba" = received at a
       dirs: {
         ab: { rsl: nominalRsl, snr: 42, acm: 5, es: 0, ses: 0, up: true },
@@ -175,7 +176,7 @@
     // -- topology math: what hangs below a link (blast radius) --
     sitesBelow(linkId) {
       // remove link, BFS from all POPs over ACTIVE links; unreachable non-standby sites = below
-      const act = this.links.filter(l => l.id !== linkId && !l.standby && (l.dirs.ab.up || l.dirs.ba.up));
+      const act = this.links.filter(l => l.id !== linkId && l.active && (l.dirs.ab.up || l.dirs.ba.up));
       const adj = {};
       act.forEach(l => { (adj[l.a] = adj[l.a] || []).push(l.b); (adj[l.b] = adj[l.b] || []).push(l.a); });
       const reach = new Set(this.sites.filter(s => s.kind === "pop").map(s => s.id));
@@ -200,6 +201,9 @@
             if (f.progressive && f.appliedDb < f.db) f.appliedDb += 0.15; // slow drift
             rsl -= f.appliedDb; snr -= f.appliedDb * 0.8;
           }
+          if (l.faults.odu2 && l.faults.odu2.dir === dk) {
+            rsl -= l.faults.odu2.appliedDb; snr -= l.faults.odu2.appliedDb * 0.8;
+          }
           if (l.faults.interference && l.faults.interference.dir === dk) {
             snr -= l.faults.interference.snrLossDb; // RSL untouched: the signature
           }
@@ -219,7 +223,7 @@
           if (d.up && d.snr < l.nominalSnr - 10 && d.rsl > l.nominalRsl - 4) newAlarms.push(F("MAJOR", "SNR_DEGRADED", `${l.id}/${dk}`, `SNR ${d.snr} dB with healthy RSL ${d.rsl} dBm`));
         }
         // both directions dead -> downstream sympathetic storm
-        if (!l.dirs.ab.up && !l.dirs.ba.up && !l.standby) {
+        if (!l.dirs.ab.up && !l.dirs.ba.up && l.active) {
           for (const sid of this.sitesBelow(l.id)) {
             const F = FMT[this.sites.find(s => s.id === sid).island] || FMT.X;
             newAlarms.push(F("CRITICAL", "SITE_UNREACHABLE", sid, "NE not responding (sympathetic)"));
@@ -261,6 +265,26 @@
       return this.changeLog.filter(c => c.obj === linkId && this.tick - c.tick < 900);
     }
     recentAlarms(n) { return this.alarms.slice(-n); }
+    // -- actuation API (typed, auditable; the ONLY writes the agent can make)
+    activateStandby(linkId) {
+      const l = this.links.find(x => x.id === linkId && x.standby);
+      if (!l) return { ok: false, err: "no such standby link" };
+      l.active = true;
+      this.events.push({ tick: this.tick, kind: "action", txt: `Standby link ${linkId} activated (reroute)` });
+      return { ok: true };
+    }
+    deactivateStandby(linkId) {
+      const l = this.links.find(x => x.id === linkId && x.standby);
+      if (!l) return { ok: false, err: "no such standby link" };
+      l.active = false;
+      this.events.push({ tick: this.tick, kind: "action", txt: `Standby link ${linkId} deactivated (rollback)` });
+      return { ok: true };
+    }
+    hardFail(linkId) { // test helper: catastrophic both-direction failure
+      const l = this.links.find(x => x.id === linkId); if (!l) return;
+      l.faults.odu = { dir: "ab", db: 60, progressive: false, appliedDb: 60 };
+      l.faults.odu2 = { dir: "ba", db: 60, progressive: false, appliedDb: 60 };
+    }
   }
 
   window.MWSim = { MWSim, BANDS, ACM };

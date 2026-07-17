@@ -35,6 +35,16 @@
     const p = sim.probeLink(linkId);
     if (!p) return { verdict: "INCONCLUSIVE", confidence: 0, evidence: [{ probe: "probeLink", observed: "no such link", inference: "-" }] };
 
+    // hard outage first: both directions dead is not a diagnosis puzzle,
+    // it is a restoration priority (cause analysis comes after service)
+    if (!p.ab.up && !p.ba.up) {
+      say("probeLink status", "both directions DOWN", "hard outage - restore service first, determine cause after (LINK_DOWN)");
+      const below = sim.sitesBelow(linkId);
+      say("sitesBelow", `${below.length} site(s) isolated: ${below.join(", ") || "-"}`,
+          below.length ? "lifeline failure - restoration is time-critical" : "no downstream isolation");
+      return { verdict: "LINK_DOWN", confidence: 0.95, evidence: ev, linkId, sitesBelow: below };
+    }
+
     const nominal = p.band === "80GHz" ? -42 : -38;
     const dropAb = nominal - p.ab.rsl;   // +ve = degraded
     const dropBa = nominal - p.ba.rsl;
@@ -135,7 +145,7 @@
       const d = diagnoseLink(sim, l.id);
       if (d.verdict !== "HEALTHY") out.push(d);
     }
-    const rank = { HARDWARE: 0, INTERFERENCE: 1, OBSTRUCTION_OR_MISALIGNMENT: 2, CONFIG: 3, RAIN_FADE: 4, INCONCLUSIVE: 5 };
+    const rank = { LINK_DOWN: -1, HARDWARE: 0, INTERFERENCE: 1, OBSTRUCTION_OR_MISALIGNMENT: 2, CONFIG: 3, RAIN_FADE: 4, INCONCLUSIVE: 5 };
     return out.sort((a, b) => (rank[a.verdict] ?? 9) - (rank[b.verdict] ?? 9) || b.confidence - a.confidence);
   }
 
