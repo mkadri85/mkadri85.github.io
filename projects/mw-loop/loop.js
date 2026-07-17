@@ -124,15 +124,23 @@
       // the pre-reroute question every operator asks: can the protection path
       // CARRY what we are about to move, and what sheds first per QoS?
       if (plan.action === "ACTIVATE_STANDBY" && plan.cause) {
+        // the operator's pre-reroute thinking, in order: what is stranded, what
+        // is the protection path carrying RIGHT NOW, at what modulation, and
+        // what happens per QoS class when the stranded load lands on it.
+        const tgt = this.sim.probeLink(plan.target);
         const demand = this.sim.demandOf(this.sim.sitesBelow(plan.cause));
         const headroom = this.sim.linkHeadroomGbps(plan.target);
+        checks.push({ name: "protection path current state", ok: true,
+          detail: `${plan.target}: ${tgt.utilizationPct}% utilized (${tgt.carriedGbps}/${tgt.capacityNowGbps} Gbps at current ACM), ${tgt.serviceCount} services riding` });
+        checks.push({ name: "stranded load to move", ok: true,
+          detail: `${demand.totalGbps} Gbps total / ${demand.priorityGbps} Gbps priority across isolated sites` });
         const fitsPriority = demand.priorityGbps <= headroom;
         const fitsAll = demand.totalGbps <= headroom;
-        ok = pass("capacity: priority traffic fits protection path", fitsPriority,
-                  `moving ${demand.totalGbps} Gbps (${demand.priorityGbps} priority) onto ${headroom} Gbps headroom`) && ok;
+        ok = pass("capacity: priority traffic fits protection headroom", fitsPriority,
+                  `headroom ${headroom} Gbps vs ${demand.priorityGbps} Gbps priority demand`) && ok;
         if (fitsPriority && !fitsAll)
           checks.push({ name: "QoS shedding expected", ok: true,
-                        detail: `best-effort will shed: ${(demand.totalGbps - headroom).toFixed(2)} Gbps over headroom - priority classes protected` });
+                        detail: `best-effort exceeds headroom by ${(demand.totalGbps - headroom).toFixed(2)} Gbps - EF/AF protected, BE sheds` });
       }
       ok = pass("agent breaker", this.breakerAllows(), this.mode) && ok;
       return { allowed: ok, checks, blast };

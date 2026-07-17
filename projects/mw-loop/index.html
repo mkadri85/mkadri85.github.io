@@ -101,6 +101,7 @@
         <button class="danger" id="btnLifeline">Lifeline hub failure</button>
         <button id="btnReset">Reset region</button>
         <span style="flex:1"></span>
+        <button id="btnUtil">Show utilization</button>
         <button id="btnPause">Pause</button>
       </div>
       <div class="kpis">
@@ -110,6 +111,10 @@
         <div class="kpi"><div class="v" id="kIso">0</div><div class="l">sites isolated</div></div>
         <div class="kpi"><div class="v mode-active" id="kMode">active</div><div class="l">agent mode</div></div>
       </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Link inspector — click any link on the map</h3>
+      <div class="pad" id="inspector" style="color:var(--dim);font-size:13px">Click a link to see what a NOC would see: RSL/SNR both directions, ACM state, capacity at current modulation, utilization, and the services riding it.</div>
     </div>
     <div class="card" style="margin-top:14px">
       <h3>Raw alarm feeds — what the three islands actually emit</h3>
@@ -156,7 +161,7 @@
   "use strict";
   let sim = new MWSim.MWSim();
   let orch = new MWLoop.Orchestrator(sim);
-  let paused = false, findings = [];
+  let paused = false, findings = [], showUtil = true, selectedLink = null;
 
   const $ = id => document.getElementById(id);
   const map = $("map");
@@ -181,6 +186,11 @@
       const dash = l.standby ? `stroke-dasharray="1.6,1.2"` : "";
       const w = l.standby && l.active ? 0.9 : 0.55;
       s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${l.standby&&l.active?"#54d0e0":linkColor(l)}" stroke-width="${w}" ${dash}/>`;
+      s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="transparent" stroke-width="3.2" style="cursor:pointer" data-link="${l.id}"/>`;
+      if (showUtil && l.carried && l.carried.gbps > 0 && !l.standby) {
+        const mx=(a.x+b.x)/2, my=(a.y+b.y)/2, u=sim.utilizationPct(l);
+        s += `<text x="${mx}" y="${my-1}" font-size="2.2" font-weight="700" fill="${u>=90?"#e4574f":u>=60?"#e5b84b":"#7f93b2"}" text-anchor="middle" style="pointer-events:none">${u}%</text>`;
+      }
     }
     for(const site of sim.sites){
       const r = site.kind==="pop" ? 1.7 : site.kind==="hub" ? 1.3 : 0.9;
@@ -261,7 +271,7 @@
       if(acted.some(a=>a.result.proposed)){ light("L3"); }
       if(orch.log.some(l=>l.kind==="verify" && l.tick===sim.tick)) light("L5");
       if(orch.mode!=="active") light("L6");
-      renderFindings(); renderProps(); renderLog();
+      renderFindings(); renderProps(); renderLog(); renderInspector();
     }
     $("kTick").textContent = sim.tick;
     $("kAlarms").textContent = sim.alarms.length;
@@ -292,6 +302,34 @@
   $("btnLifeline").addEventListener("click", ()=> sim.hardFail("A-POP~A-H1"));
   $("btnReset").addEventListener("click", ()=>{ sim = new MWSim.MWSim(); orch = new MWLoop.Orchestrator(sim); findings=[]; $("feed").innerHTML=""; renderFindings(); renderProps(); renderLog(); });
   $("btnPause").addEventListener("click", (e)=>{ paused=!paused; e.target.textContent = paused?"Resume":"Pause"; });
+  $("btnUtil").addEventListener("click", (e)=>{ showUtil=!showUtil; e.target.textContent = showUtil?"Hide utilization":"Show utilization"; render(); });
+  map.addEventListener("click", (e)=>{ const id=e.target && e.target.dataset && e.target.dataset.link; if(id){ selectedLink=id; renderInspector(); }});
+  function renderInspector(){
+    const el=$("inspector"); if(!selectedLink){ return; }
+    const p=sim.probeLink(selectedLink); if(!p){ el.textContent="link not found"; return; }
+    const ACMn=["QPSK","16QAM","64QAM","256QAM","1024QAM","4096QAM"];
+    const svc = p.services.slice(0,6).join(", ") + (p.serviceCount>6 ? ` +${p.serviceCount-6} more` : "");
+    el.innerHTML = `
+      <b style="color:var(--txt)">${p.id}</b> &middot; ${p.band} &middot; ${p.lengthKm} km ${p.standby?`&middot; <span style="color:#54d0e0">protection link${p.active?" (ACTIVE)":" (standby)"}</span>`:""}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
+        <div style="background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px">
+          <div style="font-size:11px;color:var(--dim)">A&rarr;B direction</div>
+          RSL <b style="color:var(--txt)">${p.ab.rsl} dBm</b> &middot; SNR ${p.ab.snr} dB<br>
+          ACM ${ACMn[p.ab.acm]} &middot; ES ${p.ab.es} &middot; ${p.ab.up?'<span style="color:var(--ok)">UP</span>':'<span style="color:var(--bad)">DOWN</span>'}
+        </div>
+        <div style="background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:8px">
+          <div style="font-size:11px;color:var(--dim)">B&rarr;A direction</div>
+          RSL <b style="color:var(--txt)">${p.ba.rsl} dBm</b> &middot; SNR ${p.ba.snr} dB<br>
+          ACM ${ACMn[p.ba.acm]} &middot; ES ${p.ba.es} &middot; ${p.ba.up?'<span style="color:var(--ok)">UP</span>':'<span style="color:var(--bad)">DOWN</span>'}
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        Capacity now <b style="color:var(--txt)">${p.capacityNowGbps} Gbps</b> (of ${p.capacityGbps} nominal) &middot;
+        Carrying <b style="color:var(--txt)">${p.carriedGbps} Gbps</b> (${p.carriedPriorityGbps} priority) &middot;
+        Utilization <b style="color:${p.utilizationPct>=90?"var(--bad)":p.utilizationPct>=60?"var(--warn)":"var(--ok)"}">${p.utilizationPct}%</b>
+      </div>
+      <div style="margin-top:6px;font-size:12px">Services riding (${p.serviceCount}): <span style="color:var(--txt)">${svc||"none"}</span></div>`;
+  }
 
   render();
 })();

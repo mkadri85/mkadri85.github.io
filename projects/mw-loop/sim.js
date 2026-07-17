@@ -146,11 +146,28 @@
     X: (sev, type, obj, txt) => ({ island: "X", raw: `[UMBRELLA] ${sev} ${type} ${obj} ${txt}`, sev, type, obj }),
   };
 
+  // ---- services & traffic routing ---------------------------------------
+  // Every tail site carries a realistic service mix (mobile backhaul + enterprise
+  // leased services). Traffic is routed hop-by-hop toward the POP over ACTIVE
+  // links, so each link knows exactly what rides it - count, mix, priority split.
+  function seedServices(sites) {
+    let eid = 100;
+    for (const st of sites) {
+      if (st.kind !== "tail") { st.services = []; continue; }
+      const mobile = { type: "mobile", name: st.id + " 4G/5G backhaul", gbps: 0.25, priorityGbps: 0.05 };
+      const entN = 1 + (st.id.charCodeAt(2) % 3); // 1-3 enterprise services per tail
+      const ents = Array.from({ length: entN }, (_, i) => ({
+        type: "enterprise", name: "ENT-" + (eid++) , gbps: 0.04, priorityGbps: 0.02 }));
+      st.services = [mobile, ...ents];
+    }
+  }
+
   // ---- the simulation ----------------------------------------------------
   class MWSim {
     constructor() {
       const t = buildTopology();
       this.sites = t.sites; this.links = t.links;
+      seedServices(this.sites);
       this.cells = []; this.tick = 0; this.alarms = []; this.events = [];
       this.changeLog = [
         { tick: -600, obj: "B-H1~B-T6", txt: "ACM profile updated during MW window" },
@@ -158,6 +175,51 @@
       this._noiseSeed = 42;
     }
     rnd() { this._noiseSeed = (this._noiseSeed * 16807) % 2147483647; return this._noiseSeed / 2147483647; }
+
+    // route every tail's services toward its POP over active, up links (BFS
+    // parent tree). Fills l.carried = {gbps, priorityGbps, services[]} per link.
+    computeRouting() {
+      const act = this.links.filter(l => l.active && l.dirs.ab.up && l.dirs.ba.up);
+      const adj = {};
+      act.forEach(l => {
+        (adj[l.a] = adj[l.a] || []).push({ n: l.b, l }); (adj[l.b] = adj[l.b] || []).push({ n: l.a, l });
+      });
+      const parent = {};
+      const q = this.sites.filter(x => x.kind === "pop").map(x => x.id);
+      const seen = new Set(q);
+      while (q.length) {
+        const n = q.shift();
+        for (const e of (adj[n] || [])) if (!seen.has(e.n)) { seen.add(e.n); parent[e.n] = { via: e.l, to: n }; q.push(e.n); }
+      }
+      for (const l of this.links) l.carried = { gbps: 0, priorityGbps: 0, services: [] };
+      for (const st of this.sites.filter(x => x.kind === "tail" && x.services.length)) {
+        if (!seen.has(st.id)) { st.isolated = true; continue; }
+        st.isolated = false;
+        let cur = st.id;
+        while (parent[cur]) {
+          const hop = parent[cur];
+          for (const svc of st.services) {
+            hop.via.carried.gbps += svc.gbps;
+            hop.via.carried.priorityGbps += svc.priorityGbps;
+            hop.via.carried.services.push(svc.name);
+          }
+          cur = hop.to;
+        }
+      }
+      for (const l of this.links) {
+        l.carried.gbps = +l.carried.gbps.toFixed(2);
+        l.carried.priorityGbps = +l.carried.priorityGbps.toFixed(2);
+      }
+    }
+    capacityNowGbps(l) {
+      const acmIdx = Math.min(l.dirs.ab.acm, l.dirs.ba.acm);
+      const capFactor = [0.17, 0.33, 0.50, 0.67, 0.83, 1.00][acmIdx] || 0.17;
+      return +(l.capacityGbps * capFactor).toFixed(2);
+    }
+    utilizationPct(l) {
+      const cap = this.capacityNowGbps(l);
+      return cap > 0 ? Math.round(100 * l.carried.gbps / cap) : 0;
+    }
 
     // -- fault injectors (the demo's control panel calls these) --
     injectRainCell(x, y, radiusKm, rateMmh, vx, vy) {
@@ -241,6 +303,15 @@
           }
         }
       }
+      this.computeRouting();
+      for (const l of this.links.filter(x => x.active && x.carried && x.carried.gbps > 0)) {
+        const cap = this.capacityNowGbps(l);
+        if (l.carried.gbps > cap) {
+          const F = FMT[l.island] || FMT.X;
+          newAlarms.push(F("MAJOR", "CONGESTION_QOS_SHED", l.id,
+            `carrying ${l.carried.gbps} Gbps on ${cap} Gbps ACM-reduced capacity - best-effort shedding, priority protected`));
+        }
+      }
       newAlarms.forEach(a => (a.tick = this.tick));
       this.alarms.push(...newAlarms);
       if (this.alarms.length > 4000) this.alarms.splice(0, this.alarms.length - 4000);
@@ -254,7 +325,13 @@
       const l = this.links.find(x => x.id === linkId); if (!l) return null;
       return {
         id: l.id, island: l.island, band: l.band, lengthKm: l.lengthKm,
-        standby: l.standby, capacityGbps: l.capacityGbps,
+        standby: l.standby, active: l.active, capacityGbps: l.capacityGbps,
+        capacityNowGbps: this.capacityNowGbps(l),
+        carriedGbps: l.carried ? l.carried.gbps : 0,
+        carriedPriorityGbps: l.carried ? l.carried.priorityGbps : 0,
+        utilizationPct: this.utilizationPct(l),
+        serviceCount: l.carried ? l.carried.services.length : 0,
+        services: l.carried ? l.carried.services.slice(0, 40) : [],
         ab: { ...l.dirs.ab }, ba: { ...l.dirs.ba },
       };
     }
@@ -295,9 +372,8 @@
     }
     linkHeadroomGbps(linkId) {
       const l = this.links.find(x => x.id === linkId); if (!l) return 0;
-      const acmIdx = Math.min(l.dirs.ab.acm, l.dirs.ba.acm);
-      const capFactor = [0.17, 0.33, 0.50, 0.67, 0.83, 1.00][acmIdx] || 0.17;
-      return +(l.capacityGbps * capFactor).toFixed(2);
+      const carried = l.carried ? l.carried.gbps : 0;
+      return +(this.capacityNowGbps(l) - carried).toFixed(2);
     }
     // topology-aware restoration check: would activating `standbyId` actually
     // reconnect everything isolated by losing `causeId`?
