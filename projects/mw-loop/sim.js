@@ -230,6 +230,23 @@
       const cap = this.capacityNowGbps(l);
       return cap > 0 ? Math.round(100 * l.carried.gbps / cap) : 0;
     }
+    // services on tail sites that currently have no path to the POP. Unlike the
+    // ever-climbing alarm count, this rises during an incident and falls again as
+    // links recover or the agent reroutes onto a standby - it is the service-impact
+    // signal the loop correlates to, not the alarm scream. (st.isolated is set by
+    // computeRouting on every step.)
+    servicesImpacted() {
+      let down = 0, priorityDown = 0, total = 0;
+      for (const st of this.sites) {
+        if (st.kind !== "tail" || !st.services) continue;
+        total += st.services.length;
+        if (st.isolated) {
+          down += st.services.length;
+          priorityDown += st.services.filter(s => s.priorityGbps > 0).length;
+        }
+      }
+      return { down, priorityDown, total };
+    }
 
     // -- fault injectors (the demo's control panel calls these) --
     injectRainCell(x, y, radiusKm, rateMmh, vx, vy) {

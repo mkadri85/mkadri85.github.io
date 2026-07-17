@@ -31,7 +31,7 @@
   button.primary{background:var(--acc);border-color:var(--acc);color:#06101f;font-weight:600}
   button.danger{border-color:var(--bad);color:var(--bad)}
   button:disabled{opacity:.45;cursor:default}
-  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 14px 12px}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:0 14px 12px}
   .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:center}
   .kpi .v{font-size:20px;font-weight:700}
   .kpi .l{font-size:11px;color:var(--dim)}
@@ -78,7 +78,7 @@
   .layer.lit{border-color:var(--acc);box-shadow:0 0 12px #4f8fc933;animation:stagePulse 2.4s ease-in-out infinite}
   @keyframes stagePulse{0%,100%{box-shadow:0 0 8px #4f8fc92e}50%{box-shadow:0 0 16px #4f8fc95a}}
   footer{color:var(--dim);font-size:12.5px;text-align:center;padding:20px}
-  @media(max-width:980px){.wrap{grid-template-columns:1fr}.layers{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}.layers{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -122,6 +122,7 @@
       <div class="kpis">
         <div class="kpi"><div class="v" id="kTick">06:00</div><div class="l">sim clock (diurnal load)</div></div>
         <div class="kpi"><div class="v" id="kAlarms">0</div><div class="l">alarms emitted</div></div>
+        <div class="kpi"><div class="v" id="kSvc">0</div><div class="l">services down</div></div>
         <div class="kpi"><div class="v" id="kFind">0</div><div class="l">open findings</div></div>
         <div class="kpi"><div class="v" id="kIso">0</div><div class="l">sites isolated</div></div>
         <div class="kpi"><div class="v mode-active" id="kMode">active</div><div class="l">agent mode</div></div>
@@ -238,6 +239,9 @@
   function renderFeed(newAlarms){
     if(!newAlarms.length) return;
     const f = $("feed");
+    // stick to the bottom only if the operator is already there; if they have
+    // scrolled up to read older alarms, hold their position while new ones land
+    const atBottom = f.scrollHeight - f.scrollTop - f.clientHeight < 24;
     for(const a of newAlarms.slice(-14)){
       const d = document.createElement("div");
       d.className = "i"+a.island.toLowerCase();
@@ -246,8 +250,12 @@
       d.innerHTML = `<span class="sevtag tg-${tag}">${tag.slice(0,4)}</span>${a.raw.replace(/</g,"&lt;")}`;
       f.appendChild(d);
     }
-    while(f.children.length>250) f.removeChild(f.firstChild);
-    f.scrollTop = f.scrollHeight;
+    while(f.children.length>250){
+      const first = f.firstChild, h = first.offsetHeight;
+      f.removeChild(first);
+      if(!atBottom) f.scrollTop -= h; // pruning from the top would shift the view; compensate
+    }
+    if(atBottom) f.scrollTop = f.scrollHeight;
   }
   function renderFindings(){
     const el = $("findings");
@@ -313,6 +321,12 @@
     $("kTick").textContent = sim.clockHHMM();
     $("kAlarms").textContent = sim.alarms.length;
     updateSevCounts();
+    const svc = sim.servicesImpacted();
+    const kv = $("kSvc");
+    kv.textContent = svc.down;
+    // rises red as the incident spreads, drops back to green as the loop restores
+    kv.style.color = svc.down === 0 ? "var(--ok)" : svc.down >= 6 ? "var(--bad)" : "var(--warn)";
+    kv.title = svc.down ? `${svc.priorityDown} priority (EF/AF) of ${svc.down} down - ${svc.total} services total` : "all services reaching the POP";
     $("kFind").textContent = findings.length;
     const isoSet = new Set();
     sim.links.filter(l=>l.active&&!l.dirs.ab.up&&!l.dirs.ba.up).forEach(l=>sim.sitesBelow(l.id).forEach(x=>isoSet.add(x)));
