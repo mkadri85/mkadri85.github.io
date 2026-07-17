@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Loop Meets the Microwave Network — live console</title>
+<meta name="description" content="An agentic closed loop operating a simulated multi-vendor microwave backhaul region: glass-box diagnosis, blast-radius-gated actions, verify and rollback.">
+<meta name="robots" content="index,follow">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80' fill='%234f8fc9' font-style='italic' font-weight='bold'>MK</text></svg>">
+<style>
+  :root{--bg:#0a0e16;--panel:#10182a;--panel2:#0d1420;--line:#1d2a44;--txt:#dbe6f5;--dim:#7f93b2;
+        --acc:#4f8fc9;--ok:#3fca7c;--warn:#e5b84b;--bad:#e4574f;--cy:#54d0e0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--acc);text-decoration:none}
+  header{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line)}
+  header .brand{font-weight:700;font-size:17px}
+  header .brand span{color:var(--acc)}
+  header nav a{margin-left:16px;color:var(--dim);font-size:13px}
+  .note{background:#132036;border:1px solid var(--line);color:var(--dim);font-size:12.5px;padding:8px 22px}
+  .note b{color:var(--txt)}
+  .wrap{display:grid;grid-template-columns:minmax(420px,1.25fr) minmax(360px,1fr);gap:14px;padding:14px 22px;max-width:1500px;margin:0 auto}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .card h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--line)}
+  .pad{padding:12px 14px}
+  /* controls */
+  .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
+  button{background:#16233c;border:1px solid var(--line);color:var(--txt);border-radius:7px;padding:7px 12px;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--acc)}
+  button.primary{background:var(--acc);border-color:var(--acc);color:#06101f;font-weight:600}
+  button.danger{border-color:var(--bad);color:var(--bad)}
+  button:disabled{opacity:.45;cursor:default}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:0 14px 12px}
+  .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;text-align:center}
+  .kpi .v{font-size:20px;font-weight:700}
+  .kpi .l{font-size:11px;color:var(--dim)}
+  .mode-active{color:var(--ok)} .mode-propose{color:var(--warn)}
+  svg{display:block;width:100%;height:auto;background:var(--panel2)}
+  .feed{height:190px;overflow-y:auto;font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:8px 12px}
+  .feed div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ia{color:#7fb4e8}.ib{color:#e8b97f}.ic{color:#9fe87f}.ix{color:var(--dim)}
+  .sevC{color:var(--bad)}.sevM{color:var(--warn)}
+  .finding{border-bottom:1px solid var(--line);padding:10px 14px;cursor:pointer}
+  .finding:hover{background:#131d33}
+  .finding .head{display:flex;justify-content:space-between;align-items:center}
+  .badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .b-RAIN_FADE{background:#233d5c;color:#8fc2f2}.b-HARDWARE{background:#4a2020;color:#f2a09a}
+  .b-INTERFERENCE{background:#4a3a15;color:#f2d38f}.b-LINK_DOWN{background:#5c1d1d;color:#ff9f97}
+  .b-CONFIG{background:#2d2450;color:#c3b4f5}.b-OBSTRUCTION_OR_MISALIGNMENT{background:#233d33;color:#9adfc2}
+  .evi{display:none;margin-top:8px;font-size:12px;color:var(--dim)}
+  .evi div{padding:3px 0;border-top:1px dashed #1b2033}
+  .evi b{color:var(--txt);font-weight:600}
+  .open .evi{display:block}
+  .prop{border-bottom:1px solid var(--line);padding:10px 14px}
+  .prop .checks div{font-size:12px;color:var(--dim)}
+  .pass:before{content:"PASS ";color:var(--ok);font-weight:700;font-size:10.5px}
+  .fail:before{content:"FAIL ";color:var(--bad);font-weight:700;font-size:10.5px}
+  .log{height:210px;overflow-y:auto;font-size:12.5px;padding:8px 14px}
+  .log div{padding:2.5px 0;border-bottom:1px dashed #141c30}
+  .k-action{color:var(--ok)}.k-proposal{color:var(--warn)}.k-verify{color:var(--cy)}.k-breaker{color:var(--bad)}.k-weather{color:#8fc2f2}.k-fault{color:#f2a09a}
+  .layers{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:12px 22px;max-width:1500px;margin:0 auto}
+  .layer{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--dim);text-align:center}
+  .layer b{display:block;color:var(--txt);font-size:12px}
+  .layer.lit{border-color:var(--acc);box-shadow:0 0 12px #4f8fc933}
+  footer{color:var(--dim);font-size:12.5px;text-align:center;padding:20px}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}.layers{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">MK<span>·</span> The Loop Meets the Microwave Network</div>
+  <nav>
+    <a href="/blog/" target="_top">Writing</a>
+    <a href="/projects/agent-noc/" target="_top">Agent NOC console</a>
+    <a href="/" target="_top">mkadri85.github.io</a>
+  </nav>
+</header>
+<div class="note"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic — the same rules described in the article, running live in your browser. No data leaves this page.</div>
+
+<div class="wrap">
+  <div>
+    <div class="card">
+      <h3>Multi-vendor microwave region — three NMS islands</h3>
+      <svg id="map" viewBox="0 0 100 74" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="controls">
+        <button class="primary" id="btnRain">Inject rain storm</button>
+        <button id="btnOdu">Hidden ODU degradation</button>
+        <button id="btnIntf">Interference</button>
+        <button class="danger" id="btnLifeline">Lifeline hub failure</button>
+        <button id="btnReset">Reset region</button>
+        <span style="flex:1"></span>
+        <button id="btnPause">Pause</button>
+      </div>
+      <div class="kpis">
+        <div class="kpi"><div class="v" id="kTick">0</div><div class="l">tick</div></div>
+        <div class="kpi"><div class="v" id="kAlarms">0</div><div class="l">alarms (storm feed)</div></div>
+        <div class="kpi"><div class="v" id="kFind">0</div><div class="l">open findings</div></div>
+        <div class="kpi"><div class="v" id="kIso">0</div><div class="l">sites isolated</div></div>
+        <div class="kpi"><div class="v mode-active" id="kMode">active</div><div class="l">agent mode</div></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Raw alarm feeds — what the three islands actually emit</h3>
+      <div class="feed" id="feed"></div>
+    </div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h3>Layer 2 — glass-box diagnosis (click a finding for the evidence trail)</h3>
+      <div id="findings"><div class="pad" style="color:var(--dim)">Region healthy. Inject a scenario on the left.</div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Layer 3 — gated proposals awaiting a human</h3>
+      <div id="props"><div class="pad" style="color:var(--dim)">Nothing pending. Actions inside policy fire automatically; anything bigger lands here.</div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h3>Decision log — actions, verifications, breaker</h3>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+
+<div class="layers" id="layerStrip">
+  <div class="layer" id="L0"><b>0 · Signal</b>probes &amp; alarms</div>
+  <div class="layer" id="L1"><b>1 · Topology</b>correlate islands</div>
+  <div class="layer" id="L2"><b>2 · Diagnosis</b>runbook verdicts</div>
+  <div class="layer" id="L3"><b>3 · Decision</b>blast-radius gate</div>
+  <div class="layer" id="L4"><b>4 · Actuation</b>typed calls</div>
+  <div class="layer" id="L5"><b>5 · Verify</b>contracts &amp; rollback</div>
+  <div class="layer" id="L6"><b>6 · Assurance</b>agent breaker</div>
+</div>
+
+<footer>
+  Companion demo to <a href="/blog/" target="_top">the article series</a> · logic MIT, view source ·
+  built by <a href="/" target="_top">Mohamed Kadri</a>
+</footer>
+
+<script src="sim.js"></script>
+<script src="diagnosis.js"></script>
+<script src="loop.js"></script>
+<script>
+(function(){
+  "use strict";
+  let sim = new MWSim.MWSim();
+  let orch = new MWLoop.Orchestrator(sim);
+  let paused = false, findings = [];
+
+  const $ = id => document.getElementById(id);
+  const map = $("map");
+
+  // ---- map rendering ----
+  function islandColor(i){ return i==="A" ? "#7fb4e8" : i==="B" ? "#e8b97f" : i==="C" ? "#9fe87f" : "#69819f"; }
+  function linkColor(l){
+    if(l.standby && !l.active) return "#33415e";
+    if(!l.dirs.ab.up && !l.dirs.ba.up) return "#e4574f";
+    const nom = l.band==="80GHz" ? -42 : -38;
+    const drop = Math.max(nom-l.dirs.ab.rsl, nom-l.dirs.ba.rsl);
+    if(drop >= 15) return "#e5b84b";
+    if(drop >= 5)  return "#c9d46a";
+    return "#2f6f4f";
+  }
+  function render(){
+    let s = "";
+    for(const c of sim.cells.filter(c=>c.active))
+      s += `<circle cx="${c.x}" cy="${c.y}" r="${c.radiusKm/0.6}" fill="#4f8fc9" opacity="0.14"/><circle cx="${c.x}" cy="${c.y}" r="${c.radiusKm/0.6}" fill="none" stroke="#4f8fc9" stroke-width="0.25" opacity="0.5"/>`;
+    for(const l of sim.links){
+      const a=sim.sites.find(x=>x.id===l.a), b=sim.sites.find(x=>x.id===l.b);
+      const dash = l.standby ? `stroke-dasharray="1.6,1.2"` : "";
+      const w = l.standby && l.active ? 0.9 : 0.55;
+      s += `<line x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" stroke="${l.standby&&l.active?"#54d0e0":linkColor(l)}" stroke-width="${w}" ${dash}/>`;
+    }
+    for(const site of sim.sites){
+      const r = site.kind==="pop" ? 1.7 : site.kind==="hub" ? 1.3 : 0.9;
+      const shape = site.kind==="pop"
+        ? `<rect x="${site.x-r}" y="${site.y-r}" width="${2*r}" height="${2*r}" fill="${islandColor(site.island)}"/>`
+        : `<circle cx="${site.x}" cy="${site.y}" r="${r}" fill="${site.kind==="hub"?islandColor(site.island):"#0d1420"}" stroke="${islandColor(site.island)}" stroke-width="0.4"/>`;
+      s += shape + `<text x="${site.x}" y="${site.y-r-0.9}" font-size="2.1" fill="#7f93b2" text-anchor="middle">${site.id}</text>`;
+    }
+    map.innerHTML = s;
+  }
+
+  // ---- panels ----
+  function light(id){ const el=$(id); el.classList.add("lit"); setTimeout(()=>el.classList.remove("lit"), 900); }
+  function renderFeed(newAlarms){
+    if(!newAlarms.length) return;
+    const f = $("feed");
+    for(const a of newAlarms.slice(-14)){
+      const d = document.createElement("div");
+      d.className = "i"+a.island.toLowerCase();
+      d.innerHTML = `<span class="${a.sev==="CRITICAL"?"sevC":a.sev==="MAJOR"?"sevM":""}">${a.raw.replace(/</g,"&lt;")}</span>`;
+      f.appendChild(d);
+    }
+    while(f.children.length>250) f.removeChild(f.firstChild);
+    f.scrollTop = f.scrollHeight;
+  }
+  function renderFindings(){
+    const el = $("findings");
+    if(!findings.length){ el.innerHTML = `<div class="pad" style="color:var(--dim)">Region healthy. Inject a scenario on the left.</div>`; return; }
+    el.innerHTML = findings.map((d,i)=>`
+      <div class="finding" data-i="${i}">
+        <div class="head">
+          <div><b>${d.linkId}</b> ${d.direction?`<span style="color:var(--dim)">dir ${d.direction}</span>`:""}</div>
+          <div><span class="badge b-${d.verdict}">${d.verdict.replace(/_/g," ")}</span> <span style="color:var(--dim);font-size:12px">conf ${d.confidence}</span></div>
+        </div>
+        ${d.note?`<div style="font-size:12px;color:var(--dim);margin-top:3px">${d.note}</div>`:""}
+        <div class="evi">${d.evidence.map(e=>`<div><b>[${e.probe}]</b> ${e.observed} <span style="color:var(--acc)">→</span> ${e.inference}</div>`).join("")}</div>
+      </div>`).join("");
+    el.querySelectorAll(".finding").forEach(n=>n.addEventListener("click",()=>n.classList.toggle("open")));
+  }
+  function renderProps(){
+    const el = $("props");
+    if(!orch.proposals.length){ el.innerHTML = `<div class="pad" style="color:var(--dim)">Nothing pending. Actions inside policy fire automatically; anything bigger lands here.</div>`; return; }
+    el.innerHTML = orch.proposals.map((p,i)=>`
+      <div class="prop">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b>${MWLoop.ACTIONS[p.plan.action].label}</b>
+          <button class="primary" data-approve="${i}">Approve</button>
+        </div>
+        <div style="font-size:12px;color:var(--dim)">target ${p.plan.target}${p.plan.cause?` · cause ${p.plan.cause}`:""} · verdict ${p.diag.verdict} (${p.diag.confidence})</div>
+        <div class="checks" style="margin-top:6px">${p.gate.checks.map(c=>`<div class="${c.ok?"pass":"fail"}">${c.name} — ${c.detail}</div>`).join("")}</div>
+      </div>`).join("");
+    el.querySelectorAll("[data-approve]").forEach(b=>b.addEventListener("click",()=>{ orch.approve(+b.dataset.approve); light("L4"); renderProps(); renderLog(); }));
+  }
+  function renderLog(){
+    const el = $("log");
+    el.innerHTML = orch.log.slice(-80).map(l=>`<div><span style="color:var(--dim)">t${l.tick}</span> <span class="k-${l.kind}">${l.kind.toUpperCase()}</span> ${l.txt}</div>`).join("");
+    el.scrollTop = el.scrollHeight;
+  }
+
+  // ---- main loop ----
+  let tickCount = 0;
+  setInterval(()=>{
+    if(paused) return;
+    const newAlarms = sim.step(); tickCount++;
+    if(newAlarms.length) light("L0");
+    renderFeed(newAlarms);
+    if(tickCount % 4 === 0){
+      findings = MWDiag.diagnoseRegion(sim);
+      if(findings.length){ light("L1"); light("L2"); }
+      const acted = orch.runOnce(()=>findings);
+      if(acted.some(a=>a.result.executed)){ light("L3"); light("L4"); }
+      if(acted.some(a=>a.result.proposed)){ light("L3"); }
+      if(orch.log.some(l=>l.kind==="verify" && l.tick===sim.tick)) light("L5");
+      if(orch.mode!=="active") light("L6");
+      renderFindings(); renderProps(); renderLog();
+    }
+    $("kTick").textContent = sim.tick;
+    $("kAlarms").textContent = sim.alarms.length;
+    $("kFind").textContent = findings.length;
+    const iso = sim.sites.length ? sim.links.filter(l=>l.active&&!l.dirs.ab.up&&!l.dirs.ba.up).reduce((n,l)=>Math.max(n,sim.sitesBelow(l.id).length),0) : 0;
+    $("kIso").textContent = iso;
+    const km = $("kMode"); km.textContent = orch.mode; km.className = "v " + (orch.mode==="active"?"mode-active":"mode-propose");
+    render();
+  }, 500);
+
+  // ---- scenario buttons ----
+  $("btnRain").addEventListener("click", ()=> sim.injectRainCell(14,12,10,42,0.5,0.28));
+  $("btnOdu").addEventListener("click", ()=> sim.injectOduDegradation("A-H1~A-H2","ab",16));
+  $("btnIntf").addEventListener("click", ()=> sim.injectInterference("C-H2~C-T5","ba",14));
+  $("btnLifeline").addEventListener("click", ()=> sim.hardFail("A-POP~A-H1"));
+  $("btnReset").addEventListener("click", ()=>{ sim = new MWSim.MWSim(); orch = new MWLoop.Orchestrator(sim); findings=[]; $("feed").innerHTML=""; renderFindings(); renderProps(); renderLog(); });
+  $("btnPause").addEventListener("click", (e)=>{ paused=!paused; e.target.textContent = paused?"Resume":"Pause"; });
+
+  render();
+})();
+</script>
+</body>
+</html>
