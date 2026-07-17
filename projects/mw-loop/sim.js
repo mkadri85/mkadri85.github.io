@@ -92,8 +92,11 @@
     const sa = sites.find(s => s.id === a), sb = sites.find(s => s.id === b);
     const lengthKm = Math.hypot(sa.x - sb.x, sa.y - sb.y) * 0.6; // plane->km scale
     // nominal RSL: mid-range healthy receive level; fade margin by band
+    // operator calibration: receiver falls over around -75 dBm regardless of
+    // band (low-mod sensitivity); fade margin is what stands between nominal
+    // RSL and that floor - a ~35 dB drop from nominal is a real incident.
     const nominalRsl = band === "80GHz" ? -42 : -38;
-    const fadeMargin = band === "80GHz" ? 18 : band === "7GHz" ? 38 : 28;
+    const fadeMargin = band === "80GHz" ? 33 : 37; // down at ~-75 dBm
     return {
       id: a + "~" + b, a, b, band, capacityGbps, lengthKm: +lengthKm.toFixed(1),
       island: sa.island === sb.island ? sa.island : "X",
@@ -266,6 +269,28 @@
       return this.changeLog.filter(c => c.obj === linkId && this.tick - c.tick < 900);
     }
     recentAlarms(n) { return this.alarms.slice(-n); }
+    alarmHistoryFor(linkId, lastN) {
+      return this.alarms.slice(-(lastN || 600)).filter(a => a.obj && a.obj.startsWith(linkId));
+    }
+    // traffic demand: tails carry subscriber load with a QoS split. The
+    // pre-reroute question every operator asks: does the protection path have
+    // headroom, and if not, what sheds first per QoS profile?
+    demandOf(siteIds) {
+      let priority = 0, total = 0;
+      for (const sid of siteIds) {
+        const site = this.sites.find(x => x.id === sid);
+        if (!site) continue;
+        const d = site.kind === "tail" ? { p: 0.08, t: 0.35 } : site.kind === "hub" ? { p: 0.04, t: 0.15 } : { p: 0, t: 0 };
+        priority += d.p; total += d.t;
+      }
+      return { priorityGbps: +priority.toFixed(2), totalGbps: +total.toFixed(2) };
+    }
+    linkHeadroomGbps(linkId) {
+      const l = this.links.find(x => x.id === linkId); if (!l) return 0;
+      const acmIdx = Math.min(l.dirs.ab.acm, l.dirs.ba.acm);
+      const capFactor = [0.17, 0.33, 0.50, 0.67, 0.83, 1.00][acmIdx] || 0.17;
+      return +(l.capacityGbps * capFactor).toFixed(2);
+    }
     // topology-aware restoration check: would activating `standbyId` actually
     // reconnect everything isolated by losing `causeId`?
     wouldRestore(causeId, standbyId) {

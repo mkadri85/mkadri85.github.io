@@ -121,6 +121,19 @@
       }
       ok = pass(`blast radius <= ${POLICY.maxAutoBlast} (or read-only)`, !a.writes || blast <= POLICY.maxAutoBlast,
                 a.writes ? `${blast} sites depend on the affected object` : "read-only action") && ok;
+      // the pre-reroute question every operator asks: can the protection path
+      // CARRY what we are about to move, and what sheds first per QoS?
+      if (plan.action === "ACTIVATE_STANDBY" && plan.cause) {
+        const demand = this.sim.demandOf(this.sim.sitesBelow(plan.cause));
+        const headroom = this.sim.linkHeadroomGbps(plan.target);
+        const fitsPriority = demand.priorityGbps <= headroom;
+        const fitsAll = demand.totalGbps <= headroom;
+        ok = pass("capacity: priority traffic fits protection path", fitsPriority,
+                  `moving ${demand.totalGbps} Gbps (${demand.priorityGbps} priority) onto ${headroom} Gbps headroom`) && ok;
+        if (fitsPriority && !fitsAll)
+          checks.push({ name: "QoS shedding expected", ok: true,
+                        detail: `best-effort will shed: ${(demand.totalGbps - headroom).toFixed(2)} Gbps over headroom - priority classes protected` });
+      }
       ok = pass("agent breaker", this.breakerAllows(), this.mode) && ok;
       return { allowed: ok, checks, blast };
     }

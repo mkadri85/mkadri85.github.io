@@ -81,6 +81,15 @@
       return { verdict: "HEALTHY", confidence: 0.95, evidence: ev, linkId };
     }
 
+    // H0: the operator's actual first move - active alarms + history on the
+    // object. A recurring pattern (same hour daily, flapping for weeks) reads
+    // completely differently from a first-ever event.
+    const hist = sim.alarmHistoryFor(linkId, 800);
+    const rslLows = hist.filter(a => a.type === "RSL_LOW" || a.type === "ACM_DOWNSHIFT").length;
+    say("alarm history", `${hist.length} alarms on this object recently (${rslLows} RSL/ACM events)`,
+        rslLows > 12 ? "recurring degradation pattern - chronic issue, check trend before treating as new (H0)" :
+        rslLows > 0 ? "some prior events - compare with current signature (H0)" : "first occurrence - fresh event (H0)");
+
     // H7: config first - cheapest check, embarrassing to miss
     const changes = sim.probeChangeLog(linkId);
     if (changes.length) {
