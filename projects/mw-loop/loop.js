@@ -134,12 +134,26 @@
       const g = this.gate(plan, diag);
       const entry = { tick: this.sim.tick, plan, diag: { verdict: diag.verdict, confidence: diag.confidence, linkId: diag.linkId }, gate: g };
       if (!g.allowed) {
+        // correlate: one proposal per (action,target); new causes fold into it.
+        // (otherwise an island outage spams N copies of the same reroute -
+        // the alarm-storm problem reborn at the proposal layer)
+        const dup = this.proposals.find(p => p.plan.action === plan.action && p.plan.target === plan.target);
+        if (dup) {
+          dup.covers = dup.covers || [dup.plan.cause || dup.diag.linkId];
+          const c = plan.cause || diag.linkId;
+          if (!dup.covers.includes(c)) { dup.covers.push(c); this.note("proposal", `Correlated: existing ${plan.action} proposal on ${plan.target} also covers ${c}`); }
+          return { executed: false, proposed: true, gate: g, correlated: true };
+        }
         this.proposals.push(entry);
         this.note("proposal", `${ACTIONS[plan.action].label} on ${plan.target} - PROPOSED (gate: ${g.checks.filter(c => !c.ok).map(c => c.name).join(", ") || "breaker"})`, { blast: g.blast });
         return { executed: false, proposed: true, gate: g };
       }
       // fire the typed call
-      if (plan.action === "ACTIVATE_STANDBY") this.sim.activateStandby(plan.target);
+      if (plan.action === "ACTIVATE_STANDBY") {
+        const t = this.sim.links.find(x => x.id === plan.target);
+        if (t && t.active) return { executed: false, skipped: "standby already active", gate: g };
+        this.sim.activateStandby(plan.target);
+      }
       if (plan.action === "CONFIG_ROLLBACK") this.note("action", `(sim) config rollback issued on ${plan.target}`);
       if (ACTIONS[plan.action].writes) this.autoActionTicks.push(this.sim.tick);
       const contract = this.verifyContractFor(plan);
