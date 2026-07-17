@@ -9,7 +9,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80' fill='%234f8fc9' font-style='italic' font-weight='bold'>MK</text></svg>">
 <style>
   :root{--bg:#0a0e16;--panel:#10182a;--panel2:#0d1420;--line:#1d2a44;--txt:#dbe6f5;--dim:#7f93b2;
-        --acc:#4f8fc9;--ok:#3fca7c;--warn:#e5b84b;--bad:#e4574f;--cy:#54d0e0}
+        --acc:#4f8fc9;--ok:#3fca7c;--warn:#e5b84b;--bad:#e4574f;--cy:#54d0e0;
+        --sevCrit:#e4574f;--sevMaj:#e8873f;--sevMin:#e5b84b;--sevWarn:#4f8fc9}
   *{box-sizing:border-box;margin:0;padding:0}
   body{background:var(--bg);color:var(--txt);font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
   a{color:var(--acc);text-decoration:none}
@@ -36,9 +37,22 @@
   .kpi .l{font-size:11px;color:var(--dim)}
   .mode-active{color:var(--ok)} .mode-propose{color:var(--warn)}
   svg{display:block;width:100%;height:auto;background:var(--panel2)}
-  .feed{height:190px;overflow-y:auto;font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:8px 12px}
+  /* severity counter strip (mirrors iMaster MAE Current Alarms) */
+  .sevbar{display:flex;gap:7px;padding:9px 12px 3px;flex-wrap:wrap;align-items:center}
+  .sevpill{display:flex;align-items:center;gap:7px;border-radius:5px;padding:3px 5px 3px 9px;
+    font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#0a0e16}
+  .sevpill .n{background:rgba(6,16,31,.28);border-radius:4px;padding:1px 7px;font-size:12px;
+    font-weight:700;font-variant-numeric:tabular-nums;min-width:26px;text-align:center}
+  .sp-crit{background:var(--sevCrit)}.sp-maj{background:var(--sevMaj)}
+  .sp-min{background:var(--sevMin)}.sp-warn{background:var(--sevWarn)}
+  .feed{height:190px;overflow-y:auto;font:11.5px/1.55 ui-monospace,Menlo,Consolas,monospace;padding:6px 12px 8px}
   .feed div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .ia{color:#7fb4e8}.ib{color:#e8b97f}.ic{color:#9fe87f}.ix{color:var(--dim)}
+  /* per-line severity tag = the coloured "Severity" cell in the real console */
+  .sevtag{display:inline-block;min-width:52px;text-align:center;font-weight:700;font-size:9.5px;
+    letter-spacing:.05em;border-radius:3px;padding:0 5px;margin-right:8px;color:#0a0e16;vertical-align:1px}
+  .tg-CRITICAL{background:var(--sevCrit)}.tg-MAJOR{background:var(--sevMaj)}
+  .tg-MINOR{background:var(--sevMin)}.tg-WARNING{background:var(--sevWarn)}
   .sevC{color:var(--bad)}.sevM{color:var(--warn)}
   .finding{border-bottom:1px solid var(--line);padding:10px 14px;cursor:pointer}
   .finding:hover{background:#131d33}
@@ -119,6 +133,12 @@
     </div>
     <div class="card" style="margin-top:14px">
       <h3>Raw alarm feeds — what the three islands actually emit</h3>
+      <div class="sevbar" id="sevbar">
+        <span class="sevpill sp-crit">Critical<span class="n" id="scCrit">0</span></span>
+        <span class="sevpill sp-maj">Major<span class="n" id="scMaj">0</span></span>
+        <span class="sevpill sp-min">Minor<span class="n" id="scMin">0</span></span>
+        <span class="sevpill sp-warn">Warning<span class="n" id="scWarn">0</span></span>
+      </div>
       <div class="feed" id="feed"></div>
     </div>
   </div>
@@ -207,13 +227,23 @@
   function light(id){ const el=$(id); el.classList.add("lit"); setTimeout(()=>el.classList.remove("lit"), 1400); }
   function setStage(id, on){ $(id).classList.toggle("lit", !!on); }
   let lastAlarmTick = -99;
+  function updateSevCounts(){
+    let c=0,m=0,n=0,w=0;
+    for(const a of sim.alarms){
+      const s=(a.sev||"").toUpperCase();
+      if(s==="CRITICAL")c++; else if(s==="MAJOR")m++; else if(s==="MINOR")n++; else w++;
+    }
+    $("scCrit").textContent=c; $("scMaj").textContent=m; $("scMin").textContent=n; $("scWarn").textContent=w;
+  }
   function renderFeed(newAlarms){
     if(!newAlarms.length) return;
     const f = $("feed");
     for(const a of newAlarms.slice(-14)){
       const d = document.createElement("div");
       d.className = "i"+a.island.toLowerCase();
-      d.innerHTML = `<span class="${a.sev==="CRITICAL"?"sevC":a.sev==="MAJOR"?"sevM":""}">${a.raw.replace(/</g,"&lt;")}</span>`;
+      const sev = (a.sev||"WARNING").toUpperCase();
+      const tag = ["CRITICAL","MAJOR","MINOR","WARNING"].includes(sev) ? sev : "WARNING";
+      d.innerHTML = `<span class="sevtag tg-${tag}">${tag.slice(0,4)}</span>${a.raw.replace(/</g,"&lt;")}`;
       f.appendChild(d);
     }
     while(f.children.length>250) f.removeChild(f.firstChild);
@@ -282,6 +312,7 @@
     }
     $("kTick").textContent = sim.clockHHMM();
     $("kAlarms").textContent = sim.alarms.length;
+    updateSevCounts();
     $("kFind").textContent = findings.length;
     const isoSet = new Set();
     sim.links.filter(l=>l.active&&!l.dirs.ab.up&&!l.dirs.ba.up).forEach(l=>sim.sitesBelow(l.id).forEach(x=>isoSet.add(x)));
@@ -307,7 +338,7 @@
     setTimeout(()=>{ say("STORY 3/3: the cell is passing. Watch the re-verify: everything recovers except one link - the fault stands exposed, dispatch gets proposed with evidence attached."); }, 45000);
   });
   $("btnLifeline").addEventListener("click", ()=> sim.hardFail("A-POP~A-H1"));
-  $("btnReset").addEventListener("click", ()=>{ sim = new MWSim.MWSim(); orch = new MWLoop.Orchestrator(sim); findings=[]; $("feed").innerHTML=""; renderFindings(); renderProps(); renderLog(); });
+  $("btnReset").addEventListener("click", ()=>{ sim = new MWSim.MWSim(); orch = new MWLoop.Orchestrator(sim); findings=[]; $("feed").innerHTML=""; renderFindings(); renderProps(); renderLog(); updateSevCounts(); });
   $("btnPause").addEventListener("click", (e)=>{ paused=!paused; e.target.textContent = paused?"Resume":"Pause"; });
   $("btnUtil").addEventListener("click", (e)=>{ showUtil=!showUtil; e.target.textContent = showUtil?"Hide utilization":"Show utilization"; render(); });
   map.addEventListener("click", (e)=>{ const id=e.target && e.target.dataset && e.target.dataset.link; if(id){ selectedLink=id; renderInspector(); }});
