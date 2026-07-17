@@ -72,13 +72,27 @@
   .log{height:210px;overflow-y:auto;font-size:12.5px;padding:8px 14px}
   .log div{padding:2.5px 0;border-bottom:1px dashed #141c30}
   .k-action{color:var(--ok)}.k-proposal{color:var(--warn)}.k-verify{color:var(--cy)}.k-breaker{color:var(--bad)}.k-weather{color:#8fc2f2}.k-fault{color:#f2a09a}
-  .layers{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:12px 22px;max-width:1500px;margin:0 auto}
-  .layer{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--dim);text-align:center}
-  .layer b{display:block;color:var(--txt);font-size:12px}
-  .layer.lit{border-color:var(--acc);box-shadow:0 0 12px #4f8fc933;animation:stagePulse 2.4s ease-in-out infinite}
-  @keyframes stagePulse{0%,100%{box-shadow:0 0 8px #4f8fc92e}50%{box-shadow:0 0 16px #4f8fc95a}}
+  /* agentic loop pipeline - the hero, pinned at the top; each stage lights in its own colour */
+  .pipe{max-width:1500px;margin:12px auto 0;padding:0 22px}
+  .pipe .lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin:0 2px 8px}
+  .pipe .lab b{color:var(--txt);font-weight:700}
+  .pipeflow{display:flex;gap:2px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:6px;overflow-x:auto}
+  .stage{flex:1 0 118px;position:relative;border:1px solid transparent;border-radius:8px;padding:9px 12px;
+    text-align:left;transition:background .25s,border-color .25s,box-shadow .25s}
+  .stage .sn{font-size:9.5px;font-weight:700;letter-spacing:.09em;color:var(--dim)}
+  .stage .st{display:block;font-size:13px;font-weight:700;color:var(--txt);margin:1px 0}
+  .stage .sd{font-size:10.5px;color:var(--dim)}
+  .stage .dot{position:absolute;top:10px;right:11px;width:7px;height:7px;border-radius:50%;background:#2a3550}
+  .stage:not(:last-child):after{content:"";position:absolute;right:-3px;top:50%;width:7px;height:7px;
+    border-top:2px solid var(--line);border-right:2px solid var(--line);transform:translateY(-50%) rotate(45deg);z-index:2}
+  .stage.lit{background:var(--sbg);border-color:var(--sc);box-shadow:0 0 0 1px var(--sc),0 0 18px -3px var(--sc)}
+  .stage.lit .sn{color:var(--sc)}.stage.lit .st{color:#fff}.stage.lit .sd{color:var(--txt)}
+  .stage.lit .dot{background:var(--sc);box-shadow:0 0 9px var(--sc);animation:sdot 1.4s ease-in-out infinite}
+  @keyframes sdot{0%,100%{opacity:1}50%{opacity:.3}}
+  #L0{--sc:#54d0e0;--sbg:#0f2830}#L1{--sc:#4f8fc9;--sbg:#122238}#L2{--sc:#a888f0;--sbg:#1d1836}
+  #L3{--sc:#e5b84b;--sbg:#2b2410}#L4{--sc:#3fca7c;--sbg:#0f2a1c}#L5{--sc:#54d0e0;--sbg:#0f2630}#L6{--sc:#e4574f;--sbg:#2e1512}
   footer{color:var(--dim);font-size:12.5px;text-align:center;padding:20px}
-  @media(max-width:980px){.wrap{grid-template-columns:1fr}.layers{grid-template-columns:repeat(2,1fr)}.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:980px){.wrap{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -91,6 +105,19 @@
   </nav>
 </header>
 <div class="note"><b>Honest labeling:</b> the network below is simulated (topology, ITU-R rain physics, alarms). The diagnosis runbook, blast-radius gate, verify/rollback contracts and the agent breaker are the real logic, running live in your browser — no data leaves this page. <b>"Agentic"</b> here means software that closes the loop itself (observes, decides, acts, verifies) — not an SNMP agent. Simplifications, stated up front: ATPC is modeled on traditional bands (TX rises to hold RSL until saturation; E-band runs without); multipath/ducting and wet-radome effects remain out of scope — the article covers how each would change the runbook.</div>
+
+<div class="pipe">
+  <div class="lab">The agentic loop — <b>live pipeline</b>, each stage lights in its own colour as the region is handled</div>
+  <div class="pipeflow" id="layerStrip">
+    <div class="stage" id="L0"><span class="dot"></span><span class="sn">STAGE 0</span><span class="st">Signal</span><span class="sd">probes &amp; alarms</span></div>
+    <div class="stage" id="L1"><span class="dot"></span><span class="sn">STAGE 1</span><span class="st">Topology</span><span class="sd">correlate islands</span></div>
+    <div class="stage" id="L2"><span class="dot"></span><span class="sn">STAGE 2</span><span class="st">Diagnosis</span><span class="sd">runbook verdicts</span></div>
+    <div class="stage" id="L3"><span class="dot"></span><span class="sn">STAGE 3</span><span class="st">Decision</span><span class="sd">blast-radius gate</span></div>
+    <div class="stage" id="L4"><span class="dot"></span><span class="sn">STAGE 4</span><span class="st">Actuation</span><span class="sd">typed calls</span></div>
+    <div class="stage" id="L5"><span class="dot"></span><span class="sn">STAGE 5</span><span class="st">Verify</span><span class="sd">contracts &amp; rollback</span></div>
+    <div class="stage" id="L6"><span class="dot"></span><span class="sn">STAGE 6</span><span class="st">Assurance</span><span class="sd">agent breaker</span></div>
+  </div>
+</div>
 
 <div class="wrap">
   <div>
@@ -158,16 +185,6 @@
       <div class="log" id="log"></div>
     </div>
   </div>
-</div>
-
-<div class="layers" id="layerStrip">
-  <div class="layer" id="L0"><b>Stage 0 · Signal</b>probes &amp; alarms</div>
-  <div class="layer" id="L1"><b>Stage 1 · Topology</b>correlate islands</div>
-  <div class="layer" id="L2"><b>Stage 2 · Diagnosis</b>runbook verdicts</div>
-  <div class="layer" id="L3"><b>Stage 3 · Decision</b>blast-radius gate</div>
-  <div class="layer" id="L4"><b>Stage 4 · Actuation</b>typed calls</div>
-  <div class="layer" id="L5"><b>Stage 5 · Verify</b>contracts &amp; rollback</div>
-  <div class="layer" id="L6"><b>Stage 6 · Assurance</b>agent breaker</div>
 </div>
 
 <footer>
