@@ -176,7 +176,7 @@
     // -- topology math: what hangs below a link (blast radius) --
     sitesBelow(linkId) {
       // remove link, BFS from all POPs over ACTIVE links; unreachable non-standby sites = below
-      const act = this.links.filter(l => l.id !== linkId && l.active && (l.dirs.ab.up || l.dirs.ba.up));
+      const act = this.links.filter(l => l.id !== linkId && l.active && l.dirs.ab.up && l.dirs.ba.up); // duplex: one dead direction carries no service
       const adj = {};
       act.forEach(l => { (adj[l.a] = adj[l.a] || []).push(l.b); (adj[l.b] = adj[l.b] || []).push(l.a); });
       const reach = new Set(this.sites.filter(s => s.kind === "pop").map(s => s.id));
@@ -233,6 +233,7 @@
       newAlarms.forEach(a => (a.tick = this.tick));
       this.alarms.push(...newAlarms);
       if (this.alarms.length > 4000) this.alarms.splice(0, this.alarms.length - 4000);
+      if (this.events.length > 400) this.events.splice(0, this.events.length - 400);
       return newAlarms;
     }
 
@@ -265,6 +266,21 @@
       return this.changeLog.filter(c => c.obj === linkId && this.tick - c.tick < 900);
     }
     recentAlarms(n) { return this.alarms.slice(-n); }
+    // topology-aware restoration check: would activating `standbyId` actually
+    // reconnect everything isolated by losing `causeId`?
+    wouldRestore(causeId, standbyId) {
+      const below = this.sitesBelow(causeId);
+      if (!below.length) return false;
+      const act = this.links.filter(l => l.id !== causeId &&
+        (l.active || l.id === standbyId) &&
+        (l.id === standbyId || (l.dirs.ab.up && l.dirs.ba.up)));
+      const adj = {};
+      act.forEach(l => { (adj[l.a] = adj[l.a] || []).push(l.b); (adj[l.b] = adj[l.b] || []).push(l.a); });
+      const reach = new Set(this.sites.filter(x => x.kind === "pop").map(x => x.id));
+      const q = [...reach];
+      while (q.length) { const n = q.shift(); (adj[n] || []).forEach(m => { if (!reach.has(m)) { reach.add(m); q.push(m); } }); }
+      return below.every(sid => reach.has(sid));
+    }
     // -- actuation API (typed, auditable; the ONLY writes the agent can make)
     activateStandby(linkId) {
       const l = this.links.find(x => x.id === linkId && x.standby);

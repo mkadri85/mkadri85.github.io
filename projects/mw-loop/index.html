@@ -46,7 +46,7 @@
   .badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
   .b-RAIN_FADE{background:#233d5c;color:#8fc2f2}.b-HARDWARE{background:#4a2020;color:#f2a09a}
   .b-INTERFERENCE{background:#4a3a15;color:#f2d38f}.b-LINK_DOWN{background:#5c1d1d;color:#ff9f97}
-  .b-CONFIG{background:#2d2450;color:#c3b4f5}.b-OBSTRUCTION_OR_MISALIGNMENT{background:#233d33;color:#9adfc2}
+  .b-LINK_DOWN_RAIN{background:#1d3a5c;color:#8fc2f2}.b-CONFIG{background:#2d2450;color:#c3b4f5}.b-OBSTRUCTION_OR_MISALIGNMENT{background:#233d33;color:#9adfc2}
   .evi{display:none;margin-top:8px;font-size:12px;color:var(--dim)}
   .evi div{padding:3px 0;border-top:1px dashed #1b2033}
   .evi b{color:var(--txt);font-weight:600}
@@ -215,12 +215,12 @@
       <div class="prop">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <b>${MWLoop.ACTIONS[p.plan.action].label}</b>
-          <button class="primary" data-approve="${i}">Approve</button>
+          <button class="primary" data-approve="${p.pid}">Approve</button>
         </div>
         <div style="font-size:12px;color:var(--dim)">target ${p.plan.target}${p.plan.cause?` · cause ${p.plan.cause}`:""} · verdict ${p.diag.verdict} (${p.diag.confidence})</div>
         <div class="checks" style="margin-top:6px">${p.gate.checks.map(c=>`<div class="${c.ok?"pass":"fail"}">${c.name} — ${c.detail}</div>`).join("")}</div>
       </div>`).join("");
-    el.querySelectorAll("[data-approve]").forEach(b=>b.addEventListener("click",()=>{ orch.approve(+b.dataset.approve); light("L4"); renderProps(); renderLog(); }));
+    el.querySelectorAll("[data-approve]").forEach(b=>b.addEventListener("click",()=>{ b.disabled=true; orch.approve(+b.dataset.approve); light("L4"); renderProps(); renderLog(); }));
   }
   function renderLog(){
     const el = $("log");

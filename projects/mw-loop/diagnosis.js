@@ -35,13 +35,31 @@
     const p = sim.probeLink(linkId);
     if (!p) return { verdict: "INCONCLUSIVE", confidence: 0, evidence: [{ probe: "probeLink", observed: "no such link", inference: "-" }] };
 
-    // hard outage first: both directions dead is not a diagnosis puzzle,
-    // it is a restoration priority (cause analysis comes after service)
+    // hard outage first: restoration is the priority - but the CAUSE still
+    // steers the dispatch decision. A storm outage self-clears; a dry-path
+    // failure needs a crew. Rolling trucks for rain is the classic false cost.
     if (!p.ab.up && !p.ba.up) {
-      say("probeLink status", "both directions DOWN", "hard outage - restore service first, determine cause after (LINK_DOWN)");
+      say("probeLink status", "both directions DOWN", "hard outage - restore first, but cause steers dispatch");
       const below = sim.sitesBelow(linkId);
       say("sitesBelow", `${below.length} site(s) isolated: ${below.join(", ") || "-"}`,
           below.length ? "lifeline failure - restoration is time-critical" : "no downstream isolation");
+      const wx0 = sim.probeWeather(linkId);
+      const neigh0 = sim.probeNeighbors(linkId).filter(n => !n.standby);
+      const coFading0 = neigh0.filter(n => {
+        const nom = n.band === "80GHz" ? -42 : -38;
+        return !n.ab.up || !n.ba.up || (nom - n.ab.rsl) >= THRESH.rslDropDb || (nom - n.ba.rsl) >= THRESH.rslDropDb;
+      });
+      say("probeWeather", `${wx0.rateMmh} mm/h at link geometry`,
+          wx0.rateMmh >= THRESH.rainRateMin ? "active rain over path (H5)" : "dry path - rain ruled out (H5)");
+      say("probeNeighbors", `${coFading0.length}/${neigh0.length} neighbours degraded or down`,
+          coFading0.length >= THRESH.coFadeMin ? "co-fade -> storm outage pattern (H4)" : "neighbours healthy -> failure is local");
+      if (wx0.rateMmh >= THRESH.rainRateMin || coFading0.length >= THRESH.coFadeMin) {
+        say("verdict path", "outage with rain / co-fade evidence",
+            "STORM OUTAGE: reroute if sites are isolated, but HOLD the truck roll - re-verify after the cell passes (H5+H4 gate dispatch)");
+        return { verdict: "LINK_DOWN_RAIN", confidence: 0.9, evidence: ev, linkId, sitesBelow: below, recheckAfter: true,
+                 note: "hold dispatch - storm outage pattern; restore via protection if isolated, re-diagnose after cell exits (H6)" };
+      }
+      say("verdict path", "outage on a dry path with healthy neighbours", "hard failure - dispatch is justified");
       return { verdict: "LINK_DOWN", confidence: 0.95, evidence: ev, linkId, sitesBelow: below };
     }
 
@@ -145,7 +163,7 @@
       const d = diagnoseLink(sim, l.id);
       if (d.verdict !== "HEALTHY") out.push(d);
     }
-    const rank = { LINK_DOWN: -1, HARDWARE: 0, INTERFERENCE: 1, OBSTRUCTION_OR_MISALIGNMENT: 2, CONFIG: 3, RAIN_FADE: 4, INCONCLUSIVE: 5 };
+    const rank = { LINK_DOWN: -1, LINK_DOWN_RAIN: -1, HARDWARE: 0, INTERFERENCE: 1, OBSTRUCTION_OR_MISALIGNMENT: 2, CONFIG: 3, RAIN_FADE: 4, INCONCLUSIVE: 5 };
     return out.sort((a, b) => (rank[a.verdict] ?? 9) - (rank[b.verdict] ?? 9) || b.confidence - a.confidence);
   }
 
