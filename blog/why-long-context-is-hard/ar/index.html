@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لماذا السياق الطويل صعب: KV Cache و MLA و KDA | محمد قادري</title>
+<meta name="description" content="تعلن الشركات عن ذاكرة بمليون كلمة. ما التكلفة الحقيقية؟ دفتر الملاحظات المتضخم، والملخص المضغوط MLA، والسبورة الثابتة KDA - شرح من الصفر.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/why-long-context-is-hard/ar/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/why-long-context-is-hard/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="ar_AR">
+<meta property="og:url" content="https://mkadri85.github.io/blog/why-long-context-is-hard/ar/">
+<meta property="og:title" content="لماذا السياق الطويل صعب: KV Cache و MLA و KDA">
+<meta property="og:description" content="تخزين محادثة طويلة قد يكلف ذاكرة أكثر من التفكير نفسه. دفتر الملاحظات المتضخم، والملخص المضغوط، والسبورة التي لا تكبر - شرح من الصفر.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/longcontext-hero.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1376">
+<meta property="og:image:height" content="768">
+<meta property="og:image:alt" content="برج شاهق من الدفاتر بجانب سبورة صغيرة: طريقتان لتذكر محادثة طويلة">
+<meta property="article:published_time" content="2026-07-27">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="أساسيات الذكاء الاصطناعي">
+<meta property="article:tag" content="KV cache">
+<meta property="article:tag" content="MLA">
+<meta property="article:tag" content="Kimi Delta Attention">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="لماذا السياق الطويل صعب: KV Cache و MLA و KDA">
+<meta name="twitter:description" content="تخزين محادثة طويلة قد يكلف ذاكرة أكثر من التفكير نفسه. شرح من الصفر.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/longcontext-hero.jpg">
+<meta name="twitter:image:alt" content="برج من الدفاتر بجانب سبورة صغيرة">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "لماذا السياق الطويل صعب: ذاكرة KV و MLA و Kimi Delta Attention بشرح مبسط",
+  "description": "الجزء الثاني من سلسلة من الصفر: لماذا ذاكرة المحادثة الطويلة هي التكلفة الخفية للذكاء الاصطناعي، والحلول - GQA و MLA و KDA - بشرح مبسط.",
+  "image": "https://mkadri85.github.io/assets/longcontext-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-27",
+  "dateModified": "2026-07-27",
+  "inLanguage": "ar",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/why-long-context-is-hard/ar/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ar","mainEntity":[
+{"@type":"Question","name":"ما هي ذاكرة KV Cache بكلمات بسيطة؟","acceptedAnswer":{"@type":"Answer","text":"الملاحظات التي يحتفظ بها نموذج الذكاء الاصطناعي عن كل كلمة رآها في محادثتك، حتى لا يعيد قراءة كل شيء مع كل كلمة جديدة. تكبر هذه الملاحظات مع المحادثة وتصبح أكبر تكلفة ذاكرة في المحادثات الطويلة."}},
+{"@type":"Question","name":"لماذا يصبح الذكاء الاصطناعي أبطأ وأغلى في المحادثات الطويلة؟","acceptedAnswer":{"@type":"Answer","text":"لأن ملاحظات النموذج (ذاكرة KV) تكبر مع كل كلمة. في محادثة واحدة من 32,000 وحدة نصية، يحتاج نموذج بأبعاد DeepSeek-V3 مع الانتباه القياسي إلى نحو 131 جيجابايت للملاحظات وحدها."}},
+{"@type":"Question","name":"ما هو Multi-head Latent Attention؟","acceptedAnswer":{"@type":"Answer","text":"حل DeepSeek للملاحظات المتضخمة: خزن ملخصا مضغوطا صغيرا بدلا من الملاحظات الكاملة وأعد بناء الأجزاء المفيدة عند الحاجة. قلص حجم الدفتر بنسبة 93% مقارنة بنموذجهم السابق وبقيت الإجابات بنفس الجودة."}},
+{"@type":"Question","name":"ما هو Kimi Delta Attention؟","acceptedAnswer":{"@type":"Answer","text":"حل Moonshot: استبدال الدفتر المتضخم بسبورة ثابتة الحجم يعاد الكتابة عليها باستمرار، وتنسى مناطقها المختلفة بسرعات مختلفة. عند مزجها بنسبة ثلاثة إلى واحد مع طبقات الدفتر الكامل، تنخفض تكلفة الدفتر بنسبة تصل إلى 75%."}},
+{"@type":"Question","name":"هل نافذة السياق بمليون وحدة نصية حقيقية؟","acceptedAnswer":{"@type":"Answer","text":"الرقم حقيقي كسعة، لكن السؤال الهندسي هو تكلفة تشغيله. تصميمات مثل MLA و KDA وجدت بالضبط لجعل نوافذ المليون ميسورة التكلفة؛ ونسخة Kimi K3 موصوفة من الشركة حتى يتم فحص ملفاتها بشكل مستقل."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans Arabic',Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.9;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'IBM Plex Sans Arabic',Inter,sans-serif;line-height:1.35}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-size:19px;font-weight:700;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;margin:56px 0 14px}
+  h1{font-size:clamp(26px,5vw,38px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.7}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-size:21px;line-height:1.6;color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;margin-bottom:10px}
+  .toc ol{margin:0;padding-right:20px;padding-left:0;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  ul,ol{padding-right:24px;padding-left:0}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-right:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-right-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout ul{margin:8px 0 0}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut);direction:ltr;text-align:left}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.7}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">الرئيسية</a><a href="/blog/">المقالات</a><a href="/blog/why-long-context-is-hard/">English</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">أساسيات الذكاء الاصطناعي / السياق الطويل &middot; الجزء الثاني</div>
+  <h1>لماذا السياق الطويل صعب: ذاكرة KV و MLA و Kimi Delta Attention بشرح مبسط</h1>
+  <p class="subtitle">تخزين محادثة طويلة قد يكلف ذاكرة أكثر من التفكير نفسه. الدفتر المتضخم، والملخص المضغوط، والسبورة التي لا تكبر - من الصفر.</p>
+  <div class="meta">محمد قادري &middot; 27 يوليو 2026 &middot; 7 دقائق قراءة &middot; <a href="/blog/why-long-context-is-hard/">Read in English</a> &middot; الجزء الأول: <a href="/blog/mixture-of-experts-explained/ar/">شرح مبسط لخليط الخبراء</a></div>
+
+  <figure class="hero">
+    <img src="/assets/longcontext-hero.jpg" alt="برج شاهق من الدفاتر والمستندات بجانب سبورة صغيرة قابلة لإعادة الاستخدام وبينهما شخص صغير: طريقتان يتذكر بهما نموذج الذكاء الاصطناعي محادثة طويلة" width="1376" height="768">
+    <figcaption>طريقتان لتذكر مليون كلمة: احتفظ بكل صفحة، أو احتفظ بسبورة واحدة.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">في هذا المقال</div>
+    <ol>
+      <li><a href="#tokens">ما هي الوحدة النصية ونافذة السياق؟</a></li>
+      <li><a href="#kv-cache">ذاكرة KV: الدفتر المتضخم</a></li>
+      <li><a href="#gqa">الحل الشائع: مشاركة الملاحظات (GQA)</a></li>
+      <li><a href="#mla">حل DeepSeek: ضغط الملاحظات (MLA)</a></li>
+      <li><a href="#kda">حل Kimi: السبورة (KDA)</a></li>
+      <li><a href="#k3-pieces">قطعتان أخيرتان في لغز Kimi K3</a></li>
+      <li><a href="#faq">أسئلة وأجوبة سريعة</a></li>
+      <li><a href="#refs">المصادر والمراجع</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">تعلن شركات الذكاء الاصطناعي اليوم عن نماذج &laquo;تتذكر&raquo; مليون كلمة من المحادثة.</p>
+
+  <p class="lead">المفاجأة هي الثمن. في المحادثة الطويلة، قد يستهلك تخزين المحادثة ذاكرة أكبر مما يستهلكه التفكير نفسه.</p>
+
+  <p>انتهى <a href="/blog/mixture-of-experts-explained/ar/">الجزء الأول من هذه السلسلة</a> بسؤال: إذا كان نموذج خليط الخبراء بهذه الكفاءة لكل كلمة، فأين تختبئ تكلفة محادثة المليون كلمة؟ هذه هي الإجابة. ليست في الخبراء. بل في الملاحظات التي يحتفظ بها النموذج عن محادثتك.</p>
+
+  <p>هذا هو الجزء الثاني. شرح الجزء الأول خليط الخبراء، الحيلة التي تجعل النماذج الضخمة رخيصة لكل كلمة. ولا تحتاج إلى قراءته لمتابعة هذا الجزء.</p>
+
+  <h2 id="tokens">ما هي الوحدة النصية (Token)؟ وما هي نافذة السياق؟</h2>
+
+  <p>النماذج لا تقرأ جملا كاملة. بل تقرأ قطعا صغيرة، كلمة أو جزءا من كلمة في كل مرة. كل قطعة اسمها <strong>وحدة نصية (Token)</strong>.</p>
+
+  <p>وكمية المحادثة التي يستطيع النموذج الرجوع إليها اسمها <strong>نافذة السياق (Context Window)</strong>. &laquo;نافذة سياق بمليون وحدة نصية&raquo; تعني: يستطيع النظر في نحو مليون قطعة من محادثتك دفعة واحدة.</p>
+
+  <p>والسؤال: كيف يرجع للخلف دون أن يعيد قراءة كل شيء من الصفر مع كل كلمة جديدة؟</p>
+
+  <h2 id="kv-cache">ذاكرة KV: دفتر النموذج المتضخم</h2>
+
+  <p>عندما يكتب النموذج الكلمة رقم 1000، يجب أن ينظر في كل الكلمات السابقة. إعادة قراءة كل شيء مع كل كلمة جديدة ستكون بطيئة جدا. لذلك يحتفظ النموذج بملاحظات عن كل كلمة رآها.</p>
+
+  <p>هذه الملاحظات لها اسم: <strong>ذاكرة KV (KV Cache)</strong>.</p>
+
+  <p>الملاحظات مفيدة، لكنها تكبر مع كل كلمة. إلى أي حد؟ خذ تصميم الملاحظات الأصلي (يسميه الباحثون الانتباه Attention، ونسخته القياسية هي MHA). لو استخدم نموذج بأبعاد DeepSeek-V3 هذا التصميم القياسي - وهو ما لا يفعله V3 نفسه كما سنرى - لاحتاجت ملاحظات محادثة واحدة من نحو 32,000 وحدة نصية (نحو 25,000 كلمة) إلى قرابة 131 جيجابايت من الذاكرة <a href="#ref-2">[2]</a><a href="#ref-3">[3]</a>. أي أكثر من إجمالي ذاكرة معظم أجهزة الحاسوب المحمولة، لتذكر محادثة واحدة.</p>
+
+  <figure>
+    <img src="/assets/longcontext-notebook-grows.png" alt="رسم خطي لذاكرة KV مقابل طول المحادثة: الانتباه القياسي يصل إلى 131 جيجابايت عند 32,000 وحدة نصية، و GQA نحو 16، و MLA نحو 9، وهجين KDA يبقى شبه ثابت" width="2040" height="1120" loading="lazy">
+    <figcaption>الدفتر يكبر - إلا إذا غيرت الدفتر. الرسم من إعداد الكاتب؛ الافتراضات في الملاحظة أسفل المصادر.</figcaption>
+  </figure>
+
+  <p>هذه هي التكلفة الخفية للسياق الطويل. جعل تفكير النموذج رخيصا (الجزء الأول) لا يحلها، لأن الدفتر يخص المحادثة، لا النموذج.</p>
+
+  <h2 id="gqa">الحل الشائع: مشاركة الملاحظات (GQA)</h2>
+
+  <p>داخل النموذج، هناك &laquo;قراء&raquo; صغار كثيرون يفحصون الملاحظات في الوقت نفسه. الحل الأوسع استخداما، والقياسي في Llama ومعظم النماذج الغربية منذ 2023: اجعل مجموعات من القراء تتشارك مجموعة ملاحظات واحدة بدلا من أن يحتفظ كل قارئ بملاحظاته. تسميه Llama ونظيراتها <strong>GQA</strong>، الانتباه بالاستعلام المجمع <a href="#ref-1">[1]</a>. يقلص الدفتر عدة مرات. مفيد، لكن الدفتر ما زال يكبر مع كل كلمة.</p>
+
+  <h2 id="mla">حل DeepSeek: ضغط الملاحظات (MLA)</h2>
+
+  <p>ذهب DeepSeek أبعد في 2024. لا تخزن الملاحظات الكاملة أصلا. خزن ملخصا مضغوطا صغيرا، وأعد بناء الأجزاء المفيدة عند الحاجة. مثل الاحتفاظ بصفحة واحدة من ملاحظات مكتوبة واضحة من اجتماع بدلا من التسجيل الكامل.</p>
+
+  <p>قلصوا حجم الدفتر بنسبة 93% مقارنة بنموذجهم السابق، وبقيت الإجابات بنفس الجودة <a href="#ref-2">[2]</a>. سماه DeepSeek باسم <strong>MLA</strong>، الانتباه الكامن متعدد الرؤوس. وشحن في DeepSeek-V2 و V3، النموذجين اللذين فاجآ الصناعة كلها في 2024 و 2025 <a href="#ref-2">[2]</a><a href="#ref-3">[3]</a>.</p>
+
+  <h2 id="kda">حل Kimi: استبدل الدفتر بسبورة (KDA)</h2>
+
+  <p>نشر مختبر Moonshot، صانع Kimi، خطوة أجرأ: تخلص من الدفتر المتضخم كليا. احتفظ بسبورة صغيرة ثابتة الحجم، وأعد الكتابة عليها باستمرار. تأتي كلمة جديدة: اكتب، أو اكتب فوق القديم، أو امسح. الدفتر لا يكبر أبدا، مهما طالت المحادثة.</p>
+
+  <p>الجزء الذكي: مناطق السبورة المختلفة تنسى بسرعات مختلفة. ركن يحمل حقيقة مهمة من الصفحة الأولى يستطيع الاحتفاظ بها حتى النهاية. ومنطقة تتابع تفاصيل محلية صغيرة تمسح نفسها وتعيد الاستخدام.</p>
+
+  <p>تسميه Moonshot باسم <strong>KDA</strong>، Kimi Delta Attention <a href="#ref-4">[4]</a>. وفكرة السبورة نفسها فكرة عملت عليها مختبرات كثيرة لسنوات (الانتباه الخطي، Mamba، عائلة DeltaNet). مساهمة Moonshot المنشورة هي النسيان الدقيق، إضافة إلى وصفة عملية: ثلاث طبقات سبورة لكل طبقة دفتر كامل. هذا يحفظ بعض الذاكرة المثالية ويقلص تكلفة الدفتر بنسبة تصل إلى 75% <a href="#ref-4">[4]</a>. وتقول Moonshot إن هذا التصميم هو ما يشغل نافذة المليون وحدة نصية في Kimi K3 <a href="#ref-6">[6]</a>.</p>
+
+  <figure>
+    <img src="/assets/longcontext-threepanel.jpg" alt="ثلاثة مكاتب متطابقة: الأول غارق تحت أكوام الدفاتر، والثاني مرتب وعليه صفحة ملخص واحدة، والثالث لا يحمل إلا سبورة صغيرة بقلم وممحاة" width="1376" height="768" loading="lazy">
+    <figcaption>الملاحظات الكاملة (KV)، والملاحظات المضغوطة (MLA)، والسبورة الثابتة (KDA).</figcaption>
+  </figure>
+
+  <h2 id="k3-pieces">قطعتان أخيرتان في لغز Kimi K3</h2>
+
+  <p>فكرتان أصغر تكملان التصميم، وكلتاهما موصوفتان في مواد Moonshot نفسها <a href="#ref-6">[6]</a>.</p>
+
+  <p>أولا، النموذج العملاق موزع على عشرات الشرائح. وكل كلمة يجب أن تسافر بين الشرائح لتصل إلى أجزاء النموذج التي تعالجها (&laquo;الخبراء&raquo; من <a href="/blog/mixture-of-experts-explained/ar/">الجزء الأول</a>). يضغط Kimi K3 كل كلمة إلى شكل أصغر قبل أن تسافر، ويفكها عند الوصول. حقيبة أصغر، رحلات أرخص. تسميه Moonshot باسم <strong>Stable LatentMoE</strong>.</p>
+
+  <p>ثانيا، النماذج العميقة تشوه المعلومات ببطء وهي تمر عبر طبقاتها الكثيرة - مثل رسمة قطة تنسخ مرة بعد مرة في صف طويل، حتى تختفي القطة. الحل الكلاسيكي، المستخدم في كل مكان منذ 2015، يمرر الرسمة الأصلية بجانب النسخ؛ وهذه هي <strong>الوصلات المتبقية (Residual Connections)</strong> <a href="#ref-5">[5]</a>. يستخدم Kimi K3 نسخة مطورة. كل طبقة تستطيع أيضا النظر للخلف إلى عدة طبقات سابقة وسحب ما تحتاجه، لا مجرد النسخ من الطبقة التي قبلها مباشرة. تسميه Moonshot باسم <strong>Attention Residuals</strong> <a href="#ref-6">[6]</a>.</p>
+
+  <figure>
+    <img src="/assets/longcontext-residual-cat.jpg" alt="جدار معرض عليه ثمانية رسوم مؤطرة لقطة تزداد كل نسخة تشوها عن السابقة، بينما ينقل أنبوب نحاسي علوي الرسمة الأصلية مباشرة إلى النهاية: هكذا تحفظ الوصلات المتبقية المعلومات" width="1376" height="768" loading="lazy">
+    <figcaption>ثماني نسخ وقطة واحدة. الأنبوب في الأعلى هو الوصلة المتبقية.</figcaption>
+  </figure>
+
+  <h2 id="practice">ماذا يعني هذا عمليا</h2>
+
+  <div class="callout">
+    <p><strong>ثلاثة أشياء تذكرها</strong></p>
+    <ul>
+      <li>السياق الطويل مشكلة ذاكرة، لا مشكلة تفكير. الدفتر يكبر مع المحادثة.</li>
+      <li>ضغط الملاحظات (MLA) يحفظ رجوعا مثاليا للخلف بجزء بسيط من الذاكرة.</li>
+      <li>السبورة الثابتة (KDA) لا تكبر أبدا، لكنها يجب أن تختار ما تنساه. ومزج الاثنين هو أفضل نهج معروف اليوم.</li>
+    </ul>
+  </div>
+
+  <p>عندما تعلن شركة عن نافذة سياق بمليون وحدة نصية، السؤال الحقيقي: أي تصميم دفتر يجعلها ميسورة التكلفة؟</p>
+
+  <p>تفصيلة أخيرة تستحق الانتباه: لم تظهر أي قطعة من قطع K3 من العدم. نشر Kimi Delta Attention قبل K3 بتسعة أشهر <a href="#ref-4">[4]</a>. وجاءت Attention Residuals قبله بأشهر. اختبر المختبر قطعه علنا، ثم جمعها. هكذا يبدو البحث المفتوح - ولهذا يستطيع مقال من جزأين مثل هذا شرح نموذج من الطراز الأول أصلا.</p>
+
+  <p>بهذا نغلق تكلفتي الذكاء الاصطناعي الحديث: الجزء الأول غطى التفكير، والجزء الثاني غطى التذكر. إذا كان جزء ثالث سيفيد - كيف تدرب هذه النماذج بتكلفة منخفضة - أخبرني على <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a>.</p>
+
+  <p class="closing">العنوان يقول مليون وحدة نصية. <span class="grad">القصة في من يحمل الدفتر.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="محمد قادري" width="64" height="64">
+    <div class="who"><b>محمد قادري</b> يعمل في تشغيل وتحويل شبكات اتصالات من الفئة الأولى، وقاد
+      انتقال مركز عمليات الشبكة من المستوى L2 إلى L3 بأتمتة 75% من حوادث المستوى الأول.
+      يبني اليوم منتجات ذكاء اصطناعي وسحابة، ويشرف على مشروع
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a> مفتوح المصدر.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">أسئلة وأجوبة سريعة</h2>
+
+  <h3>ما هي ذاكرة KV Cache بكلمات بسيطة؟</h3>
+  <p>الملاحظات التي يحتفظ بها نموذج الذكاء الاصطناعي عن كل كلمة رآها في محادثتك، حتى لا يعيد قراءة كل شيء مع كل كلمة جديدة. تكبر هذه الملاحظات مع المحادثة وتصبح أكبر تكلفة ذاكرة في المحادثات الطويلة.</p>
+
+  <h3>لماذا يصبح الذكاء الاصطناعي أبطأ وأغلى في المحادثات الطويلة؟</h3>
+  <p>لأن ملاحظات النموذج (ذاكرة KV) تكبر مع كل كلمة. في محادثة واحدة من 32,000 وحدة نصية، يحتاج نموذج بأبعاد DeepSeek-V3 مع الانتباه القياسي إلى نحو 131 جيجابايت للملاحظات وحدها.</p>
+
+  <h3>ما هو Multi-head Latent Attention؟</h3>
+  <p>حل DeepSeek للملاحظات المتضخمة: خزن ملخصا مضغوطا صغيرا بدلا من الملاحظات الكاملة وأعد بناء الأجزاء المفيدة عند الحاجة. قلص حجم الدفتر بنسبة 93% مقارنة بنموذجهم السابق وبقيت الإجابات بنفس الجودة.</p>
+
+  <h3>ما هو Kimi Delta Attention؟</h3>
+  <p>حل Moonshot: استبدال الدفتر المتضخم بسبورة ثابتة الحجم يعاد الكتابة عليها باستمرار، وتنسى مناطقها المختلفة بسرعات مختلفة. عند مزجها بنسبة ثلاثة إلى واحد مع طبقات الدفتر الكامل، تنخفض تكلفة الدفتر بنسبة تصل إلى 75%.</p>
+
+  <h3>هل نافذة السياق بمليون وحدة نصية حقيقية؟</h3>
+  <p>الرقم حقيقي كسعة، لكن السؤال الهندسي هو تكلفة تشغيله. تصميمات مثل MLA و KDA وجدت بالضبط لجعل نوافذ المليون ميسورة التكلفة؛ ونسخة Kimi K3 موصوفة من الشركة حتى يتم فحص ملفاتها بشكل مستقل.</p>
+
+  <hr>
+
+  <h2 id="refs">المصادر والمراجع</h2>
+  <p>مرقمة حسب موضع دعمها لهذا المقال. المصادر بالإنجليزية.</p>
+  <ol class="refs">
+    <li id="ref-1">Ainslie et al.: <a href="https://arxiv.org/abs/2305.13245">GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints</a>, 2023.</li>
+    <li id="ref-2"><a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2 Technical Report</a>, 2024.</li>
+    <li id="ref-3"><a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a>, 2024.</li>
+    <li id="ref-4"><a href="https://arxiv.org/abs/2510.26692">Kimi Linear Technical Report (Kimi Delta Attention)</a>, Moonshot AI, 2025.</li>
+    <li id="ref-5">He, Zhang, Ren, Sun: <a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a>, 2015.</li>
+    <li id="ref-6"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026.</li>
+  </ol>
+
+  <p style="font-size:13.5px;color:var(--dim)">ملاحظة رقم 131 جيجابايت: محسوب من أبعاد الانتباه المنشورة لنموذج DeepSeek-V3 (2 &times; 128 بعدا &times; 2 بايت &times; 128 رأسا &times; 61 طبقة &times; 32,768 وحدة نصية) كتكلفة الانتباه القياسي؛ بينما يتجنبها DeepSeek-V3 نفسه باستخدام MLA. عن هذا المقال: كتبه محمد قادري، وتم التحقق من كل رقم مقابل الورقة العلمية أو الإصدار الرسمي المذكور، وأرقام Kimi K3 معلمة كادعاءات من الشركة حتى الفحص المستقل. آخر تحديث: 27 يوليو 2026.</p>
+
+  <hr>
+
+  <p>الجزء الأول من السلسلة: <a href="/blog/mixture-of-experts-explained/ar/">شرح مبسط لتقنية خليط الخبراء (MoE)</a>.</p>
+
+</article>
+
+<footer>
+  <div class="wrap">محمد قادري - قائد تحول رقمي وسحابة - دبي، الإمارات - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>

@@ -11,6 +11,8 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 
 ## Key articles
 
+- [Why Long Context Is Hard: KV Cache, MLA, KDA](https://mkadri85.github.io/blog/why-long-context-is-hard/): Part 2 of the zero-background series - why the KV cache dominates long-context cost (131 GB of notes for one 32k-token chat under standard attention), and the fixes: GQA, DeepSeek's MLA, Moonshot's Kimi Delta Attention; Arabic edition at https://mkadri85.github.io/blog/why-long-context-is-hard/ar/
+
 - [Mixture of Experts (MoE) Explained Simply](https://mkadri85.github.io/blog/mixture-of-experts-explained/): zero-background guide to MoE - experts, routers, expert specialization, total vs active parameters - anchored on Kimi K3's claimed 2.8T/~2%-active design, fully referenced to the primary papers; Arabic edition at https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/
 
 - [Your AI Agents Need a NOC](https://mkadri85.github.io/blog/agent-noc/): what thirty years of telecom NOC discipline transfers to AI agent fleets - autonomy levels, earned autonomy, burn rates, kill switches - with an interactive Agent NOC console demo at https://mkadri85.github.io/projects/agent-noc/

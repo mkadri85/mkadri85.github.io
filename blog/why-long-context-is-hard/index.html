@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Why Long Context Is Hard: KV Cache, MLA, KDA | Mohamed Kadri</title>
+<meta name="description" content="AI companies advertise million-word memories. What that really costs, and the two fixes - compressed notes (MLA) and a fixed whiteboard (KDA) - from zero.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/why-long-context-is-hard/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/why-long-context-is-hard/">
+<meta property="og:title" content="Why Long Context Is Hard: KV Cache, MLA and Kimi Delta Attention">
+<meta property="og:description" content="Storing a long chat can cost more memory than the thinking itself. The growing notebook, the compressed notes, and the whiteboard that never grows - from zero.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/longcontext-hero.jpg">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/longcontext-hero.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1376">
+<meta property="og:image:height" content="768">
+<meta property="og:image:alt" content="A towering stack of notebooks and documents beside one small reusable whiteboard, with a tiny figure between them: the two ways an AI model can remember a long conversation">
+<meta property="article:published_time" content="2026-07-27">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI fundamentals">
+<meta property="article:tag" content="KV cache">
+<meta property="article:tag" content="Multi-head Latent Attention">
+<meta property="article:tag" content="Kimi Delta Attention">
+<meta property="article:tag" content="long context">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Why Long Context Is Hard: KV Cache, MLA and Kimi Delta Attention">
+<meta name="twitter:description" content="Storing a long chat can cost more memory than the thinking itself. The growing notebook, the compressed notes, and the whiteboard that never grows.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/longcontext-hero.jpg">
+<meta name="twitter:image:alt" content="A tower of notebooks beside one small reusable whiteboard">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Why Long Context Is Hard: the KV Cache, MLA, and Kimi Delta Attention, Explained Simply",
+  "description": "Part 2 of a zero-background series: why the memory of a long conversation is the hidden cost of AI, and the fixes - GQA, MLA and KDA - explained simply.",
+  "image": "https://mkadri85.github.io/assets/longcontext-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-27",
+  "dateModified": "2026-07-27",
+  "inLanguage": "en",
+  "isPartOf": "https://mkadri85.github.io/blog/mixture-of-experts-explained/",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/why-long-context-is-hard/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is a KV cache in simple words?","acceptedAnswer":{"@type":"Answer","text":"The notes an AI model keeps about every word it has seen in your conversation, so it does not re-read everything for each new word. The notes grow with the conversation and become the biggest memory cost of long chats."}},
+{"@type":"Question","name":"Why does AI get slower and more expensive in long conversations?","acceptedAnswer":{"@type":"Answer","text":"Because the model's notes (the KV cache) grow with every word. For one 32,000-token chat, a model with DeepSeek-V3's dimensions using standard attention would need roughly 131 gigabytes just for the notes."}},
+{"@type":"Question","name":"What is Multi-head Latent Attention?","acceptedAnswer":{"@type":"Answer","text":"DeepSeek's fix for the growing notes: store a small compressed summary instead of full notes and rebuild the useful parts when needed. It cut the notebook size by 93 percent compared with their previous model, and the answers stayed just as good."}},
+{"@type":"Question","name":"What is Kimi Delta Attention?","acceptedAnswer":{"@type":"Answer","text":"Moonshot's fix: replace the growing notebook with a fixed-size whiteboard that is constantly rewritten, where different areas forget at different speeds. Mixed three-to-one with normal full-notebook layers, it cuts the notebook cost by up to 75 percent."}},
+{"@type":"Question","name":"Is the 1 million token context window real?","acceptedAnswer":{"@type":"Answer","text":"The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's version is company-described until its files are independently checked."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  .callout ul{margin:8px 0 0}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/blog/why-long-context-is-hard/ar/">العربية</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">AI fundamentals / Long context &middot; Part 2</div>
+  <h1>Why Long Context Is Hard: the KV Cache, MLA, and Kimi Delta Attention, Explained Simply</h1>
+  <p class="subtitle">Storing a long chat can cost more memory than the thinking itself. The growing notebook, the compressed notes, and the whiteboard that never grows - from zero.</p>
+  <div class="meta">Mohamed Kadri &middot; July 27, 2026 &middot; 7 min read &middot; <a href="/blog/why-long-context-is-hard/ar/">اقرأ بالعربية</a> &middot; Part 1: <a href="/blog/mixture-of-experts-explained/">Mixture of Experts Explained Simply</a></div>
+
+  <figure class="hero">
+    <img src="/assets/longcontext-hero.jpg" alt="A towering stack of notebooks and documents beside one small reusable whiteboard, with a tiny figure between them: the two ways an AI model can remember a long conversation" width="1376" height="768">
+    <figcaption>Two ways to remember a million words: keep every page, or keep one whiteboard.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#tokens">What is a token? What is a context window?</a></li>
+      <li><a href="#kv-cache">The KV cache: the growing notebook</a></li>
+      <li><a href="#gqa">The standard fix: sharing notes (GQA)</a></li>
+      <li><a href="#mla">DeepSeek's fix: compress the notes (MLA)</a></li>
+      <li><a href="#kda">Kimi's fix: the whiteboard (KDA)</a></li>
+      <li><a href="#k3-pieces">Two more pieces of the Kimi K3 puzzle</a></li>
+      <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">AI companies now advertise models that &ldquo;remember&rdquo; a million words of conversation.</p>
+
+  <p class="lead">The surprising part is the price. In a long conversation, storing the chat can use more computer memory than the thinking itself.</p>
+
+  <p><a href="/blog/mixture-of-experts-explained/">Part 1 of this series</a> ended with a question: if a Mixture of Experts model is so efficient per word, where does the cost of a million-word chat hide? Here is the answer. Not in the experts. In the notes the model keeps about your conversation.</p>
+
+  <p>This is Part 2. Part 1 explained Mixture of Experts, the trick that makes huge models cheap per word. You do not need Part 1 to follow this one.</p>
+
+  <h2 id="tokens">What is a token? What is a context window?</h2>
+
+  <p>Models do not read whole sentences. They read small pieces, a word or a part of a word at a time. Each piece is called a <strong>token</strong>.</p>
+
+  <p>The amount of conversation a model can look back on is called its <strong>context window</strong>. &ldquo;One million token context window&rdquo; means: it can consider roughly a million word-pieces of your conversation at once.</p>
+
+  <p>The question is how it looks back without re-reading everything from zero for every new word.</p>
+
+  <h2 id="kv-cache">The KV cache: the model's growing notebook</h2>
+
+  <p>When a model writes word number 1000, it must consider all the words before it. Re-reading everything for every new word would be far too slow. So the model keeps notes about every word it has seen.</p>
+
+  <p>Those notes have a name: the <strong>KV cache</strong>.</p>
+
+  <p>The notes are useful, but they grow with every word. How bad does it get? Take the original note-taking design (researchers call it attention, and its standard version is multi-head attention, or MHA). If a model with DeepSeek-V3's dimensions used that standard design - V3 itself does not, as we will see - the notes for one conversation of about 32,000 tokens (roughly 25,000 words) would add up to roughly 131 gigabytes of memory <a href="#ref-2">[2]</a><a href="#ref-3">[3]</a>. That is more memory than most laptops have in total, spent on remembering one chat.</p>
+
+  <figure>
+    <img src="/assets/longcontext-notebook-grows.png" alt="Line chart of KV cache memory versus conversation length: standard attention reaches 131 gigabytes at 32,000 tokens, grouped-query attention about 16, Multi-head Latent Attention about 9, and a Kimi Delta Attention hybrid stays nearly flat" width="2040" height="1120" loading="lazy">
+    <figcaption>The notebook grows - unless you change the notebook. Chart by the author; assumptions in the note under Sources.</figcaption>
+  </figure>
+
+  <p>This is the hidden cost of long context. Making the model's thinking cheap (Part 1) does not fix it, because the notebook belongs to the conversation, not to the model.</p>
+
+  <h2 id="gqa">The standard fix: sharing notes (GQA)</h2>
+
+  <p>Inside the model, many small &ldquo;readers&rdquo; scan the notes at the same time. The most widely used fix, standard in Llama and most Western models since 2023: make groups of readers share one set of notes instead of each keeping its own. Llama and its peers call this <strong>GQA</strong>, grouped-query attention <a href="#ref-1">[1]</a>. It shrinks the notebook a few times over. Helpful, but the notebook still grows with every word.</p>
+
+  <h2 id="mla">DeepSeek's fix: compress the notes (MLA)</h2>
+
+  <p>DeepSeek went further in 2024. Do not store the full notes at all. Store a small compressed summary, and rebuild the useful parts when needed. Like keeping one page of clear written notes from a meeting instead of the full recording.</p>
+
+  <p>They cut the notebook size by 93 percent compared with their previous model, and the answers stayed just as good <a href="#ref-2">[2]</a>. DeepSeek named it <strong>MLA</strong>, Multi-head Latent Attention. It shipped in DeepSeek-V2 and V3, the models that surprised the whole industry in 2024 and 2025 <a href="#ref-2">[2]</a><a href="#ref-3">[3]</a>.</p>
+
+  <h2 id="kda">Kimi's fix: replace the notebook with a whiteboard (KDA)</h2>
+
+  <p>Moonshot, the lab behind Kimi, published a bolder move: throw the growing notebook away completely. Keep a small whiteboard of fixed size, and rewrite it constantly. A new word comes in: write, overwrite, or erase. The notebook never grows, no matter how long the conversation gets.</p>
+
+  <p>The clever part: different areas of the whiteboard forget at different speeds. A corner holding a key fact from page one can keep it until the end. An area tracking small local details erases and reuses itself.</p>
+
+  <p>Moonshot calls this <strong>KDA</strong>, Kimi Delta Attention <a href="#ref-4">[4]</a>. The whiteboard idea itself is one many labs have worked on for years (linear attention, Mamba, the DeltaNet family). Moonshot's published contribution is the fine-grained forgetting, plus a working recipe: three whiteboard layers for every one full-notebook layer. This keeps some perfect memory and still cuts the notebook cost by up to 75 percent <a href="#ref-4">[4]</a>. Moonshot says this design is what powers Kimi K3's million-token context window <a href="#ref-6">[6]</a>.</p>
+
+  <figure>
+    <img src="/assets/longcontext-threepanel.jpg" alt="Three identical desks: one buried under stacks of notebooks, one tidy with a single summary page, and one holding only a compact whiteboard with a marker and eraser" width="1376" height="768" loading="lazy">
+    <figcaption>Full notes (KV cache), compressed notes (MLA), and the fixed whiteboard (KDA).</figcaption>
+  </figure>
+
+  <h2 id="k3-pieces">Two more pieces of the Kimi K3 puzzle</h2>
+
+  <p>Two smaller ideas finish the design, both described in Moonshot's own materials <a href="#ref-6">[6]</a>.</p>
+
+  <p>First, a giant model is spread across dozens of chips. Every word must travel between chips to reach the parts of the model that process it (the &ldquo;experts&rdquo; from <a href="/blog/mixture-of-experts-explained/">Part 1</a>). Kimi K3 compresses each word into a smaller form before it travels, and unpacks it on arrival. Smaller luggage, cheaper trips. Moonshot calls this <strong>Stable LatentMoE</strong>.</p>
+
+  <p>Second, deep models slowly distort information as it passes through their many layers - like a drawing of a cat copied again and again down a row, until the cat is gone. The classic fix, used everywhere since 2015, passes the original drawing along next to the copies; these are <strong>residual connections</strong> <a href="#ref-5">[5]</a>. Kimi K3 uses an upgraded version. Each layer can also look back at several earlier layers and pull what it needs, not just copy from the one before it. Moonshot calls it <strong>Attention Residuals</strong> <a href="#ref-6">[6]</a>.</p>
+
+  <figure>
+    <img src="/assets/longcontext-residual-cat.jpg" alt="A gallery wall of eight framed cat drawings, each copy more distorted than the last, while a brass tube above carries the original drawing straight to the end: how residual connections preserve information" width="1376" height="768" loading="lazy">
+    <figcaption>Eight copies, one cat. The tube above is the residual connection.</figcaption>
+  </figure>
+
+  <h2 id="practice">What this means in practice</h2>
+
+  <div class="callout">
+    <p><strong>Three things to remember</strong></p>
+    <ul>
+      <li>Long context is a memory problem, not a thinking problem. The notebook grows with the conversation.</li>
+      <li>Compressing the notes (MLA) keeps perfect lookback at a fraction of the memory.</li>
+      <li>A fixed whiteboard (KDA) never grows, but it must choose what to forget. Mixing the two is the best approach known today.</li>
+    </ul>
+  </div>
+
+  <p>When a company advertises a million-token context window, the real question is: which notebook design makes it affordable?</p>
+
+  <p>One last detail worth noticing: none of K3's parts appeared from nowhere. Kimi Delta Attention was published nine months before K3 <a href="#ref-4">[4]</a>. Attention Residuals came months before. The lab tested its parts in public, then assembled them. That is what open research looks like - and it is why a two-part blog like this one can explain a frontier model at all.</p>
+
+  <p>That closes the two costs of modern AI: <a href="/blog/mixture-of-experts-explained/">Part 1</a> covered the thinking, Part 2 covered the remembering. If a Part 3 would help - how these models are trained so cheaply - tell me on <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a>.</p>
+
+  <p class="closing">The headline says one million tokens. <span class="grad">The story is who carries the notebook.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> operates and transforms Tier-1 telecom networks, and led a
+      NOC's L2-to-L3 autonomy transition that automated 75 percent of Level-1 incidents.
+      He now builds AI and cloud products, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>What is a KV cache in simple words?</h3>
+  <p>The notes an AI model keeps about every word it has seen in your conversation, so it does not re-read everything for each new word. The notes grow with the conversation and become the biggest memory cost of long chats.</p>
+
+  <h3>Why does AI get slower and more expensive in long conversations?</h3>
+  <p>Because the model's notes (the KV cache) grow with every word. For one 32,000-token chat, a model with DeepSeek-V3's dimensions using standard attention would need roughly 131 gigabytes just for the notes.</p>
+
+  <h3>What is Multi-head Latent Attention?</h3>
+  <p>DeepSeek's fix for the growing notes: store a small compressed summary instead of full notes and rebuild the useful parts when needed. It cut the notebook size by 93 percent compared with their previous model, and the answers stayed just as good.</p>
+
+  <h3>What is Kimi Delta Attention?</h3>
+  <p>Moonshot's fix: replace the growing notebook with a fixed-size whiteboard that is constantly rewritten, where different areas forget at different speeds. Mixed three-to-one with normal full-notebook layers, it cuts the notebook cost by up to 75 percent.</p>
+
+  <h3>Is the 1 million token context window real?</h3>
+  <p>The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's version is company-described until its files are independently checked.</p>
+
+  <hr>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Numbered by where they support this article.</p>
+  <ol class="refs">
+    <li id="ref-1">Ainslie et al.: <a href="https://arxiv.org/abs/2305.13245">GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints</a>, 2023. Supports: the shared-notes fix (section: The standard fix).</li>
+    <li id="ref-2"><a href="https://arxiv.org/abs/2405.04434">DeepSeek-V2 Technical Report</a>, 2024. Supports: MLA and the 93.3 percent KV cache reduction versus their previous model; attention dimensions behind the 131 GB illustration (sections: The KV cache; DeepSeek's fix).</li>
+    <li id="ref-3"><a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a>, 2024. Supports: MLA at frontier scale; model dimensions used in the 131 GB illustration (sections: The KV cache; DeepSeek's fix).</li>
+    <li id="ref-4"><a href="https://arxiv.org/abs/2510.26692">Kimi Linear Technical Report (Kimi Delta Attention)</a>, Moonshot AI, 2025. Supports: the fixed-size whiteboard, per-channel forgetting, the 3:1 hybrid and up to 75 percent KV cache reduction (section: Kimi's fix).</li>
+    <li id="ref-5">He, Zhang, Ren, Sun: <a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a>, 2015. Supports: the original residual connections idea (section: Two more pieces).</li>
+    <li id="ref-6"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026. Supports: KDA inside K3, the million-token window, Stable LatentMoE and Attention Residuals - all company-described until the public files are independently checked (sections: Kimi's fix; Two more pieces).</li>
+  </ol>
+
+  <p style="font-size:13.5px;color:var(--dim)">Further watching: Welch Labs, &ldquo;How DeepSeek Rewrote the Transformer&rdquo; - the best visual explanation of MLA. Note on the 131 GB figure: computed from the published DeepSeek-V3 attention dimensions (2 x 128 dimensions x 2 bytes x 128 heads x 61 layers x 32,768 tokens) as what standard multi-head attention would cost; DeepSeek-V3 itself avoids it with MLA. About this article: written by Mohamed Kadri; every number was checked against the primary paper or official release listed, and Kimi K3 figures are marked as company claims until the released files are independently verified. Last updated: July 27, 2026.</p>
+
+  <hr>
+
+  <p>Part 1 of this series: <a href="/blog/mixture-of-experts-explained/">Mixture of Experts (MoE) Explained Simply</a>. More on operating AI in production: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a>.</p>
+
+</article>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>
