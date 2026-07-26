@@ -11,6 +11,8 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 
 ## Key articles
 
+- [Mixture of Experts (MoE) Explained Simply](https://mkadri85.github.io/blog/mixture-of-experts-explained/): zero-background guide to MoE - experts, routers, expert specialization, total vs active parameters - anchored on Kimi K3's claimed 2.8T/~2%-active design, fully referenced to the primary papers; Arabic edition at https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/
+
 - [Your AI Agents Need a NOC](https://mkadri85.github.io/blog/agent-noc/): what thirty years of telecom NOC discipline transfers to AI agent fleets - autonomy levels, earned autonomy, burn rates, kill switches - with an interactive Agent NOC console demo at https://mkadri85.github.io/projects/agent-noc/
 
 - [Who Operates the Operators? Agentic SRE for AI-Agent Fleets](https://mkadri85.github.io/blog/agentic-sre-agent-fleets/): running fleets of AI agents with observe-understand-act-repeat loops, confidence gating and human escalation; reference implementation published as the open-source npm package guardplane

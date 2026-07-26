@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mixture of Experts (MoE) Explained Simply: Why Kimi K3's 2.8 Trillion Parameters Don't Mean What You Think - Mohamed Kadri</title>
+<meta name="description" content="A zero-background guide to Mixture of Experts (MoE): how Kimi K3 can claim 2.8 trillion parameters while about 2 percent work per word, and the two numbers that matter more than the headline.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
+<meta property="og:title" content="Mixture of Experts (MoE) Explained Simply">
+<meta property="og:description" content="Kimi K3 is called a 2.8 trillion parameter model. Around 98 percent of it is asleep every time it answers you. That is not a bug - it is the design. Explained from zero.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/moe-hero.jpg">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/moe-hero.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1536">
+<meta property="og:image:height" content="1024">
+<meta property="og:image:alt" content="2.8T total parameters versus about 2 percent active: a vast field of dark sleeping expert units with one small glowing cluster doing the work">
+<meta property="article:published_time" content="2026-07-27">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI fundamentals">
+<meta property="article:tag" content="Mixture of Experts">
+<meta property="article:tag" content="Kimi K3">
+<meta property="article:tag" content="active parameters">
+<meta property="article:tag" content="MoE">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Mixture of Experts (MoE) Explained Simply">
+<meta name="twitter:description" content="Kimi K3 claims 2.8 trillion parameters. About 98 percent of it is asleep every time it answers you. That is the design - explained from zero.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/moe-hero.jpg">
+<meta name="twitter:image:alt" content="2.8T total parameters versus about 2 percent active in a Mixture of Experts AI model">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Mixture of Experts (MoE) Explained Simply: Why Kimi K3's 2.8 Trillion Parameters Don't Mean What You Think",
+  "description": "A zero-background guide to Mixture of Experts: experts, routers, total vs active parameters, and why a 2.8 trillion parameter model runs mostly asleep.",
+  "image": "https://mkadri85.github.io/assets/moe-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-07-27",
+  "dateModified": "2026-07-27",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/mixture-of-experts-explained/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is a Mixture of Experts model, in one sentence?","acceptedAnswer":{"@type":"Answer","text":"A big AI model split into many small parts, where a tiny decision-maker wakes up only a few parts for each word, so a huge model runs at a small model's cost."}},
+{"@type":"Question","name":"Do the experts specialize in subjects like math or poetry?","acceptedAnswer":{"@type":"Answer","text":"No. Researchers who looked inside found patterns like code indentation and common words, not human subjects. Nobody assigns the jobs; the routing patterns appear on their own during training."}},
+{"@type":"Question","name":"Is Kimi K3 really the biggest AI model in the world?","acceptedAnswer":{"@type":"Answer","text":"Nobody can say. It is the largest OPEN model announced so far, at 2.8 trillion parameters by the company's own numbers. Closed labs like OpenAI, Anthropic and Google do not publish the sizes of their top models."}},
+{"@type":"Question","name":"Is Mixture of Experts a Chinese invention?","acceptedAnswer":{"@type":"Answer","text":"No. The idea is from 1991, Google scaled it, a French lab made it famous in open models, and US models like Llama 4 and gpt-oss use it today. Chinese labs pushed the efficiency furthest and published the most details."}},
+{"@type":"Question","name":"What should I look for when a new model launches?","acceptedAnswer":{"@type":"Answer","text":"Two numbers. Total parameters tell you the memory it needs. Active parameters tell you the speed and cost per word. The second one is usually the real story."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  .callout ul{margin:8px 0 0}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/blog/mixture-of-experts-explained/ar/">العربية</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">AI fundamentals / Mixture of Experts</div>
+  <h1>Mixture of Experts (MoE) Explained Simply: Why Kimi K3's 2.8 Trillion Parameters Don't Mean What You Think</h1>
+  <p class="subtitle">A zero-background guide to how giant AI models stay cheap: experts, routers, and the two numbers that matter more than the headline.</p>
+  <div class="meta">Mohamed Kadri &middot; July 27, 2026 &middot; 9 min read &middot; <a href="/blog/mixture-of-experts-explained/ar/">اقرأ بالعربية</a></div>
+
+  <figure class="hero">
+    <img src="/assets/moe-hero.jpg" alt="2.8T total parameters versus about 2 percent active: a vast field of dark sleeping expert units with one small glowing cluster doing the work in a Mixture of Experts AI model" width="1536" height="1024">
+    <figcaption>A 2.8 trillion parameter model at work: almost everything asleep, a small cluster awake. Figures are Moonshot's own <a href="#ref-14">[14]</a>.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#parameters">What are parameters in an AI model?</a></li>
+      <li><a href="#dense">What is a dense model?</a></li>
+      <li><a href="#moe">What is a Mixture of Experts (MoE) model?</a></li>
+      <li><a href="#myth">The expert myth</a></li>
+      <li><a href="#deepseek">Fine-grained experts and shared experts</a></li>
+      <li><a href="#active-vs-total">Active parameters vs total parameters</a></li>
+      <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">Kimi K3 is called a 2.8 trillion parameter model.</p>
+
+  <p class="lead">The surprising part? Around 98% of those parameters are asleep every time it answers you, by the maker's own numbers <a href="#ref-14">[14]</a>.</p>
+
+  <p>That is not a bug. It is the biggest architectural shift in modern AI. Here is how it works, explained from zero. No math. No background needed. By the end you will also know the real technical words.</p>
+
+  <p>First, the news context in one line: Kimi K3 was announced on July 16 by Moonshot, a Chinese lab, as the largest open-weight AI model ever <a href="#ref-14">[14]</a>. &ldquo;Open&rdquo; means anyone can download the model files for free.</p>
+
+  <h2 id="parameters">What are parameters in an AI model?</h2>
+
+  <p>An AI model is a huge pile of adjustable numbers. Billions of them. A long, automatic practice process slowly tunes these numbers until the model can predict the next word well. That process is called <strong>training</strong>. The numbers are called <strong>parameters</strong>.</p>
+
+  <p>When you read &ldquo;a 70 billion parameter model&rdquo;, it means: a pile of 70 billion tuned numbers.</p>
+
+  <p>Now the question this whole story is about: to write ONE word of an answer, must ALL those numbers do work?</p>
+
+  <h2 id="dense">What is a dense model? Every parameter works on every word</h2>
+
+  <p>Classic AI models answer: yes. To write one word, every parameter does work. Scientists call this a <strong>dense</strong> model. Dense means: everything is active, all the time.</p>
+
+  <p>Imagine a factory where every worker must touch every product. Even one cup of coffee needs all 70,000 employees. It works, but it is slow and very expensive. This is why bigger AI kept meaning slower and more expensive AI.</p>
+
+  <figure>
+    <img src="/assets/moe-factory.jpg" alt="A dense AI model illustrated as a huge factory where thousands of workers crowd around a single coffee cup: every parameter works on every word" width="1448" height="1086" loading="lazy">
+    <figcaption>A dense model: every worker touches every product, even for one cup of coffee.</figcaption>
+  </figure>
+
+  <h2 id="moe">What is a Mixture of Experts (MoE) model?</h2>
+
+  <p>Around 2021-2024, an idea from the 1990s came back: stop making every parameter work on every word.</p>
+
+  <p>One more word first. A model is built as a stack of repeated processing steps. Each step in the stack is called a <strong>layer</strong>.</p>
+
+  <p>Inside each layer, two things happen. First, the words in your sentence look at each other, like a team meeting where everyone shares context. Then each word goes off to be processed on its own, like each person going back to their desk to think after the meeting. That second part, the desk work, is the expensive part. It is where most of the parameters live.</p>
+
+  <p>The idea: cut that desk-work part into many small blocks. Add a tiny decision-maker. For each word, the decision-maker picks a few blocks to wake up. The rest stay asleep and cost nothing.</p>
+
+  <p>The names: the small blocks are <strong>experts</strong>. The decision-maker is the <strong>router</strong>. The whole design is called <strong>Mixture of Experts</strong>, or <strong>MoE</strong>. When you see &ldquo;MoE&rdquo; in the news, it means exactly this: a big model where only a small piece works per word.</p>
+
+  <p>A real example from Mixtral, released in December 2023 by Mistral, a French lab <a href="#ref-6">[6]</a>. Each layer has 8 experts, and the router picks 2. The model holds 47 billion parameters, but each word only uses about 13 billion. You store a big model. You pay for a small one.</p>
+
+  <p>A picture that helps: a dense model cooks every meal from one small home pantry. An MoE model shops in a giant supermarket, but fills only one small basket for each dish.</p>
+
+  <figure>
+    <img src="/assets/moe-supermarket.jpg" alt="A Mixture of Experts model illustrated as a giant supermarket where one shopper fills a small basket: a huge model with a tiny active slice per word" width="1536" height="1024" loading="lazy">
+    <figcaption>An MoE model: a giant store, one small basket per dish.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="/assets/moe-switch-fig2.png" alt="Figure 2 from Google's Switch Transformer paper: a router sending each token to one of four feed-forward experts inside a transformer layer" width="1476" height="1033" loading="lazy">
+    <figcaption>The real science: the router in action. Figure 2 from the Switch Transformer paper <a href="#ref-3">[3]</a>, reproduced with attribution.</figcaption>
+  </figure>
+
+  <p>A short history, because this idea is not new and not from one country. The mixture-of-experts concept was published in 1991 <a href="#ref-1">[1]</a>. Google revived it for modern AI in 2017 <a href="#ref-2">[2]</a>.</p>
+
+  <p>By 2020-2021, Google was already training models with thousands of experts and over a trillion parameters <a href="#ref-3">[3]</a><a href="#ref-4">[4]</a>. Google says its Gemini models use MoE <a href="#ref-13">[13]</a>. Mistral in France then made the idea famous in open models <a href="#ref-6">[6]</a>.</p>
+
+  <p>Today, Meta's Llama 4 <a href="#ref-11">[11]</a>, OpenAI's gpt-oss <a href="#ref-12">[12]</a>, xAI's Grok <a href="#ref-7">[7]</a>, and Databricks' DBRX <a href="#ref-8">[8]</a> are all MoE models too. This is world engineering, not one country's secret.</p>
+
+  <figure>
+    <img src="/assets/moe-timeline.png" alt="Timeline of Mixture of Experts from the 1991 idea through Google's Switch Transformer, Mixtral in France, DeepSeek in China, US adoption with Llama 4 and gpt-oss, to Kimi K3 in 2026" width="2240" height="780" loading="lazy">
+    <figcaption>One idea, thirty-five years, many countries. Chart by the author.</figcaption>
+  </figure>
+
+  <h2 id="myth">The expert myth: MoE experts are not human-style specialists</h2>
+
+  <p>Here is where most explanations get it wrong, including my supermarket picture above.</p>
+
+  <p>You would expect a &ldquo;math expert&rdquo; and a &ldquo;poetry expert&rdquo;. That is not what happens. Researchers looked inside Mixtral and found no clear subject specialists <a href="#ref-6">[6]</a>. Instead, experts specialize in strange things: code indentation, the word &ldquo;self&rdquo; in Python programs, runs of neighboring words. Even in the very first 2017 study, the patterns were sometimes recognizable but never school subjects: one expert kept receiving adjectives, another kept receiving words like &ldquo;a&rdquo; and &ldquo;the&rdquo; <a href="#ref-2">[2]</a>. Patterns that help the machine, not subjects a human would choose.</p>
+
+  <p>Why? Because nobody assigns the jobs. During training, the router simply learns that sending similar word-pieces to the same expert reduces errors. Scientists discuss this as <strong>expert specialization</strong>, and the key fact is that it is emergent: nobody designs it, it appears on its own.</p>
+
+  <p>Three more common mistakes, corrected in one line each:</p>
+
+  <ul>
+    <li>An MoE is not several small AIs with a manager choosing between them. The routing happens deep inside, for every word, at every layer.</li>
+    <li>You cannot take one expert out and use it as a small model. The parts only work together.</li>
+    <li>MoE does not save memory. All experts must stay stored in memory. What it saves is the work done per word. That work has a name: <strong>compute</strong>.</li>
+  </ul>
+
+  <h2 id="deepseek">Fine-grained experts and shared experts: DeepSeek's design</h2>
+
+  <p>In January 2024, weeks after Mixtral appeared, the Chinese lab DeepSeek published a design that pushed the idea further <a href="#ref-9">[9]</a>. DeepSeek did not invent MoE. It refined how the experts are organized. Google had already tried thousands of experts <a href="#ref-3">[3]</a>, but each word still used just one or two big ones. Microsoft had already tried an always-awake helper expert in 2022 <a href="#ref-5">[5]</a>. DeepSeek combined and sharpened both moves:</p>
+
+  <p>One. Slice every expert into much smaller pieces, and wake up MORE of them per word, for the same total work. Instead of 8 big departments, think 256 small teams. There are vastly more ways to combine the right small teams for each word.</p>
+
+  <p>Two. Keep one or two experts that never sleep. They see every word and handle the common, boring work, so the small teams never repeat it. Like the front desk of a hotel.</p>
+
+  <p>The names: <strong>fine-grained MoE</strong>, and the always-awake part is a <strong>shared expert</strong>.</p>
+
+  <p>The result was a race, across all labs, toward using less of the model per word:</p>
+
+  <figure>
+    <img src="/assets/moe-sparsity-race.png" alt="Bar chart of the share of parameters active per word: Mixtral 28 percent, Grok-1 25 percent, DBRX 27 percent, DeepSeek-V3 5.5 percent, Llama 4 Maverick 4.3 percent, gpt-oss 4.4 percent, and Kimi K3's company-reported 1.8 percent of experts" width="1920" height="1120" loading="lazy">
+    <figcaption>How much of the model works per word, by model and country <a href="#ref-6">[6]</a><a href="#ref-7">[7]</a><a href="#ref-8">[8]</a><a href="#ref-10">[10]</a><a href="#ref-11">[11]</a><a href="#ref-12">[12]</a><a href="#ref-14">[14]</a>. Chart by the author.</figcaption>
+  </figure>
+
+  <p>So, is this a Chinese idea? No. The idea is shared world engineering. What the Chinese labs did is push the dial furthest, publish complete technical reports about it, and release the files. The influence now runs in both directions.</p>
+
+  <p>Why does this race matter so much? Because a model this big does not live on one chip. It is spread across dozens of computer chips in a data center, and every word must travel between those chips to reach its experts. Every trip costs time and electricity. The fewer parts of the model each word wakes up, the fewer trips and the smaller the bill. This is the hidden reason efficiency wins: the real cost of AI is not the size of the model, it is the traffic inside the data center.</p>
+
+  <div class="callout">
+    <p><strong>One caution:</strong> a lower percentage is not automatically better. It is a dial. Turn it too far and quality drops, and the router needs careful balancing so some experts do not sit unused.</p>
+  </div>
+
+  <div class="callout warn">
+    <p><strong>One honest note:</strong> Kimi K3's numbers still come from the company <a href="#ref-14">[14]</a>. At the time of writing, the model files were scheduled for public release on July 27 and were not yet available for independent checks. I will update this post once the files are public and the numbers can be confirmed.</p>
+  </div>
+
+  <hr>
+
+  <h2 id="active-vs-total">Active parameters vs total parameters: what is the difference?</h2>
+
+  <p>Now the payoff. Two numbers describe every modern model, and they answer different questions.</p>
+
+  <p><strong>Total parameters</strong> decide how much MEMORY you need to hold the model. <strong>Active parameters</strong> decide the SPEED and the cost per word. Take a model with 30 billion total and 3 billion active. It needs the memory of a big model. It runs at the speed of a tiny one. And it thinks somewhere in between: clearly better than a small model, not equal to a big one.</p>
+
+  <figure>
+    <img src="/assets/moe-memory-vs-work.png" alt="The same 30 billion total, 3 billion active Mixture of Experts model seen two ways: all parameters loaded in memory on the left, only a small orange set working per word on the right" width="2080" height="920" loading="lazy">
+    <figcaption>The same model, two different bills. Chart by the author.</figcaption>
+  </figure>
+
+  <p>Active parameters determine speed. Total parameters determine memory. That is why modern MoE models can feel dramatically smaller than their headline numbers suggest.</p>
+
+  <div class="callout">
+    <p><strong>Three things to remember</strong></p>
+    <ul>
+      <li>Total parameters tell you the memory needed.</li>
+      <li>Active parameters tell you the speed and the cost per answer.</li>
+      <li>A lower active percentage is not automatically better. It only helps if quality stays high.</li>
+    </ul>
+  </div>
+
+  <p>Next time a model launches, read past the headline number and look for both: total parameters, and active parameters. The second one is the story. Once you understand that distinction, AI headlines become much easier to interpret. You stop asking &ldquo;How big is the model?&rdquo; and start asking &ldquo;How much of it actually works for each word?&rdquo;</p>
+
+  <p>One question remains, and it deserves its own post:</p>
+
+  <p>If the model is so efficient per word, why is a million-word conversation still so hard?</p>
+
+  <p>Because the bottleneck isn't the experts. It's somewhere else.</p>
+
+  <p>In Part 2: <em>Why Long Context Is Hard - the KV Cache, MLA, and Kimi Delta Attention, explained just as simply.</em></p>
+
+  <p class="closing">The headline says 2.8 trillion. <span class="grad">The story is the 2 percent.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> spent 17 years operating and transforming Tier-1 telecom networks,
+      including leading a NOC's L2-to-L3 autonomy transition (75 percent of Level-1 incidents automated).
+      He now builds AI and cloud products, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>What is a Mixture of Experts model, in one sentence?</h3>
+  <p>A big AI model split into many small parts, where a tiny decision-maker wakes up only a few parts for each word, so a huge model runs at a small model's cost.</p>
+
+  <h3>Do the experts specialize in subjects like math or poetry?</h3>
+  <p>No. Researchers who looked inside found patterns like code indentation and common words, not human subjects. Nobody assigns the jobs; the routing patterns appear on their own during training.</p>
+
+  <h3>Is Kimi K3 really the biggest AI model in the world?</h3>
+  <p>Nobody can say. It is the largest OPEN model announced so far, at 2.8 trillion parameters by the company's own numbers. Closed labs like OpenAI, Anthropic and Google do not publish the sizes of their top models.</p>
+
+  <h3>Is Mixture of Experts a Chinese invention?</h3>
+  <p>No. The idea is from 1991, Google scaled it, a French lab made it famous in open models, and US models like Llama 4 and gpt-oss use it today. Chinese labs pushed the efficiency furthest and published the most details.</p>
+
+  <h3>What should I look for when a new model launches?</h3>
+  <p>Two numbers. Total parameters tell you the memory it needs. Active parameters tell you the speed and cost per word. The second one is usually the real story.</p>
+
+  <hr>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Numbered by where they support this article.</p>
+  <ol class="refs">
+    <li id="ref-1">Jacobs, Jordan, Nowlan, Hinton: <a href="https://doi.org/10.1162/neco.1991.3.1.79">Adaptive Mixtures of Local Experts</a>, Neural Computation, 1991. Supports: the 1990s origin of the idea (section: What is a Mixture of Experts).</li>
+    <li id="ref-2">Shazeer et al.: <a href="https://arxiv.org/abs/1701.06538">Outrageously Large Neural Networks: The Sparsely-Gated Mixture-of-Experts Layer</a>, 2017. Supports: Google reviving sparse MoE in 2017; the early expert patterns like adjectives and articles (sections: What is MoE; The expert myth).</li>
+    <li id="ref-3">Fedus, Zoph, Shazeer: <a href="https://arxiv.org/abs/2101.03961">Switch Transformers</a>, 2021. Supports: Google's trillion-parameter, thousands-of-experts scaling; the router diagram reproduced above as Figure 2 (sections: What is MoE; the diagram).</li>
+    <li id="ref-4">Lepikhin et al.: <a href="https://arxiv.org/abs/2006.16668">GShard</a>, 2020. Supports: Google's early scaling to hundreds of billions of parameters (section: What is MoE, history).</li>
+    <li id="ref-5">Rajbhandari et al.: <a href="https://arxiv.org/abs/2201.05596">DeepSpeed-MoE</a>, Microsoft, 2022. Supports: the always-awake helper expert existing at Microsoft in 2022 (section: DeepSeek's design).</li>
+    <li id="ref-6">Jiang et al.: <a href="https://arxiv.org/abs/2401.04088">Mixtral of Experts</a>, Mistral AI, 2024. Supports: the 8 experts / pick 2 example, 47 billion total vs 13 billion active, and the finding of no clear subject specialists (sections: What is MoE; The expert myth; the chart).</li>
+    <li id="ref-7"><a href="https://github.com/xai-org/grok-1">Grok-1</a>, xAI, 2024. Supports: the Grok-1 bar in the chart.</li>
+    <li id="ref-8"><a href="https://www.databricks.com/blog/introducing-dbrx-new-state-art-open-llm">DBRX</a>, Databricks, 2024. Supports: the DBRX bar in the chart.</li>
+    <li id="ref-9">Dai et al.: <a href="https://arxiv.org/abs/2401.06066">DeepSeekMoE</a>, 2024. Supports: fine-grained experts and shared experts (section: DeepSeek's design).</li>
+    <li id="ref-10"><a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a>, 2024. Supports: 671 billion total / 37 billion active, 256 experts (section: DeepSeek's design; the chart).</li>
+    <li id="ref-11"><a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">Llama 4</a>, Meta, 2025. Supports: Llama 4 as a US MoE model using a shared expert (history section; the chart).</li>
+    <li id="ref-12"><a href="https://arxiv.org/abs/2508.10925">gpt-oss model card</a>, OpenAI, 2025. Supports: the gpt-oss bar in the chart and US adoption of extreme sparsity.</li>
+    <li id="ref-13"><a href="https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/">Google announcement of Gemini 1.5</a>, 2024. Supports: Google saying its Gemini models use MoE (history section).</li>
+    <li id="ref-14"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026. Supports: all Kimi K3 figures in this article, which remain company-reported until the public files are independently checked (intro; the chart; the honesty note).</li>
+  </ol>
+
+  <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri, a technical manager working in telecom network operations who builds and runs AI agent systems hands-on. Every number above was checked against the primary paper or official release listed, and the Kimi K3 figures are marked as company claims until the released files are independently verified. This post will be updated when that check completes. Last updated: July 27, 2026.</p>
+
+  <hr>
+
+  <p>More on operating AI in production: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a> brings telecom operations discipline to agent fleets; <a href="/blog/agentic-sre-agent-fleets/">Who Operates the Operators?</a> covers the incident loop for agent fleets.</p>
+
+</article>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>
