@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mixture of Experts (MoE) Explained Simply | Mohamed Kadri</title>
-<meta name="description" content="A zero-background guide to Mixture of Experts: how Kimi K3 claims 2.8 trillion parameters while ~2% work per word, and the two numbers that matter.">
+<meta name="description" content="A zero-background guide to Mixture of Experts: how Kimi K3 holds 2.8 trillion parameters while only 104 billion work per word, and the two numbers that matter.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
 <link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
@@ -17,13 +17,13 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:url" content="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
 <meta property="og:title" content="Mixture of Experts (MoE) Explained Simply">
-<meta property="og:description" content="Kimi K3 claims 2.8 trillion parameters. About 98 percent is asleep when it answers you. The design, explained from zero.">
+<meta property="og:description" content="Kimi K3 holds 2.8 trillion parameters. Only 104 billion are active per word. The design, explained from zero.">
 <meta property="og:image" content="https://mkadri85.github.io/assets/moe-og.jpg">
 <meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/moe-og.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="2.8T total parameters versus about 2 percent active: a vast field of dark sleeping expert units with one small glowing cluster doing the work">
+<meta property="og:image:alt" content="A vast field of dark idle expert units with one small glowing cluster doing the work in a Mixture of Experts AI model">
 <meta property="article:published_time" content="2026-07-27">
 <meta property="article:author" content="Mohamed Kadri">
 <meta property="article:section" content="AI fundamentals">
@@ -35,16 +35,16 @@
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Mixture of Experts (MoE) Explained Simply">
-<meta name="twitter:description" content="Kimi K3 claims 2.8 trillion parameters. About 98 percent is asleep when it answers you. The design, explained from zero.">
+<meta name="twitter:description" content="Kimi K3 holds 2.8 trillion parameters. Only 104 billion are active per word. The design, explained from zero.">
 <meta name="twitter:image" content="https://mkadri85.github.io/assets/moe-og.jpg">
-<meta name="twitter:image:alt" content="2.8T total parameters versus about 2 percent active in a Mixture of Experts AI model">
+<meta name="twitter:image:alt" content="A field of idle expert units with one small glowing cluster active in a Mixture of Experts AI model">
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "Mixture of Experts (MoE) Explained Simply: Why Kimi K3's 2.8 Trillion Parameters Don't Mean What You Think",
-  "description": "A zero-background guide to Mixture of Experts: experts, routers, total vs active parameters, and why a 2.8 trillion parameter model runs mostly asleep.",
+  "description": "A zero-background guide to Mixture of Experts: experts, routers, total vs active parameters, and why a 2.8 trillion parameter model activates only 104 billion per word.",
   "image": "https://mkadri85.github.io/assets/moe-hero.jpg",
   "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
   "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
@@ -166,8 +166,8 @@
   <div class="meta">Mohamed Kadri &middot; July 27, 2026 &middot; 9 min read &middot; <a href="/blog/mixture-of-experts-explained/ar/">اقرأ بالعربية</a></div>
 
   <figure class="hero">
-    <img src="/assets/moe-hero.jpg" alt="2.8T total parameters versus about 2 percent active: a vast field of dark sleeping expert units with one small glowing cluster doing the work in a Mixture of Experts AI model" width="1536" height="1024">
-    <figcaption>A 2.8 trillion parameter model at work: almost everything asleep, a small cluster awake. Figures are Moonshot's own <a href="#ref-14">[14]</a>.</figcaption>
+    <img src="/assets/moe-hero.jpg" alt="A vast field of dark idle expert units with one small glowing cluster doing the work in a Mixture of Experts AI model" width="1536" height="1024">
+    <figcaption>A 2.8 trillion parameter model at work: almost everything idle, a small cluster active. K3 activates 104 billion parameters per word, about 3.7 percent of the total <a href="#ref-14">[14]</a>.</figcaption>
   </figure>
 
   <div class="toc">
@@ -186,7 +186,7 @@
 
   <p class="lead">Kimi K3 is called a 2.8 trillion parameter model.</p>
 
-  <p class="lead">The surprising part? Around 98% of those parameters are asleep every time it answers you, by the maker's own numbers <a href="#ref-14">[14]</a>.</p>
+  <p class="lead">The surprising part? Only about 104 billion of those parameters do any work for a given word. That is under 4 percent, confirmed from the model files Moonshot published on 27 July 2026 <a href="#ref-14">[14]</a>.</p>
 
   <p>That is not a bug. It is the biggest architectural shift in modern AI. Here is how it works, explained from zero. No math. No background needed. By the end you will also know the real technical words.</p>
 
@@ -277,7 +277,7 @@
   <p>The result was a race, across all labs, toward using less of the model per word:</p>
 
   <figure>
-    <img src="/assets/moe-sparsity-race.png" alt="Bar chart of the share of parameters active per word: Mixtral 28 percent, Grok-1 25 percent, DBRX 27 percent, DeepSeek-V3 5.5 percent, Llama 4 Maverick 4.3 percent, gpt-oss 4.4 percent, and Kimi K3's company-reported 1.8 percent of experts" width="1920" height="1120" loading="lazy">
+    <img src="/assets/moe-sparsity-race.png" alt="Bar chart of the share of parameters active per word: Mixtral 28 percent, Grok-1 25 percent, DBRX 27 percent, DeepSeek-V3 5.5 percent, Llama 4 Maverick 4.3 percent, gpt-oss 4.4 percent, and Kimi K3 3.7 percent" width="1920" height="1120" loading="lazy">
     <figcaption>How much of the model works per word, by model and country <a href="#ref-6">[6]</a><a href="#ref-7">[7]</a><a href="#ref-8">[8]</a><a href="#ref-10">[10]</a><a href="#ref-11">[11]</a><a href="#ref-12">[12]</a><a href="#ref-14">[14]</a>. Chart by the author.</figcaption>
   </figure>
 
@@ -290,7 +290,7 @@
   </div>
 
   <div class="callout warn">
-    <p><strong>One honest note:</strong> Kimi K3's numbers still come from the company <a href="#ref-14">[14]</a>. At the time of writing, the model files were scheduled for public release on July 27 and were not yet available for independent checks. I will update this post once the files are public and the numbers can be confirmed.</p>
+    <p><strong>Update, 27 July 2026:</strong> Moonshot released the K3 weights, so the figures here now come from the published model card and config file rather than the company blog <a href="#ref-14">[14]</a>. That release corrected one number in this article. Active parameters are <strong>104 billion</strong>, about 3.7 percent of the total, not the roughly 2 percent you get from the expert count alone. Sixteen of 896 routed experts are picked per word, but two shared experts, the attention layers and one dense layer stay active for every word as well, so the parameter share is higher than the expert share. The rest held: 896 experts, 16 per token, two shared experts, MXFP4 weights, and a 1,048,576-token context. The attention stack is 69 KDA layers to 24 gated MLA layers across 93 layers.</p>
   </div>
 
   <hr>
@@ -327,7 +327,7 @@
 
   <p>In Part 2: <a href="/blog/why-long-context-is-hard/"><em>Why Long Context Is Hard - the KV Cache, MLA, and Kimi Delta Attention, explained just as simply</em></a>.</p>
 
-  <p class="closing">The headline says 2.8 trillion. <span class="grad">The story is the 2 percent.</span></p>
+  <p class="closing">The headline says 2.8 trillion. <span class="grad">The story is the 104 billion.</span></p>
 
   <div class="author">
     <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
@@ -375,10 +375,10 @@
     <li id="ref-11"><a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">Llama 4</a>, Meta, 2025. Supports: Llama 4 as a US MoE model using a shared expert (history section; the chart).</li>
     <li id="ref-12"><a href="https://arxiv.org/abs/2508.10925">gpt-oss model card</a>, OpenAI, 2025. Supports: the gpt-oss bar in the chart and US adoption of extreme sparsity.</li>
     <li id="ref-13"><a href="https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/">Google announcement of Gemini 1.5</a>, 2024. Supports: Google saying its Gemini models use MoE (history section).</li>
-    <li id="ref-14"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026. Supports: all Kimi K3 figures in this article, which remain company-reported until the public files are independently checked (intro; the chart; the honesty note).</li>
+    <li id="ref-14"><a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026, alongside the <a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>. Supports: 2.8T total and 104B activated parameters, 896 experts with 16 selected per token, 2 shared experts, 93 layers as 69 KDA plus 24 gated MLA, MXFP4 weights with MXFP8 activations, and the 1,048,576-token context (intro; the chart; the update note).</li>
   </ol>
 
-  <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri, a technical manager working in telecom network operations who builds and runs AI agent systems hands-on. Every number above was checked against the primary paper or official release listed, and the Kimi K3 figures are marked as company claims until the released files are independently verified. This post will be updated when that check completes. Last updated: July 27, 2026.</p>
+  <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri, a technical manager working in telecom network operations who builds and runs AI agent systems hands-on. Every number above was checked against the primary paper or official release listed. The Kimi K3 figures were company claims when this was first published; they were re-checked against the released model card and config.json on 27 July 2026, and the active-parameter figure was corrected from roughly 2 percent to 104 billion, about 3.7 percent. Last updated: July 27, 2026.</p>
 
   <hr>
 

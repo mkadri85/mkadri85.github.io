@@ -62,7 +62,7 @@
 {"@type":"Question","name":"Why does AI get slower and more expensive in long conversations?","acceptedAnswer":{"@type":"Answer","text":"Because the model's notes (the KV cache) grow with every word. For one 32,000-token chat, a model with DeepSeek-V3's dimensions using standard attention would need roughly 131 gigabytes just for the notes."}},
 {"@type":"Question","name":"What is Multi-head Latent Attention?","acceptedAnswer":{"@type":"Answer","text":"DeepSeek's fix for the growing notes: store a small compressed summary instead of full notes and rebuild the useful parts when needed. It cut the notebook size by 93 percent compared with their previous model, and the answers stayed just as good."}},
 {"@type":"Question","name":"What is Kimi Delta Attention?","acceptedAnswer":{"@type":"Answer","text":"Moonshot's fix: replace the growing notebook with a fixed-size whiteboard that is constantly rewritten, where different areas forget at different speeds. Mixed three-to-one with normal full-notebook layers, it cuts the notebook cost by up to 75 percent."}},
-{"@type":"Question","name":"Is the 1 million token context window real?","acceptedAnswer":{"@type":"Answer","text":"The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's version is company-described until its files are independently checked."}}
+{"@type":"Question","name":"Is the 1 million token context window real?","acceptedAnswer":{"@type":"Answer","text":"The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's config, published on 27 July 2026, sets that window at 1,048,576 tokens and splits attention as 69 KDA layers to 24 gated MLA."}}
 ]}
 </script>
 
@@ -297,7 +297,7 @@
   <p>Moonshot's fix: replace the growing notebook with a fixed-size whiteboard that is constantly rewritten, where different areas forget at different speeds. Mixed three-to-one with normal full-notebook layers, it cuts the notebook cost by up to 75 percent.</p>
 
   <h3>Is the 1 million token context window real?</h3>
-  <p>The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's version is company-described until its files are independently checked.</p>
+  <p>The number is real as a capacity, but the engineering question is what it costs to serve. Designs like MLA and KDA exist exactly to make million-token windows affordable; Kimi K3's config, published on 27 July 2026, sets that window at 1,048,576 tokens and splits attention as 69 KDA layers to 24 gated MLA.</p>
 
   <hr>
 
@@ -309,7 +309,7 @@
     <li id="ref-3"><a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a>, 2024. Supports: MLA at frontier scale; model dimensions used in the 131 GB illustration (sections: The KV cache; DeepSeek's fix).</li>
     <li id="ref-4"><a href="https://arxiv.org/abs/2510.26692">Kimi Linear Technical Report (Kimi Delta Attention)</a>, Moonshot AI, 2025. Supports: the fixed-size whiteboard, per-channel forgetting, the 3:1 hybrid and up to 75 percent KV cache reduction (section: Kimi's fix).</li>
     <li id="ref-5">He, Zhang, Ren, Sun: <a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a>, 2015. Supports: the original residual connections idea (section: Two more pieces).</li>
-    <li id="ref-6"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026. Supports: KDA inside K3, the million-token window, Stable LatentMoE and Attention Residuals - all company-described until the public files are independently checked (sections: Kimi's fix; Two more pieces).</li>
+    <li id="ref-6"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026. Supports: KDA inside K3 (69 KDA layers to 24 gated MLA across 93 layers), the 1,048,576-token window, and the Stable LatentMoE and Attention Residuals design - the layer split and context length now verifiable in the published config until the public files are independently checked (sections: Kimi's fix; Two more pieces).</li>
   </ol>
 
   <p style="font-size:13.5px;color:var(--dim)">Further watching: Welch Labs, &ldquo;How DeepSeek Rewrote the Transformer&rdquo; - the best visual explanation of MLA. Note on the 131 GB figure: computed from the published DeepSeek-V3 attention dimensions (2 x 128 dimensions x 2 bytes x 128 heads x 61 layers x 32,768 tokens) as what standard multi-head attention would cost; DeepSeek-V3 itself avoids it with MLA. About this article: written by Mohamed Kadri; every number was checked against the primary paper or official release listed, and Kimi K3 figures are marked as company claims until the released files are independently verified. Last updated: July 27, 2026.</p>

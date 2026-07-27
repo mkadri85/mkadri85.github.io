@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>شرح مبسط لتقنية خليط الخبراء (MoE) | محمد قدري</title>
-<meta name="description" content="دليل من الصفر لتقنية خليط الخبراء: كيف يعلن Kimi K3 عن 2.8 تريليون معامل بينما يعمل ~2% فقط لكل كلمة، والرقمان الأهم من العنوان.">
+<meta name="description" content="دليل من الصفر لتقنية خليط الخبراء: كيف يضم Kimi K3 2.8 تريليون معامل بينما تنشط 104 مليارات فقط لكل كلمة، والرقمان الأهم من العنوان.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/">
 <link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/mixture-of-experts-explained/">
@@ -17,7 +17,7 @@
 <meta property="og:locale" content="ar_AR">
 <meta property="og:url" content="https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/">
 <meta property="og:title" content="شرح مبسط لتقنية خليط الخبراء (MoE)">
-<meta property="og:description" content="يوصف Kimi K3 بأنه نموذج بحجم 2.8 تريليون معامل. حوالي 98% منه خامل في كل إجابة. هذا ليس خللا، هذا هو التصميم. شرح من الصفر.">
+<meta property="og:description" content="يضم Kimi K3 2.8 تريليون معامل، لكن 104 مليارات فقط تنشط مع كل كلمة. هذا ليس خللا، هذا هو التصميم. شرح من الصفر.">
 <meta property="og:image" content="https://mkadri85.github.io/assets/moe-og.jpg">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
@@ -33,16 +33,16 @@
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="شرح مبسط لتقنية خليط الخبراء (MoE)">
-<meta name="twitter:description" content="يوصف Kimi K3 بأنه نموذج بحجم 2.8 تريليون معامل. حوالي 98% منه خامل في كل إجابة. هذا هو التصميم، مشروحا من الصفر.">
+<meta name="twitter:description" content="يضم Kimi K3 2.8 تريليون معامل، لكن 104 مليارات فقط تنشط مع كل كلمة. هذا هو التصميم، مشروحا من الصفر.">
 <meta name="twitter:image" content="https://mkadri85.github.io/assets/moe-og.jpg">
-<meta name="twitter:image:alt" content="2.8 تريليون معامل كلي مقابل حوالي 2% نشط في نموذج خليط الخبراء">
+<meta name="twitter:image:alt" content="حقل من وحدات الخبراء الخاملة مع مجموعة صغيرة نشطة في نموذج خليط الخبراء">
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "شرح مبسط لتقنية خليط الخبراء (MoE): لماذا 2.8 تريليون معامل في Kimi K3 لا تعني ما تظنه",
-  "description": "دليل مبسط من الصفر لتقنية خليط الخبراء: الخبراء والموجه والمعاملات الكلية مقابل النشطة، ولماذا يعمل نموذج 2.8 تريليون معامل وهو شبه خامل.",
+  "description": "دليل مبسط من الصفر لتقنية خليط الخبراء: الخبراء والموجه والمعاملات الكلية مقابل النشطة، ولماذا لا ينشط من نموذج 2.8 تريليون معامل سوى 104 مليارات مع كل كلمة.",
   "image": "https://mkadri85.github.io/assets/moe-hero.jpg",
   "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
   "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
@@ -162,8 +162,8 @@
   <div class="meta">محمد قدري &middot; 27 يوليو 2026 &middot; 9 دقائق قراءة &middot; <a href="/blog/mixture-of-experts-explained/">Read in English</a></div>
 
   <figure class="hero">
-    <img src="/assets/moe-hero.jpg" alt="2.8 تريليون معامل كلي مقابل حوالي 2% نشط: حقل واسع من وحدات الخبراء الخاملة مع مجموعة صغيرة مضيئة تعمل في نموذج خليط الخبراء" width="1536" height="1024">
-    <figcaption>نموذج بحجم 2.8 تريليون معامل أثناء العمل: كل شيء تقريبا خامل، ومجموعة صغيرة نشطة. الأرقام من Moonshot نفسها <a href="#ref-14">[14]</a>.</figcaption>
+    <img src="/assets/moe-hero.jpg" alt="حقل واسع من وحدات الخبراء الخاملة مع مجموعة صغيرة مضيئة تعمل في نموذج خليط الخبراء" width="1536" height="1024">
+    <figcaption>نموذج بحجم 2.8 تريليون معامل أثناء العمل: كل شيء تقريبا خامل، ومجموعة صغيرة نشطة. ينشط K3 نحو 104 مليارات معامل مع كل كلمة، أي حوالي 3.7% من الإجمالي <a href="#ref-14">[14]</a>.</figcaption>
   </figure>
 
   <div class="toc">
@@ -182,7 +182,7 @@
 
   <p class="lead">يوصف نموذج Kimi K3 بأنه نموذج بحجم 2.8 تريليون معامل.</p>
 
-  <p class="lead">المفاجأة؟ حوالي 98% من هذه المعاملات خاملة في كل مرة يجيبك فيها النموذج، وذلك حسب أرقام الشركة المصنعة نفسها <a href="#ref-14">[14]</a>.</p>
+  <p class="lead">المفاجأة؟ لا ينشط من هذه المعاملات سوى نحو 104 مليارات مع كل كلمة، أي أقل من 4%، وهذا مؤكد من ملفات النموذج التي نشرتها Moonshot في 27 يوليو 2026 <a href="#ref-14">[14]</a>.</p>
 
   <p>هذا ليس خللا. هذا أكبر تحول في تصميم الذكاء الاصطناعي الحديث. وفي هذا المقال نشرحه من الصفر. بلا رياضيات، وبلا خلفية مسبقة. وفي النهاية ستعرف أيضا المصطلحات التقنية الحقيقية.</p>
 
@@ -286,7 +286,7 @@
   </div>
 
   <div class="callout warn">
-    <p><strong>ملاحظة صدق:</strong> أرقام Kimi K3 لا تزال من الشركة نفسها <a href="#ref-14">[14]</a>. حتى وقت كتابة هذا المقال، كان مقررا نشر ملفات النموذج للعموم في 27 يوليو ولم تكن متاحة بعد للفحص المستقل. سنحدث هذا المقال بمجرد أن تصبح الملفات عامة ويمكن تأكيد الأرقام.</p>
+    <p><strong>تحديث 27 يوليو 2026:</strong> نشرت Moonshot أوزان K3، وأصبحت الأرقام هنا مأخوذة من بطاقة النموذج وملف الإعدادات المنشورين بدلا من مدونة الشركة <a href="#ref-14">[14]</a>. صحح هذا الإصدار رقما واحدا في المقال: المعاملات النشطة هي <strong>104 مليارات</strong>، أي نحو 3.7% من الإجمالي، وليست حوالي 2% كما توحي نسبة الخبراء وحدها. يختار النموذج 16 خبيرا موجها من 896، لكن يبقى خبيران مشتركان وطبقات الانتباه وطبقة كثيفة واحدة نشطة مع كل كلمة، لذا فنسبة المعاملات أعلى من نسبة الخبراء. أما بقية الأرقام فقد تأكدت: 896 خبيرا، و16 لكل توكن، وخبيران مشتركان، وأوزان MXFP4، ونافذة سياق 1,048,576 توكن. وتتكون طبقات الانتباه من 69 طبقة KDA مقابل 24 طبقة MLA مبوبة ضمن 93 طبقة.</p>
   </div>
 
   <hr>
@@ -323,7 +323,7 @@
 
   <p>في الجزء الثاني: <a href="/blog/why-long-context-is-hard/ar/"><em>لماذا السياق الطويل صعب - ذاكرة KV و MLA و Kimi Delta Attention، بنفس البساطة</em></a>.</p>
 
-  <p class="closing">العنوان يقول 2.8 تريليون. <span class="grad">القصة في الـ 2%.</span></p>
+  <p class="closing">العنوان يقول 2.8 تريليون. <span class="grad">القصة في الـ 104 مليارات.</span></p>
 
   <div class="author">
     <img src="/assets/portrait.jpg" alt="محمد قدري" width="64" height="64">
@@ -371,10 +371,10 @@
     <li id="ref-11"><a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">Llama 4</a>, Meta, 2025.</li>
     <li id="ref-12"><a href="https://arxiv.org/abs/2508.10925">gpt-oss model card</a>, OpenAI, 2025.</li>
     <li id="ref-13"><a href="https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/">Google announcement of Gemini 1.5</a>, 2024.</li>
-    <li id="ref-14"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>, Moonshot AI, 2026.</li>
+    <li id="ref-14"><a href="https://huggingface.co/moonshotai/Kimi-K3">بطاقة نموذج Kimi K3 وملف config.json</a>، Moonshot AI، صدرت في 27 يوليو 2026، إلى جانب <a href="https://www.kimi.com/blog/kimi-k3">مدونة Kimi K3 التقنية</a>. تدعم: 2.8 تريليون معامل كلي و104 مليارات نشطة، و896 خبيرا مع اختيار 16 لكل توكن، وخبيرين مشتركين، و93 طبقة موزعة على 69 KDA و24 MLA مبوبة، وأوزان MXFP4، ونافذة 1,048,576 توكن.</li>
   </ol>
 
-  <p style="font-size:13.5px;color:var(--dim)">عن هذا المقال: كتبه محمد قدري، مدير تقني يعمل في عمليات شبكات الاتصالات ويبني ويشغل أنظمة وكلاء الذكاء الاصطناعي بشكل عملي. تم التحقق من كل رقم أعلاه مقابل الورقة العلمية الأصلية أو الإصدار الرسمي المذكور، وأرقام Kimi K3 معلمة كادعاءات من الشركة حتى يتم التحقق المستقل من الملفات المنشورة. سيحدث هذا المقال عند اكتمال ذلك الفحص. آخر تحديث: 27 يوليو 2026.</p>
+  <p style="font-size:13.5px;color:var(--dim)">عن هذا المقال: كتبه محمد قدري، مدير تقني يعمل في عمليات شبكات الاتصالات ويبني ويشغل أنظمة وكلاء الذكاء الاصطناعي بشكل عملي. تم التحقق من كل رقم أعلاه مقابل الورقة العلمية الأصلية أو الإصدار الرسمي المذكور، وكانت أرقام Kimi K3 ادعاءات من الشركة عند النشر الأول، ثم أعيد التحقق منها مقابل بطاقة النموذج وملف config.json بعد صدورهما في 27 يوليو 2026، وصحح رقم المعاملات النشطة من حوالي 2% إلى 104 مليارات، أي نحو 3.7%. آخر تحديث: 27 يوليو 2026.</p>
 
 </article>
 
