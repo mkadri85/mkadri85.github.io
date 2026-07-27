@@ -7,6 +7,9 @@
 <meta name="description" content="Everyone draws the AI closed loop on RAN and core. What must it actually reason about on microwave backhaul - and an open demo that runs the whole loop live.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/agentic-ai-microwave-backhaul/">
 
 <!-- Open Graph -->
 <meta property="og:type" content="article">
@@ -145,7 +148,7 @@
 <header><nav>
   <a class="brand" href="/">Mohamed Kadri</a>
   <div class="navlinks">
-    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a>
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a><a href="/blog/agentic-ai-microwave-backhaul/ar/">العربية</a>
   </div>
 </nav></header>
 
@@ -153,7 +156,7 @@
   <div class="eyebrow">Agentic AI / microwave backhaul operations</div>
   <h1>The Loop Meets the Microwave Network</h1>
   <p class="sub">Everyone draws the closed loop on RAN and core. Here is what it actually has to reason about on the network layer where a wrong action severs a region - and an open demo that runs it.</p>
-  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 14 min read</div>
+  <div class="meta">Mohamed Kadri &middot; July 2026 &middot; 14 min read &middot; <a href="/blog/agentic-ai-microwave-backhaul/ar/">اقرأ بالعربية</a></div>
 
   <figure class="hero">
     <img src="/assets/mw-loop-hero.png" alt="A rain cell crossing a microwave backhaul region on an operations map, with an agent console diagnosing links" width="1536" height="1024">
@@ -181,7 +184,7 @@
 
   <h2 id="loop">The loop everybody draws</h2>
   <p>The loop itself is now standard whiteboard material: detect, correlate, plan, act, verify. TM Forum has formal guidance on agentic AI closed loops <a href="#ref-3">[3]</a>; ETSI ZSM has specified closed-loop architectures for years and published work on AI agents in zero-touch management this year <a href="#ref-4">[4]</a>. Every major vendor keynote shows some version of the same diagram.</p>
-  <p>I spent seventeen years inside telecom operations, a large part of it on transmission and microwave. My honest report from that seat: the loop is the easy part of the diagram. What the diagram never shows is the reasoning inside each box when the network under it is a microwave backhaul - and that is where closed-loop ambitions go to die quietly.</p>
+  <p>I spent my career inside telecom operations, a large part of it on transmission and microwave. My honest report from that seat: the loop is the easy part of the diagram. What the diagram never shows is the reasoning inside each box when the network under it is a microwave backhaul - and that is where closed-loop ambitions go to die quietly.</p>
 
   <h2 id="solved">What is already solved - credit where due</h2>
   <p>Let me be precise about what exists, because this article claims a gap, not an empty field.</p>
@@ -198,7 +201,7 @@
   <h2 id="storm">A storm crosses a three-vendor region</h2>
   <p>Here is the scenario every closed-loop diagram skips, and the one the demo below runs live.</p>
   <p>A rain cell enters a region carrying three vendor islands. Within minutes: E-band links inside the cell drop hard; 18 and 23 GHz links fade and their adaptive modulation steps down, trading capacity for survival; each island's NMS emits its own alarm storm in its own format; and sympathetic SITE UNREACHABLE alarms cascade from every tail site below a dead link. A national NOC can see a million alarms a day <a href="#ref-18">[18]</a>; a single fibre cut is famously "two thousand red indicators, one problem." This is that, times three formats.</p>
-  <p>The operator's actual first move - mine, for seventeen years - is not a probe. It is the alarm history: is this link a chronic flapper or is this event new? Then the differential diagnosis: both directions down or one? Receive level low, or level healthy while quality collapsed? Are the neighbours co-fading - and does the weather feed confirm a cell over this path geometry? Is there a change record on this object from last night?</p>
+  <p>The operator's actual first move, and mine for most of my career, is not a probe. It is the alarm history: is this link a chronic flapper or is this event new? Then the differential diagnosis: both directions down or one? Receive level low, or level healthy while quality collapsed? Are the neighbours co-fading - and does the weather feed confirm a cell over this path geometry? Is there a change record on this object from last night?</p>
   <p>Each of those questions is a probe an agent can execute, and the reasoning chain between them is a runbook that can be written down. That is precisely what the demo's diagnosis engine is: the runbook, executable, with every verdict carrying its evidence trail. Rain fade with radar confirmation and seven co-fading neighbours: watch, do not dispatch - the truck you do not roll for rain is the cheapest win in transmission opex, and customers have literally kept technicians' personal phone numbers because every no-fault-found dispatch was billed <a href="#ref-19">[19]</a>. A one-direction drop persisting after the cell exits: hardware on that receive chain - now dispatch, with the evidence attached.</p>
   <p>The subtle case is the one that matters: a real hardware failure that begins during the storm. While everything co-fades, a few extra decibels of one-direction loss are invisible - to the runbook and to your best engineer. The discipline is not magic detection; it is the re-verify contract. Every storm-attributed verdict carries an obligation: re-run the diagnosis when the cell exits the path. The storm passes, the region recovers, one link does not - and what remains standing is the truth.</p>
 
@@ -242,7 +245,7 @@
 
   <div class="author">
     <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
-    <div class="who"><b>Mohamed Kadri</b> spent 17 years operating and transforming Tier-1 telecom networks - much of it in transmission and microwave - including leading a NOC's L2-to-L3 autonomy transition (75 percent of Level-1 incidents automated). He now builds AI and cloud products, writes about operating AI in production, and maintains
+    <div class="who"><b>Mohamed Kadri</b> spent his career operating and transforming Tier-1 telecom networks - much of it in transmission and microwave - including leading a NOC's L2-to-L3 autonomy transition (75 percent of Level-1 incidents automated). He now builds AI and cloud products, writes about operating AI in production, and maintains
       <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
       <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
   </div>
