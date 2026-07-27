@@ -378,6 +378,48 @@
 
 </article>
 
+
+<style>
+
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:760px;margin:38px auto 8px;box-sizing:border-box;
+  padding:16px 18px;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);border-radius:12px}
+.share b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent,#4f8fc9);font-weight:600;margin-inline-end:4px}
+.share a{display:inline-block;padding:7px 13px;border:1px solid var(--line,#243044);
+  border-radius:999px;font-size:14px;color:var(--ink,#e6edf6);
+  background:rgba(255,255,255,.02);transition:border-color .15s,color .15s}
+.share a:hover{border-color:var(--accent,#4f8fc9);color:var(--accent,#4f8fc9)}
+@media(max-width:520px){.share{gap:8px;padding:14px}
+  .share a{font-size:13px;padding:6px 11px}}
+</style>
+<nav class="share" aria-label="شارك هذا المقال">
+  <b>شارك</b>
+  <a data-n="li" target="_blank" rel="noopener">LinkedIn</a>
+  <a data-n="x" target="_blank" rel="noopener">X</a>
+  <a data-n="rd" target="_blank" rel="noopener">Reddit</a>
+  <a data-n="fb" target="_blank" rel="noopener">Facebook</a>
+  <a data-n="th" target="_blank" rel="noopener">Threads</a>
+</nav>
+<script>
+(function(){
+  var c=document.querySelector('link[rel="canonical"]');
+  var u=(c&&c.href)?c.href:location.href.split('#')[0];
+  var m=document.querySelector('meta[property="og:title"]');
+  var t=(m&&m.content)?m.content:document.title;
+  var U=encodeURIComponent(u),T=encodeURIComponent(t);
+  var map={
+    li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,
+    x:'https://x.com/intent/post?url='+U+'&text='+T,
+    rd:'https://www.reddit.com/submit?url='+U+'&title='+T,
+    fb:'https://www.facebook.com/sharer/sharer.php?u='+U,
+    th:'https://www.threads.com/intent/post?text='+T+'%20'+U
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('.share a[data-n]'),
+    function(a){a.href=map[a.getAttribute('data-n')];});
+})();
+</script>
+
 <footer>
   <div class="wrap">محمد قدري - قائد تحول رقمي وسحابة - دبي، الإمارات - <a href="/">mkadri85.github.io</a></div>
 </footer>
