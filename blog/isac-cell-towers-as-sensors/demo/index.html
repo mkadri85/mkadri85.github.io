@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ISAC City: an interactive 3D demo of network sensing | Mohamed Kadri</title>
-<meta name="description" content="Watch three 5G towers sense a drone with their own radio waves. Interactive delay-Doppler view, bandwidth slider, clutter mode. Companion demo to the ISAC article.">
+<meta name="description" content="Watch three 5G towers sense a drone with their own radio waves. Guided tour, live sensing scope, bandwidth slider, clutter mode. Companion demo to the ISAC article.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/demo/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mohamed Kadri">
 <meta property="og:url" content="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/demo/">
 <meta property="og:title" content="ISAC City: watch a cell network sense a drone">
-<meta property="og:description" content="Three towers, one drone, a live delay-Doppler scope. See why bandwidth sets resolution and clutter sets the false-alarm floor.">
+<meta property="og:description" content="Three towers, one drone, a live sensing scope. See why bandwidth sets resolution and clutter sets the false-alarm floor.">
 <meta property="og:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
 <meta property="og:image:alt" content="A city at dusk where amber radio wavefronts ripple out from cell towers and outline a drone, a car and a pedestrian in blue light">
 <meta name="twitter:card" content="summary_large_image">
@@ -30,20 +30,29 @@
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
     font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-  #scene{position:fixed;inset:0;display:block}
-  .hud{position:fixed;z-index:10;border:1px solid var(--line);background:rgba(18,26,41,.88);
+  #scene{position:fixed;inset:0;display:block;cursor:grab}
+  #scene:active{cursor:grabbing}
+  .hud{position:fixed;z-index:10;border:1px solid var(--line);background:rgba(18,26,41,.9);
     backdrop-filter:blur(10px);border-radius:12px;padding:14px 16px}
   .hud h1{font-family:'Space Grotesk',Inter,sans-serif;font-size:15px;font-weight:700;
     letter-spacing:-.01em;margin:0 0 2px;color:var(--ink)}
   .hud .sub{font-size:11.5px;color:var(--dim);line-height:1.45;margin:0}
   .hud .sub a{color:var(--accent);text-decoration:none}
   .hud .sub a:hover{text-decoration:underline}
-  #title{top:16px;left:16px;max-width:300px}
+  #title{top:16px;left:16px;max-width:290px}
   .eyebrow{color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;margin:0 0 4px}
 
+  #tips{position:fixed;top:16px;right:16px;z-index:10;border:1px solid rgba(255,180,84,.45);
+    background:rgba(30,26,18,.88);backdrop-filter:blur(10px);border-radius:12px;
+    padding:12px 16px;max-width:210px}
+  #tips b{display:block;color:var(--amber);font-size:10px;font-weight:600;
+    letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+  #tips ul{margin:0;padding:0;list-style:none;color:#d8cfc0;font-size:12px;line-height:1.8}
+
   #controls{bottom:16px;left:16px;width:250px}
   .ctl{margin:12px 0 0}
+  .ctl:first-child{margin-top:2px}
   .ctl label{display:flex;justify-content:space-between;font-size:11px;font-weight:600;
     letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:6px}
   .ctl label output{color:var(--accent2);font-variant-numeric:tabular-nums;text-transform:none;letter-spacing:0}
@@ -58,34 +67,62 @@
   button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent2);
     background:rgba(79,143,201,.12)}
   button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+  button.primary{border-color:var(--amber);color:#1a1206;background:var(--amber)}
+  button.primary:hover{background:#ffc575;color:#1a1206}
 
-  #scopebox{bottom:16px;right:16px;width:320px}
+  #scopebox{bottom:16px;right:16px;width:320px;transition:box-shadow .3s}
   #scopebox .scopehead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
   #scopebox .scopehead b{font-family:'Space Grotesk',Inter,sans-serif;font-size:12px;
     letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
-  #scopebox .scopehead span{font-size:11px;color:var(--dim);font-variant-numeric:tabular-nums}
-  #scope{display:block;width:100%;height:190px;border:1px solid var(--line);border-radius:8px;background:#070b12}
+  #scopebox .scopehead span{font-size:11px;color:var(--dim)}
+  #scope{display:block;width:100%;height:190px;border:1px solid var(--line);border-radius:8px;background:#070b12;cursor:pointer}
   #counters{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);
     margin-top:8px;font-variant-numeric:tabular-nums}
   #counters b{color:var(--ink)}
   #counters .flood b{color:var(--warn)}
 
-  #infocard{top:16px;right:16px;max-width:280px;display:none}
-  #infocard h2{font-family:'Space Grotesk',Inter,sans-serif;font-size:14px;margin:0 0 6px;color:var(--accent2)}
-  #infocard p{font-size:12.5px;color:var(--mut);line-height:1.55;margin:0}
-  #infocard .close{position:absolute;top:8px;right:10px;border:0;background:none;
-    color:var(--dim);font-size:16px;padding:2px 6px;cursor:pointer}
-  #infocard .close:hover{color:var(--ink)}
+  #facts{top:16px;right:16px;width:290px;display:none;max-height:calc(100vh - 300px);
+    overflow-y:auto;transition:box-shadow .3s}
+  #facts .kicker{color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:0 0 4px}
+  #facts h2{font-family:'Space Grotesk',Inter,sans-serif;font-size:20px;margin:0 0 2px;color:var(--ink)}
+  #facts .tag{color:var(--accent2);font-size:12.5px;font-style:italic;margin:0 0 10px}
+  #facts .desc{font-size:12.5px;color:var(--mut);line-height:1.6;margin:0 0 12px}
+  #facts .kf{border-top:1px solid var(--line);padding-top:10px;margin-bottom:10px}
+  #facts .kf b{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+  #facts .kf .row{display:flex;gap:10px;font-size:12px;line-height:1.5;margin-bottom:7px}
+  #facts .kf .row span:first-child{color:var(--ink);flex:0 0 88px;font-weight:600}
+  #facts .kf .row span:last-child{color:var(--mut)}
+  #facts .dyk{border:1px solid rgba(255,180,84,.35);background:rgba(255,180,84,.07);
+    border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.55;color:#d8cfc0}
+  #facts .dyk b{color:var(--amber);display:block;font-size:10px;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:4px}
+  #facts .close{position:absolute;top:10px;right:12px;border:0;background:none;
+    color:var(--dim);font-size:18px;padding:2px 6px;cursor:pointer}
+  #facts .close:hover{color:var(--ink)}
 
-  #hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9;
-    font-size:11.5px;color:var(--dim);background:rgba(10,14,22,.6);border-radius:999px;
-    padding:6px 14px;pointer-events:none;transition:opacity 1s}
-  @media(max-width:820px){
-    #title{max-width:220px}
+  #story{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:20;
+    width:min(560px,calc(100vw - 32px));border:1px solid var(--amber);
+    background:rgba(18,26,41,.95);backdrop-filter:blur(10px);border-radius:14px;
+    padding:18px 20px 14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  #story .step{color:var(--amber);font-size:11px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:6px}
+  #story p{margin:0 0 12px;color:var(--ink);font-size:15px;line-height:1.6}
+  #story .row{display:flex;justify-content:space-between;align-items:center}
+  #story .dots{display:flex;gap:6px}
+  #story .dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+  #story .dots i.on{background:var(--amber)}
+  #story .btns{display:flex;gap:8px}
+  .hl{box-shadow:0 0 0 2px var(--amber),0 8px 40px rgba(255,180,84,.3) !important}
+
+  @media(max-width:900px){
+    #title{max-width:210px}
+    #tips{display:none}
     #controls{width:210px;padding:10px 12px}
     #scopebox{width:230px}
     #scope{height:130px}
-    #hint{display:none}
+    #facts{width:calc(100vw - 32px);max-height:44vh}
   }
 </style>
 </head>
@@ -97,8 +134,26 @@
   <p class="eyebrow">Interactive demo</p>
   <h1>ISAC City</h1>
   <p class="sub">A cell network sensing the street with its own radio waves.
-  Objects stay dark until an echo returns.
   Companion to <a href="/blog/isac-cell-towers-as-sensors/">Your Cell Network Is Learning to See</a>.</p>
+</div>
+
+<div id="tips">
+  <b>Tip</b>
+  <ul>
+    <li>Drag to rotate</li>
+    <li>Scroll to zoom</li>
+    <li>Click a glowing dot to learn more</li>
+  </ul>
+</div>
+
+<div class="hud" id="facts">
+  <button class="close" aria-label="Close">&times;</button>
+  <p class="kicker" id="f-kicker"></p>
+  <h2 id="f-title"></h2>
+  <p class="tag" id="f-tag"></p>
+  <p class="desc" id="f-desc"></p>
+  <div class="kf"><b>Key facts</b><div id="f-rows"></div></div>
+  <div class="dyk"><b>Did you know</b><span id="f-dyk"></span></div>
 </div>
 
 <div class="hud" id="controls">
@@ -110,13 +165,13 @@
   </div>
   <div class="btnrow">
     <button id="clutterbtn" aria-pressed="false">Clutter: off</button>
-    <button id="orbitbtn" aria-pressed="true">Auto orbit</button>
-    <button id="pausebtn" aria-pressed="false">Pause</button>
+    <button id="orbitbtn" aria-pressed="false">Auto orbit</button>
+    <button id="tourbtn">Replay tour</button>
   </div>
 </div>
 
 <div class="hud" id="scopebox">
-  <div class="scopehead"><b>Delay-Doppler scope</b><span>range vs radial speed</span></div>
+  <div class="scopehead"><b>What the network sees</b><span>distance vs speed</span></div>
   <canvas id="scope" width="576" height="342"></canvas>
   <div id="counters">
     <span>Real targets: <b id="realct">3</b></span>
@@ -124,13 +179,17 @@
   </div>
 </div>
 
-<div class="hud" id="infocard" role="dialog" aria-live="polite">
-  <button class="close" aria-label="Close">&times;</button>
-  <h2 id="infotitle"></h2>
-  <p id="infobody"></p>
+<div id="story" role="dialog" aria-label="Guided tour">
+  <div class="step" id="storystep"></div>
+  <p id="storytext"></p>
+  <div class="row">
+    <div class="dots" id="storydots"></div>
+    <div class="btns">
+      <button id="skipbtn">Skip tour</button>
+      <button id="nextbtn" class="primary">Next</button>
+    </div>
+  </div>
 </div>
-
-<div id="hint">Drag to orbit &middot; scroll to zoom &middot; click the markers</div>
 
 <script type="importmap">
 {"imports":{
@@ -144,11 +203,9 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 /* ---------- palette ---------- */
 const C = {
-  bg:0x0a0e16, panel:0x121a29, line:0x243044, ink:0xeef1f6,
-  mut:0x9aa6b8, dim:0x6a7689, accent:0x4f8fc9, accent2:0x77aede,
+  bg:0x0a0e16, line:0x243044, accent:0x4f8fc9, accent2:0x77aede,
   warn:0xff6a6a, amber:0xffb454
 };
-
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- renderer / scene ---------- */
@@ -160,14 +217,14 @@ scene.background = new THREE.Color(C.bg);
 scene.fog = new THREE.Fog(C.bg, 260, 620);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 1, 1200);
-camera.position.set(150, 110, 190);
+camera.position.set(170, 130, 210);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 14, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.maxPolarAngle = Math.PI * 0.49;
-controls.minDistance = 60; controls.maxDistance = 450;
-controls.autoRotate = !reduceMotion;
+controls.minDistance = 40; controls.maxDistance = 450;
+controls.autoRotate = false;
 controls.autoRotateSpeed = 0.55;
 
 scene.add(new THREE.AmbientLight(0x8899bb, 0.55));
@@ -187,33 +244,27 @@ grid.material.transparent = true; grid.material.opacity = 0.5;
 grid.position.y = 0.05;
 scene.add(grid);
 
-/* ---------- city: dark ghosts with faint edges ---------- */
+/* ---------- city ---------- */
 const bldMat  = new THREE.MeshStandardMaterial({color:0x0e131d, roughness:0.95});
 const edgeMat = new THREE.LineBasicMaterial({color:C.line, transparent:true, opacity:0.8});
-const buildings = [];
-function building(x, z, w, h, d){
-  const g = new THREE.BoxGeometry(w, h, d);
-  const m = new THREE.Mesh(g, bldMat.clone());
-  m.position.set(x, h/2, z);
-  scene.add(m);
-  const e = new THREE.LineSegments(new THREE.EdgesGeometry(g), edgeMat.clone());
-  e.position.copy(m.position);
-  scene.add(e);
-  buildings.push(m);
-  return m;
-}
-/* two city blocks flanking a road along x axis (road at z in [-14,14]) */
+function TX_X(){ return -70; }
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rng = mulberry32(7);
 for (let i=0;i<26;i++){
   const side = i%2 ? 1 : -1;
   const x = -220 + rng()*440;
   const z = side * (34 + rng()*140);
+  const w = 14+rng()*22, h = 12+rng()*66, d = 14+rng()*22;
   if (Math.hypot(x-TX_X(), z) < 34) continue;
   if (Math.hypot(x-105, z+78) < 30 || Math.hypot(x-95, z-92) < 30) continue;
-  building(x, z, 14+rng()*22, 12+rng()*66, 14+rng()*22);
+  const g = new THREE.BoxGeometry(w, h, d);
+  const m = new THREE.Mesh(g, bldMat);
+  m.position.set(x, h/2, z);
+  scene.add(m);
+  const e = new THREE.LineSegments(new THREE.EdgesGeometry(g), edgeMat);
+  e.position.copy(m.position);
+  scene.add(e);
 }
-function TX_X(){ return -70; }
-function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- towers ---------- */
 function tower(x, z, isTX){
@@ -240,21 +291,37 @@ function tower(x, z, isTX){
   scene.add(grp);
   return grp;
 }
-const txTower  = tower(TX_X(), 0, true);           // transmitter
-const rxTowerA = tower(105, -78, false);           // receiver A
-const rxTowerB = tower(95, 92, false);             // receiver B
+const txTower  = tower(TX_X(), 0, true);
+const rxTowerA = tower(105, -78, false);
+const rxTowerB = tower(95, 92, false);
 const TX  = new THREE.Vector3(TX_X(), 44, 0);
 const RXA = new THREE.Vector3(105, 44, -78);
 const RXB = new THREE.Vector3(95, 44, 92);
 
-/* ---------- moving targets (dark until echoed) ---------- */
+/* ---------- text labels ---------- */
+function textLabel(text, color){
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+  const x = c.getContext('2d');
+  x.font = '600 40px Inter, sans-serif';
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.shadowColor = 'rgba(0,0,0,.9)'; x.shadowBlur = 12;
+  x.fillStyle = color;
+  x.fillText(text.toUpperCase(), 256, 48);
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({
+    map:new THREE.CanvasTexture(c), transparent:true, opacity:0.95, depthTest:false}));
+  s.scale.set(34, 6.4, 1);
+  return s;
+}
+const lblTX = textLabel('Transmitter', '#ffb454'); lblTX.position.set(0, 62, 0); txTower.add(lblTX);
+const lblRA = textLabel('Receiver', '#77aede');    lblRA.position.set(0, 62, 0); rxTowerA.add(lblRA);
+const lblRB = textLabel('Receiver', '#77aede');    lblRB.position.set(0, 62, 0); rxTowerB.add(lblRB);
+
+/* ---------- moving targets ---------- */
 function ghostMat(base){
   return new THREE.MeshStandardMaterial({
-    color:0x141b28, roughness:0.85,
-    emissive:base, emissiveIntensity:0.0
+    color:0x141b28, roughness:0.85, emissive:base, emissiveIntensity:0.0
   });
 }
-/* drone */
 const drone = new THREE.Group();
 const droneMat = ghostMat(C.accent2);
 const dBody = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.1, 3.2), droneMat);
@@ -264,25 +331,25 @@ for (const [sx,sz] of [[-1,-1],[-1,1],[1,-1],[1,1]]){
   rotor.position.set(sx*2.4, 0.55, sz*2.4);
   drone.add(rotor);
 }
+const lblDrone = textLabel('Drone - no SIM', '#eef1f6'); lblDrone.position.set(0, 8.5, 0); drone.add(lblDrone);
 scene.add(drone);
-/* car */
+
 const carMat = ghostMat(C.accent);
 const car = new THREE.Group();
 const cb = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.6, 3.6), carMat); cb.position.y=1.6; car.add(cb);
 const ct = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.7, 3.2), carMat); ct.position.set(-0.4,3.6,0); car.add(ct);
 scene.add(car);
-/* pedestrian */
 const pedMat = ghostMat(C.accent);
 const ped = new THREE.Mesh(new THREE.CapsuleGeometry(0.85, 2.4, 4, 8), pedMat);
 scene.add(ped);
 
-/* resolution cell around the drone (depth = range resolution, exaggerated) */
+/* resolution cell */
 const cellMat = new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.14, side:THREE.DoubleSide});
+const cell = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), cellMat);
 const cellEdge = new THREE.LineSegments(
   new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
   new THREE.LineBasicMaterial({color:C.accent2, transparent:true, opacity:0.6})
 );
-const cell = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), cellMat);
 scene.add(cell); scene.add(cellEdge);
 
 /* birds (clutter) */
@@ -295,7 +362,8 @@ for (let i=0;i<3;i++){
 }
 
 /* ---------- wavefronts ---------- */
-const waves = [];   // {ring, sphere, r}
+const waves = [];
+let waveSpeed = 95;
 const ringGeo = new THREE.RingGeometry(0.98, 1, 128);
 function spawnWave(){
   const ringMat = new THREE.MeshBasicMaterial({color:C.amber, transparent:true, opacity:0.85, side:THREE.DoubleSide});
@@ -310,9 +378,8 @@ function spawnWave(){
   waves.push({ring, sphere, r:1, hit:new Set()});
 }
 
-/* echo flash + echo paths to receivers */
-const echoes = [];  // {ring, life}
-const paths = [];   // {line, life}
+const echoes = [];
+const paths = [];
 function echoAt(obj, radialSpeed, rangeFromTX, strong){
   const p = obj.position ? obj.position : obj;
   const em = new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.75, side:THREE.DoubleSide});
@@ -330,12 +397,12 @@ function echoAt(obj, radialSpeed, rangeFromTX, strong){
   addBlip(rangeFromTX, radialSpeed, strong);
 }
 
-/* ---------- delay-Doppler scope ---------- */
+/* ---------- scope ---------- */
 const scope = document.getElementById('scope');
 const sctx = scope.getContext('2d');
 const SW = scope.width, SH = scope.height;
 const RANGE_MAX = 260, V_MAX = 22;
-const blips = []; // {x,y,w,life,color}
+const blips = [];
 let speckleCount = 0, rawShown = 3, counterTimer = 0;
 function addBlip(range, v, strong){
   blips.push({
@@ -355,10 +422,13 @@ function drawScope(dt){
   sctx.stroke();
   sctx.fillStyle = 'rgba(106,118,137,0.95)';
   sctx.font = '600 13px Inter, sans-serif';
-  sctx.fillText('0 m', 6, SH-8);
-  sctx.fillText(RANGE_MAX+' m', SW-52, SH-8);
-  sctx.fillText('+'+V_MAX+' m/s', 6, 18);
-  sctx.fillText('-'+V_MAX+' m/s', 6, SH/2 + (SH/2-8) - 8);
+  sctx.fillText('near', 6, SH-8);
+  sctx.fillText('far', SW-30, SH-8);
+  sctx.fillText('approaching', 6, 18);
+  sctx.fillText('receding', 6, SH-26);
+  sctx.textAlign = 'center';
+  sctx.fillText('distance from tower', SW/2, SH-8);
+  sctx.textAlign = 'left';
   for (let i=blips.length-1; i>=0; i--){
     const b = blips[i];
     b.life -= dt * (b.strong ? 0.5 : 1.6);
@@ -376,11 +446,11 @@ function drawScope(dt){
 }
 
 /* ---------- controls state ---------- */
-const BW = [20, 100, 200, 400];               // MHz
+const BW = [20, 100, 200, 400];
 const bwSlider = document.getElementById('bw');
 const bwOut = document.getElementById('bwout');
 const resOut = document.getElementById('resout');
-function dR(){ return 299.792458 / (2 * BW[bwSlider.value]); }  // c/2B in meters (c in m/us * MHz)
+function dR(){ return 299.792458 / (2 * BW[bwSlider.value]); }
 function refreshBW(){
   bwOut.textContent = BW[bwSlider.value] + ' MHz';
   resOut.textContent = dR().toFixed(dR() < 1 ? 2 : 1) + ' m';
@@ -388,7 +458,7 @@ function refreshBW(){
 bwSlider.addEventListener('input', refreshBW);
 refreshBW();
 
-let clutter = false, paused = false;
+let clutter = false;
 const clutterBtn = document.getElementById('clutterbtn');
 clutterBtn.addEventListener('click', () => {
   clutter = !clutter;
@@ -397,58 +467,94 @@ clutterBtn.addEventListener('click', () => {
   birds.forEach(b => b.mesh.visible = clutter);
 });
 const orbitBtn = document.getElementById('orbitbtn');
-orbitBtn.setAttribute('aria-pressed', String(controls.autoRotate));
-orbitBtn.textContent = 'Auto orbit';
 orbitBtn.addEventListener('click', () => {
   controls.autoRotate = !controls.autoRotate;
   orbitBtn.setAttribute('aria-pressed', String(controls.autoRotate));
 });
-document.getElementById('pausebtn').addEventListener('click', e => {
-  paused = !paused;
-  e.target.setAttribute('aria-pressed', String(paused));
-  e.target.textContent = paused ? 'Resume' : 'Pause';
+
+/* ---------- camera fly-to ---------- */
+let camGoal = null;
+function flyTo(pos, look){
+  camGoal = {pos:new THREE.Vector3(...pos), look:new THREE.Vector3(...look)};
+}
+renderer.domElement.addEventListener('pointerdown', () => { camGoal = null; });
+
+/* ---------- facts panel (anatomy-app pattern) ---------- */
+const FACTS = {
+  tx: {kicker:'The illuminator', title:'Transmitter tower', tag:'A floodlight made of radio',
+    desc:'This tower sends the exact 5G signal that carries calls and data. In sensing mode the same signal doubles as a probe: everything it touches reflects a little of it back.',
+    rows:[['Signal','Normal 5G waveform, nothing special added'],
+          ['New hardware','None - sensing runs as software'],
+          ['Role','Illuminates the street with radio energy']],
+    dyk:'In the July 2026 Arlington demo, sensing ran on existing commercial radios. No radar was installed.',
+    cam:()=>[[TX.x-40, 70, 90],[TX.x, 30, TX.z]]},
+  rx: {kicker:'The listener', title:'Receiver tower', tag:'One echo says how far. Three say where.',
+    desc:'A second site listens for reflections of the transmitter signal. With transmitter and receivers at different sites (multistatic sensing), the network gets several viewpoints on the same echo and can localize an object it never talks to.',
+    rows:[['Mode','Multistatic: TX and RX at different sites'],
+          ['Hears','Echoes bounced off objects in between'],
+          ['Why several','Cross-bearings turn distance into position']],
+    dyk:'The Arlington demo synchronized three commercial sites into one sensing grid.',
+    cam:()=>[[150, 80, -20],[105, 30, -78]]},
+  drone: {kicker:'The target', title:'Drone', tag:'No SIM. No signal. Still visible.',
+    desc:'The drone never connects to the network and transmits nothing the network needs. It is detected purely because its body reflects radio waves. The glowing box is the range-resolution cell: bandwidth decides how finely the network separates objects in depth.',
+    rows:[['Carries','No SIM, no transponder'],
+          ['Detected by','Body reflections only'],
+          ['Field trials','700 to 1,400 m range, 6-20 m position error'],
+          ['Weak spot','Drops out when crossing building clutter']],
+    dyk:'Live trials measured about 3 percent false alarms - the simulation-era target was one in a million.',
+    cam:()=>{const p=drone.position;return [[p.x+30, p.y+18, p.z+34],[p.x, p.y, p.z]]}},
+  scope: {kicker:'The output', title:'What the network sees', tag:'The whole world, as two numbers',
+    desc:'Every echo lands on this chart as a glowing dot: distance from the transmitter across, speed toward or away vertically. No shapes, no faces, no pictures - this delay-Doppler map is everything the network knows about the street.',
+    rows:[['Across','Distance from tower'],
+          ['Vertical','Speed toward / away'],
+          ['Dot width','Range resolution (set by bandwidth)'],
+          ['Red dots','Clutter: birds, buildings, false alarms']],
+    dyk:'A live 5G-Advanced station produced an average of 168 raw detections per frame for one real drone.',
+    cam:null}
+};
+const factsEl = document.getElementById('facts');
+function showFacts(key){
+  const f = FACTS[key];
+  document.getElementById('f-kicker').textContent = f.kicker;
+  document.getElementById('f-title').textContent = f.title;
+  document.getElementById('f-tag').textContent = f.tag;
+  document.getElementById('f-desc').textContent = f.desc;
+  document.getElementById('f-rows').innerHTML = f.rows.map(r =>
+    `<div class="row"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
+  document.getElementById('f-dyk').textContent = f.dyk;
+  factsEl.style.display = 'block';
+  document.getElementById('tips').style.display = 'none';
+  if (f.cam) flyTo(...f.cam());
+}
+factsEl.querySelector('.close').addEventListener('click', () => {
+  factsEl.style.display = 'none';
+  if (!storyMode) document.getElementById('tips').style.display = '';
 });
 
-/* ---------- hotspots ---------- */
-const INFO = {
-  tx: ['Transmitter site',
-    'This tower transmits the normal 5G signal. In this demo it is also the sensing illuminator: every pulse you see is the same waveform that carries data. Nothing extra was installed.'],
-  rx: ['Receiver site',
-    'A second site listens for reflections of the transmitter\'s signal. Transmitter and receivers at different sites make this multistatic sensing: several perspectives on the same echo, which is how the network localizes an object it never talks to.'],
-  drone: ['The target',
-    'The drone carries no SIM and never connects to the network. It is detected only because its body reflects radio waves. The glowing box is the range-resolution cell: bandwidth decides how finely the network can separate objects in depth.'],
-  scope: ['Delay-Doppler scope',
-    'Each echo lands here: distance from the transmitter on the horizontal axis, speed toward or away from it on the vertical. This is what the network actually "sees". Turn clutter on to watch false detections flood the same view.']
-};
-const infocard = document.getElementById('infocard');
-function showInfo(key){
-  document.getElementById('infotitle').textContent = INFO[key][0];
-  document.getElementById('infobody').textContent = INFO[key][1];
-  infocard.style.display = 'block';
-}
-infocard.querySelector('.close').addEventListener('click', () => infocard.style.display='none');
-
-const spriteTex = makeMarkerTexture();
-function makeMarkerTexture(){
-  const c = document.createElement('canvas'); c.width = c.height = 64;
+/* ---------- hotspot dots ---------- */
+function dotTexture(hex){
+  const c = document.createElement('canvas'); c.width = c.height = 96;
   const x = c.getContext('2d');
-  x.strokeStyle = '#77aede'; x.lineWidth = 4;
-  x.beginPath(); x.arc(32,32,22,0,Math.PI*2); x.stroke();
-  x.beginPath(); x.moveTo(32,20); x.lineTo(32,44); x.moveTo(20,32); x.lineTo(44,32); x.stroke();
+  x.beginPath(); x.arc(48,48,20,0,Math.PI*2);
+  x.fillStyle = hex; x.fill();
+  x.lineWidth = 5; x.strokeStyle = 'rgba(255,255,255,.85)';
+  x.beginPath(); x.arc(48,48,30,0,Math.PI*2); x.stroke();
   return new THREE.CanvasTexture(c);
 }
 const markers = [];
-function marker(pos, key, parent){
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:spriteTex, transparent:true, opacity:0.9, depthTest:false}));
-  s.scale.set(7,7,1);
+function marker(pos, key, parent, hex){
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:dotTexture(hex), transparent:true, depthTest:false}));
+  s.scale.set(9,9,1);
   s.position.copy(pos);
   s.userData.key = key;
+  s.userData.baseScale = 9;
   (parent || scene).add(s);
   markers.push(s);
 }
-marker(new THREE.Vector3(0, 56, 0), 'tx', txTower);
-marker(new THREE.Vector3(0, 56, 0), 'rx', rxTowerA);
-marker(new THREE.Vector3(0, 8, 0), 'drone', drone);
+marker(new THREE.Vector3(0, 52, 0), 'tx', txTower, '#ffb454');
+marker(new THREE.Vector3(0, 52, 0), 'rx', rxTowerA, '#77aede');
+marker(new THREE.Vector3(0, 52, 0), 'rx', rxTowerB, '#77aede');
+marker(new THREE.Vector3(0, 4.5, 0), 'drone', drone, '#eef1f6');
 
 const ray = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -460,24 +566,82 @@ renderer.domElement.addEventListener('pointerup', e => {
   mouse.y = -(e.clientY/innerHeight)*2 + 1;
   ray.setFromCamera(mouse, camera);
   const hit = ray.intersectObjects(markers, false)[0];
-  if (hit) showInfo(hit.object.userData.key);
+  if (hit && !storyMode) showFacts(hit.object.userData.key);
 });
-document.getElementById('scope').addEventListener('click', () => showInfo('scope'));
+document.getElementById('scope').addEventListener('click', () => { if (!storyMode) showFacts('scope'); });
+
+/* ---------- guided tour ---------- */
+const STEPS = [
+  {t:'This is a city block with three ordinary 5G towers. The amber tower TRANSMITS. The two blue towers LISTEN. Nothing here is radar hardware.',
+   go(){ flyTo([170,130,210],[0,20,0]); }},
+  {t:'The amber tower sends its normal 5G signal - the same one that carries your calls. The expanding amber ring is that signal sweeping across the street.',
+   go(){ flyTo([TX.x-10, 60, 130],[TX.x, 24, TX.z]); waveSpeed = 60; spawnWave(); }},
+  {t:'When the signal reaches the drone, its body reflects a little of it. The drone carries no SIM and is connected to nothing - its body alone gives it away.',
+   go(){ const p = drone.position; flyTo([p.x+34, p.y+20, p.z+40],[p.x, p.y, p.z]); }},
+  {t:'The blue towers catch that reflection - watch the light lines. Three viewpoints on one echo are enough to pin down where the drone is.',
+   go(){ flyTo([180, 95, 40],[30, 25, 0]); }},
+  {t:'Every echo becomes a dot on this panel: distance across, speed up and down. No shapes, no faces. This chart is everything the network "sees".',
+   go(){ document.getElementById('scopebox').classList.add('hl'); }},
+  {t:'Your turn. The bandwidth slider sharpens distance vision. The Clutter button shows the real-world problem: about 100 false detections for every real drone. Drag anywhere to look around.',
+   go(){ document.getElementById('scopebox').classList.remove('hl');
+        document.getElementById('controls').classList.add('hl'); }}
+];
+let storyMode = true, stepIdx = -1, stepTimer = 0;
+const storyEl = document.getElementById('story');
+const dotsEl = document.getElementById('storydots');
+STEPS.forEach(() => { const i = document.createElement('i'); dotsEl.appendChild(i); });
+function setStep(n){
+  stepIdx = n; stepTimer = 0;
+  document.getElementById('storystep').textContent = `Step ${n+1} of ${STEPS.length}`;
+  document.getElementById('storytext').textContent = STEPS[n].t;
+  [...dotsEl.children].forEach((d,i) => d.classList.toggle('on', i <= n));
+  document.getElementById('nextbtn').textContent = n === STEPS.length-1 ? 'Explore' : 'Next';
+  STEPS[n].go();
+}
+function endTour(){
+  storyMode = false;
+  storyEl.style.display = 'none';
+  document.getElementById('controls').classList.remove('hl');
+  document.getElementById('scopebox').classList.remove('hl');
+  document.getElementById('tips').style.display = '';
+  waveSpeed = 95;
+  controls.autoRotate = !reduceMotion;
+  orbitBtn.setAttribute('aria-pressed', String(controls.autoRotate));
+}
+document.getElementById('nextbtn').addEventListener('click', () => {
+  if (stepIdx >= STEPS.length-1) endTour();
+  else setStep(stepIdx+1);
+});
+document.getElementById('skipbtn').addEventListener('click', endTour);
+document.getElementById('tourbtn').addEventListener('click', () => {
+  storyMode = true;
+  storyEl.style.display = '';
+  factsEl.style.display = 'none';
+  document.getElementById('tips').style.display = 'none';
+  controls.autoRotate = false;
+  orbitBtn.setAttribute('aria-pressed', 'false');
+  setStep(0);
+});
+document.getElementById('tips').style.display = 'none';
+setStep(0);
 
 /* ---------- animation ---------- */
 const clock = new THREE.Clock();
-let waveTimer = 0, hintTimer = 0;
+let waveTimer = 1.2;
 const prevPos = {drone:new THREE.Vector3(), car:new THREE.Vector3(), ped:new THREE.Vector3()};
 const targets = [
-  {obj:drone, name:'drone', h:()=>26 + Math.sin(clock.elapsedTime*0.7)*6},
+  {obj:drone, name:'drone'},
   {obj:car,   name:'car'},
   {obj:ped,   name:'ped'}
 ];
-
 function radialSpeed(obj, prev, dt){
   const v = obj.position.clone().sub(prev).divideScalar(Math.max(dt,1e-4));
   const rhat = obj.position.clone().sub(TX).normalize();
   return v.dot(rhat);
+}
+const glowing = new Set();
+function flash(obj){
+  obj.traverse(o => { if (o.material && o.material.emissive){ o.material.emissiveIntensity = 1.4; glowing.add(o.material); } });
 }
 
 function animate(){
@@ -486,111 +650,122 @@ function animate(){
   const t = clock.elapsedTime;
   controls.update();
 
-  if (!paused){
-    /* target motion */
-    prevPos.drone.copy(drone.position);
-    prevPos.car.copy(car.position);
-    prevPos.ped.copy(ped.position);
-    drone.position.set(60*Math.cos(t*0.21), 26 + Math.sin(t*0.7)*6, 55*Math.sin(t*0.42));
-    drone.rotation.y = t*0.6;
-    const cx = ((t*14) % 480) - 240;
-    car.position.set(cx, 0, -8);
-    ped.position.set(30 + Math.sin(t*0.12)*40, 2.1, 20);
-    birds.forEach((b,i) => {
-      if (!b.mesh.visible) return;
-      const s = b.seed;
-      b.mesh.position.set(
-        Math.sin(t*0.5 + s)*110 + Math.sin(t*1.7+s)*18,
-        22 + Math.sin(t*1.3 + s)*9,
-        Math.cos(t*0.4 + s)*95
-      );
-    });
+  /* camera tween */
+  if (camGoal){
+    const k = 1 - Math.exp(-dt*2.2);
+    camera.position.lerp(camGoal.pos, k);
+    controls.target.lerp(camGoal.look, k);
+    if (camera.position.distanceTo(camGoal.pos) < 1.2) camGoal = null;
+  }
 
-    /* resolution cell follows drone, oriented along range axis, depth = dR x8 */
-    const rhat = drone.position.clone().sub(TX).setY(0).normalize();
-    cell.position.copy(drone.position);
-    cellEdge.position.copy(drone.position);
-    const depth = Math.max(dR()*8, 1.2);
-    cell.scale.set(11, 11, depth);
-    cellEdge.scale.copy(cell.scale);
-    const yaw = Math.atan2(rhat.x, rhat.z);
-    cell.rotation.set(0, yaw, 0);
-    cellEdge.rotation.copy(cell.rotation);
+  /* target motion */
+  prevPos.drone.copy(drone.position);
+  prevPos.car.copy(car.position);
+  prevPos.ped.copy(ped.position);
+  drone.position.set(60*Math.cos(t*0.21), 26 + Math.sin(t*0.7)*6, 55*Math.sin(t*0.42));
+  drone.rotation.y = t*0.6;
+  const cx = ((t*14) % 480) - 240;
+  car.position.set(cx, 0, -8);
+  ped.position.set(30 + Math.sin(t*0.12)*40, 2.1, 20);
+  birds.forEach(b => {
+    if (!b.mesh.visible) return;
+    const s = b.seed;
+    b.mesh.position.set(
+      Math.sin(t*0.5 + s)*110 + Math.sin(t*1.7+s)*18,
+      22 + Math.sin(t*1.3 + s)*9,
+      Math.cos(t*0.4 + s)*95
+    );
+  });
 
-    /* spawn waves */
-    waveTimer -= dt;
-    if (waveTimer <= 0){ spawnWave(); waveTimer = reduceMotion ? 4.2 : 2.6; }
+  /* marker pulse */
+  for (const m of markers){
+    const p = m.userData.baseScale * (1 + 0.1*Math.sin(t*3 + m.id));
+    m.scale.set(p, p, 1);
+  }
 
-    /* propagate waves, detect crossings */
-    const speed = 95; // scene units per second (slowed light, obviously)
-    for (let i=waves.length-1; i>=0; i--){
-      const w = waves[i];
-      w.r += speed*dt;
-      w.ring.scale.set(w.r, w.r, 1);
-      w.sphere.scale.setScalar(w.r);
-      const fade = Math.max(0, 1 - w.r/300);
-      w.ring.material.opacity = 0.85*fade;
-      w.sphere.material.opacity = 0.06*fade;
-      for (const tg of targets){
-        if (w.hit.has(tg.name)) continue;
-        const d = tg.obj.position.clone().setY(0).distanceTo(new THREE.Vector3(TX.x,0,TX.z));
+  /* resolution cell follows drone */
+  const rhat = drone.position.clone().sub(TX).setY(0).normalize();
+  cell.position.copy(drone.position);
+  cellEdge.position.copy(drone.position);
+  const depth = Math.max(dR()*8, 1.2);
+  cell.scale.set(11, 11, depth);
+  cellEdge.scale.copy(cell.scale);
+  const yaw = Math.atan2(rhat.x, rhat.z);
+  cell.rotation.set(0, yaw, 0);
+  cellEdge.rotation.copy(cell.rotation);
+
+  /* spawn waves (auto only outside the wave-focused tour steps) */
+  waveTimer -= dt;
+  if (waveTimer <= 0 && (!storyMode || stepIdx >= 2)){
+    spawnWave();
+    waveTimer = reduceMotion ? 4.2 : (storyMode ? 3.4 : 2.6);
+  }
+
+  /* propagate waves */
+  for (let i=waves.length-1; i>=0; i--){
+    const w = waves[i];
+    w.r += waveSpeed*dt;
+    w.ring.scale.set(w.r, w.r, 1);
+    w.sphere.scale.setScalar(w.r);
+    const fade = Math.max(0, 1 - w.r/300);
+    w.ring.material.opacity = 0.85*fade;
+    w.sphere.material.opacity = 0.06*fade;
+    for (const tg of targets){
+      if (w.hit.has(tg.name)) continue;
+      const d = tg.obj.position.clone().setY(0).distanceTo(new THREE.Vector3(TX.x,0,TX.z));
+      if (w.r >= d){
+        w.hit.add(tg.name);
+        const vr = radialSpeed(tg.obj, prevPos[tg.name], dt);
+        const range = tg.obj.position.distanceTo(TX);
+        echoAt(tg.obj, vr, range, true);
+        flash(tg.obj);
+      }
+    }
+    if (clutter){
+      for (const [j,b] of birds.entries()){
+        const bn = 'bird'+j;
+        if (w.hit.has(bn)) continue;
+        const d = b.mesh.position.clone().setY(0).distanceTo(new THREE.Vector3(TX.x,0,TX.z));
         if (w.r >= d){
-          w.hit.add(tg.name);
-          const vr = radialSpeed(tg.obj, prevPos[tg.name], dt);
-          const range = tg.obj.position.distanceTo(TX);
-          echoAt(tg.obj, vr, range, true);
-          flash(tg.obj);
+          w.hit.add(bn);
+          addBlip(b.mesh.position.distanceTo(TX), (Math.random()-0.5)*18, false);
+          speckleCount++;
+          flash(b.mesh);
         }
       }
-      if (clutter){
-        for (const [j,b] of birds.entries()){
-          const bn = 'bird'+j;
-          if (w.hit.has(bn)) continue;
-          const d = b.mesh.position.clone().setY(0).distanceTo(new THREE.Vector3(TX.x,0,TX.z));
-          if (w.r >= d){
-            w.hit.add(bn);
-            addBlip(b.mesh.position.distanceTo(TX), (Math.random()-0.5)*18, false);
-            speckleCount++;
-            flash(b.mesh);
-          }
-        }
-        /* building multipath speckle: rate-limited, not per frame */
-        if (Math.random() < dt*14){
-          const n = 1 + Math.floor(Math.random()*3);
-          for (let k=0;k<n;k++) addBlip(Math.random()*RANGE_MAX, (Math.random()-0.5)*2*V_MAX, false);
-          speckleCount += n;
-        }
-      }
-      if (w.r > 330){
-        scene.remove(w.ring, w.sphere);
-        waves.splice(i,1);
+      if (Math.random() < dt*14){
+        const n = 1 + Math.floor(Math.random()*3);
+        for (let k=0;k<n;k++) addBlip(Math.random()*RANGE_MAX, (Math.random()-0.5)*2*V_MAX, false);
+        speckleCount += n;
       }
     }
+    if (w.r > 330){
+      scene.remove(w.ring, w.sphere);
+      waves.splice(i,1);
+    }
+  }
 
-    /* echo rings + paths decay */
-    for (let i=echoes.length-1;i>=0;i--){
-      const e = echoes[i];
-      e.r += 40*dt; e.life -= dt*1.1;
-      e.ring.scale.set(e.r, e.r, 1);
-      e.ring.material.opacity = 0.75*Math.max(0,e.life);
-      if (e.life<=0){ scene.remove(e.ring); echoes.splice(i,1); }
-    }
-    for (let i=paths.length-1;i>=0;i--){
-      const p = paths[i];
-      p.life -= dt*1.6;
-      p.line.material.opacity = 0.55*Math.max(0,p.life);
-      if (p.life<=0){ scene.remove(p.line); paths.splice(i,1); }
-    }
-
-    /* ghost glow decay */
-    for (const m of glowing){
-      m.emissiveIntensity = Math.max(0, m.emissiveIntensity - dt*1.4);
-    }
+  /* decay */
+  for (let i=echoes.length-1;i>=0;i--){
+    const e = echoes[i];
+    e.r += 40*dt; e.life -= dt*1.1;
+    e.ring.scale.set(e.r, e.r, 1);
+    e.ring.material.opacity = 0.75*Math.max(0,e.life);
+    if (e.life<=0){ scene.remove(e.ring); echoes.splice(i,1); }
+  }
+  for (let i=paths.length-1;i>=0;i--){
+    const p = paths[i];
+    p.life -= dt*1.6;
+    p.line.material.opacity = 0.55*Math.max(0,p.life);
+    if (p.life<=0){ scene.remove(p.line); paths.splice(i,1); }
+  }
+  for (const m of glowing){
+    m.emissiveIntensity = Math.max(0, m.emissiveIntensity - dt*1.4);
   }
 
   drawScope(dt);
 
-  /* counters: real targets vs raw detections per second */
+  /* counters */
   counterTimer += dt;
   if (counterTimer >= 1){
     rawShown = 3 + speckleCount;
@@ -602,17 +777,13 @@ function animate(){
     document.getElementById('rawct').textContent = 3;
   }
 
-  hintTimer += dt;
-  if (hintTimer > 9) document.getElementById('hint').style.opacity = '0';
+  /* tour auto-advance */
+  if (storyMode && !reduceMotion){
+    stepTimer += dt;
+    if (stepTimer > 9 && stepIdx < STEPS.length-1) setStep(stepIdx+1);
+  }
 
   renderer.render(scene, camera);
-}
-
-const glowing = new Set();
-function flash(obj){
-  obj.traverse ? obj.traverse(o => { if (o.material && o.material.emissive){ o.material.emissiveIntensity = 1.4; glowing.add(o.material);} })
-               : null;
-  if (obj.material && obj.material.emissive){ obj.material.emissiveIntensity = 1.4; glowing.add(obj.material); }
 }
 
 /* ---------- resize ---------- */
