@@ -133,8 +133,10 @@
 <div class="hud" id="title">
   <p class="eyebrow">Interactive demo</p>
   <h1>ISAC City</h1>
-  <p class="sub">A cell network sensing the street with its own radio waves.
-  Companion to <a href="/blog/isac-cell-towers-as-sensors/">Your Cell Network Is Learning to See</a>.</p>
+  <p class="sub">A toy city showing how 5G towers can act as radar: the tower's own
+  signal reflects off a drone, and the network sees it - no camera, no radar dish.
+  Based on a real 2026 stadium demo. Full story:
+  <a href="/blog/isac-cell-towers-as-sensors/">Your Cell Network Is Learning to See</a>.</p>
 </div>
 
 <div id="tips">
@@ -213,8 +215,17 @@ const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(C.bg);
-scene.fog = new THREE.Fog(C.bg, 260, 620);
+/* dusk gradient sky */
+const skyC = document.createElement('canvas'); skyC.width = 2; skyC.height = 512;
+const sg = skyC.getContext('2d');
+const skyGrad = sg.createLinearGradient(0,0,0,512);
+skyGrad.addColorStop(0,'#0a0e18');
+skyGrad.addColorStop(0.55,'#141b2e');
+skyGrad.addColorStop(0.82,'#282338');
+skyGrad.addColorStop(1,'#3d2f3d');
+sg.fillStyle = skyGrad; sg.fillRect(0,0,2,512);
+scene.background = new THREE.CanvasTexture(skyC);
+scene.fog = new THREE.Fog(0x151c2e, 260, 680);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 1, 1200);
 camera.position.set(170, 130, 210);
@@ -227,29 +238,79 @@ controls.minDistance = 40; controls.maxDistance = 450;
 controls.autoRotate = false;
 controls.autoRotateSpeed = 0.55;
 
-scene.add(new THREE.AmbientLight(0x8899bb, 0.55));
-const key = new THREE.DirectionalLight(0xbfd4ee, 0.8);
+scene.add(new THREE.AmbientLight(0x8899bb, 0.35));
+scene.add(new THREE.HemisphereLight(0x33405c, 0x0d1018, 1.0));
+const key = new THREE.DirectionalLight(0xcdd8ee, 0.7);
 key.position.set(-120, 200, 80);
 scene.add(key);
 
-/* ---------- ground ---------- */
+/* ---------- ground, road, lamps ---------- */
 const ground = new THREE.Mesh(
   new THREE.CircleGeometry(560, 72),
-  new THREE.MeshStandardMaterial({color:0x0c1019, roughness:1})
+  new THREE.MeshStandardMaterial({color:0x121722, roughness:1})
 );
 ground.rotation.x = -Math.PI/2;
 scene.add(ground);
-const grid = new THREE.GridHelper(520, 52, C.line, 0x18202f);
-grid.material.transparent = true; grid.material.opacity = 0.5;
+const grid = new THREE.GridHelper(520, 52, C.line, 0x1a2231);
+grid.material.transparent = true; grid.material.opacity = 0.3;
 grid.position.y = 0.05;
 scene.add(grid);
 
-/* ---------- city ---------- */
-const bldMat  = new THREE.MeshStandardMaterial({color:0x0e131d, roughness:0.95});
-const edgeMat = new THREE.LineBasicMaterial({color:C.line, transparent:true, opacity:0.8});
+const road = new THREE.Mesh(new THREE.PlaneGeometry(520, 18),
+  new THREE.MeshStandardMaterial({color:0x181f2c, roughness:0.95}));
+road.rotation.x = -Math.PI/2; road.position.set(0, 0.08, -8);
+scene.add(road);
+const dashMat = new THREE.MeshBasicMaterial({color:0x7f93b2});
+for (let x=-250; x<250; x+=26){
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(9, 0.7), dashMat);
+  d.rotation.x = -Math.PI/2; d.position.set(x, 0.12, -8);
+  scene.add(d);
+}
+const glowTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const x = c.getContext('2d');
+  const g = x.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,'rgba(255,214,160,.85)'); g.addColorStop(1,'rgba(255,214,160,0)');
+  x.fillStyle = g; x.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+})();
+for (let i=0; i<7; i++){
+  const x = -210 + i*70;
+  const z = (i % 2) ? 8 : -24;
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.25,.32,13,6),
+    new THREE.MeshStandardMaterial({color:0x2a3346, roughness:.8}));
+  pole.position.set(x, 6.5, z); scene.add(pole);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.6,8,8),
+    new THREE.MeshBasicMaterial({color:0xffd9a0}));
+  head.position.set(x, 13.2, z); scene.add(head);
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true,
+    opacity:.75, depthWrite:false, blending:THREE.AdditiveBlending}));
+  glow.scale.set(11,11,1); glow.position.set(x, 13.2, z); scene.add(glow);
+}
+
+/* ---------- city: buildings with lit windows ---------- */
 function TX_X(){ return -70; }
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rng = mulberry32(7);
+function windowTex(cols, rows){
+  const c = document.createElement('canvas');
+  c.width = Math.max(24, cols*8); c.height = Math.max(30, rows*10);
+  const x = c.getContext('2d');
+  x.fillStyle = '#1b2434'; x.fillRect(0,0,c.width,c.height);
+  const palette = ['#ffd9a0','#cfe0ff','#ffeccc','#9fb6d8'];
+  for (let r=0; r<rows; r++) for (let k=0; k<cols; k++){
+    if (rng() < 0.30){
+      x.fillStyle = palette[Math.floor(rng()*palette.length)];
+      x.globalAlpha = .5 + rng()*.5;
+      x.fillRect(k*8+2, r*10+3, 4, 5);
+      x.globalAlpha = 1;
+    }
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.magFilter = THREE.NearestFilter;
+  return t;
+}
+const roofMat = new THREE.MeshStandardMaterial({color:0x151c29, roughness:.95});
 for (let i=0;i<26;i++){
   const side = i%2 ? 1 : -1;
   const x = -220 + rng()*440;
@@ -257,13 +318,13 @@ for (let i=0;i<26;i++){
   const w = 14+rng()*22, h = 12+rng()*66, d = 14+rng()*22;
   if (Math.hypot(x-TX_X(), z) < 34) continue;
   if (Math.hypot(x-105, z+78) < 30 || Math.hypot(x-95, z-92) < 30) continue;
-  const g = new THREE.BoxGeometry(w, h, d);
-  const m = new THREE.Mesh(g, bldMat);
+  const wt = windowTex(Math.round(w/4), Math.round(h/5));
+  const wall = new THREE.MeshStandardMaterial({map:wt, emissive:0xffffff,
+    emissiveMap:wt, emissiveIntensity:.85, roughness:.9});
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+    [wall, wall, roofMat, roofMat, wall, wall]);
   m.position.set(x, h/2, z);
   scene.add(m);
-  const e = new THREE.LineSegments(new THREE.EdgesGeometry(g), edgeMat);
-  e.position.copy(m.position);
-  scene.add(e);
 }
 
 /* ---------- towers ---------- */
@@ -317,30 +378,46 @@ const lblRA = textLabel('Receiver', '#77aede');    lblRA.position.set(0, 62, 0);
 const lblRB = textLabel('Receiver', '#77aede');    lblRB.position.set(0, 62, 0); rxTowerB.add(lblRB);
 
 /* ---------- moving targets ---------- */
-function ghostMat(base){
-  return new THREE.MeshStandardMaterial({
-    color:0x141b28, roughness:0.85, emissive:base, emissiveIntensity:0.0
-  });
-}
+/* a recognizable quadcopter */
+function dmat(col){ return new THREE.MeshStandardMaterial({color:col, roughness:.55,
+  emissive:0x77aede, emissiveIntensity:0}); }
 const drone = new THREE.Group();
-const droneMat = ghostMat(C.accent2);
-const dBody = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.1, 3.2), droneMat);
-drone.add(dBody);
+const dBody = new THREE.Mesh(new THREE.BoxGeometry(2.6, .9, 3.6), dmat(0x3d4a66)); drone.add(dBody);
+const canopy = new THREE.Mesh(new THREE.BoxGeometry(1.6, .6, 1.8), dmat(0x27324a));
+canopy.position.set(0, .68, .4); drone.add(canopy);
+const gimbal = new THREE.Mesh(new THREE.SphereGeometry(.55, 10, 10), dmat(0x1c2436));
+gimbal.position.set(0, -.62, 1.55); drone.add(gimbal);
+const armA = new THREE.Mesh(new THREE.BoxGeometry(.34, .2, 7), dmat(0x2c374e));
+armA.rotation.y = Math.PI/4; drone.add(armA);
+const armB = armA.clone(); armB.rotation.y = -Math.PI/4; drone.add(armB);
+const rotors = [];
 for (const [sx,sz] of [[-1,-1],[-1,1],[1,-1],[1,1]]){
-  const rotor = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 0.25, 12), droneMat);
-  rotor.position.set(sx*2.4, 0.55, sz*2.4);
-  drone.add(rotor);
+  const pod = new THREE.Mesh(new THREE.CylinderGeometry(.42,.5,.7,10), dmat(0x3d4a66));
+  pod.position.set(sx*1.75, .18, sz*1.75); drone.add(pod);
+  const rotor = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, .06, 24),
+    new THREE.MeshBasicMaterial({color:0xaac4e8, transparent:true, opacity:.26}));
+  rotor.position.set(sx*1.75, .62, sz*1.75); drone.add(rotor);
+  rotors.push(rotor);
 }
+const ledL = new THREE.Mesh(new THREE.SphereGeometry(.15,6,6), new THREE.MeshBasicMaterial({color:0xff4d4d}));
+ledL.position.set(-1.75, .5, 1.75); drone.add(ledL);
+const ledR = new THREE.Mesh(new THREE.SphereGeometry(.15,6,6), new THREE.MeshBasicMaterial({color:0x59ff8a}));
+ledR.position.set(1.75, .5, 1.75); drone.add(ledR);
 const lblDrone = textLabel('Drone - no SIM', '#eef1f6'); lblDrone.position.set(0, 8.5, 0); drone.add(lblDrone);
 scene.add(drone);
 
-const carMat = ghostMat(C.accent);
+/* car with headlights */
 const car = new THREE.Group();
-const cb = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.6, 3.6), carMat); cb.position.y=1.6; car.add(cb);
-const ct = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.7, 3.2), carMat); ct.position.set(-0.4,3.6,0); car.add(ct);
+const cb = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.4, 3.6), dmat(0x33405c)); cb.position.y=1.5; car.add(cb);
+const ct = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.6, 3.2), dmat(0x222c42)); ct.position.set(-0.4,3.5,0); car.add(ct);
+for (const sz of [-1,1]){
+  const hl = new THREE.Mesh(new THREE.SphereGeometry(.28,6,6), new THREE.MeshBasicMaterial({color:0xfff2d0}));
+  hl.position.set(3.7, 1.5, sz*1.1); car.add(hl);
+  const tl = new THREE.Mesh(new THREE.SphereGeometry(.22,6,6), new THREE.MeshBasicMaterial({color:0xff5a5a}));
+  tl.position.set(-3.7, 1.5, sz*1.1); car.add(tl);
+}
 scene.add(car);
-const pedMat = ghostMat(C.accent);
-const ped = new THREE.Mesh(new THREE.CapsuleGeometry(0.85, 2.4, 4, 8), pedMat);
+const ped = new THREE.Mesh(new THREE.CapsuleGeometry(0.85, 2.4, 4, 8), dmat(0x5d6a84));
 scene.add(ped);
 
 /* resolution cell */
@@ -354,9 +431,9 @@ scene.add(cell); scene.add(cellEdge);
 
 /* birds (clutter) */
 const birds = [];
-const birdMat = ghostMat(C.warn);
 for (let i=0;i<3;i++){
-  const b = new THREE.Mesh(new THREE.TetrahedronGeometry(1.3), birdMat.clone());
+  const b = new THREE.Mesh(new THREE.TetrahedronGeometry(1.3),
+    new THREE.MeshStandardMaterial({color:0x4a3540, roughness:.8, emissive:C.warn, emissiveIntensity:0}));
   b.visible = false; scene.add(b);
   birds.push({mesh:b, seed:i*17+3});
 }
@@ -582,9 +659,11 @@ const STEPS = [
    go(){ flyTo([180, 95, 40],[30, 25, 0]); }},
   {t:'Every echo becomes a dot on this panel: distance across, speed up and down. No shapes, no faces. This chart is everything the network "sees".',
    go(){ document.getElementById('scopebox').classList.add('hl'); }},
-  {t:'Your turn. The bandwidth slider sharpens distance vision. The Clutter button shows the real-world problem: about 100 false detections for every real drone. Drag anywhere to look around.',
+  {t:'Why it matters: this exact idea detected drones over a World Cup stadium in July 2026, with no radar installed. The same capability extends to airports, ports, borders and other critical sites - geofencing with hardware that is already everywhere.',
    go(){ document.getElementById('scopebox').classList.remove('hl');
-        document.getElementById('controls').classList.add('hl'); }}
+        flyTo([170,130,210],[0,20,0]); }},
+  {t:'Your turn. The bandwidth slider sharpens distance vision. The Clutter button shows the real-world problem: about 100 false detections for every real drone. Drag anywhere to look around, and click any glowing dot.',
+   go(){ document.getElementById('controls').classList.add('hl'); }}
 ];
 let storyMode = true, stepIdx = -1, stepTimer = 0;
 const storyEl = document.getElementById('story');
@@ -664,6 +743,9 @@ function animate(){
   prevPos.ped.copy(ped.position);
   drone.position.set(60*Math.cos(t*0.21), 26 + Math.sin(t*0.7)*6, 55*Math.sin(t*0.42));
   drone.rotation.y = t*0.6;
+  for (const r of rotors) r.rotation.y += dt*45;
+  const blink = (t % 1) < 0.5;
+  ledL.visible = blink; ledR.visible = !blink;
   const cx = ((t*14) % 480) - 240;
   car.position.set(cx, 0, -8);
   ped.position.set(30 + Math.sin(t*0.12)*40, 2.1, 20);
