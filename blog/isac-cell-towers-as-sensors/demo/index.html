@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ISAC City: an interactive 3D demo of network sensing | Mohamed Kadri</title>
-<meta name="description" content="Watch three 5G towers sense a drone with their own radio waves. Guided tour, live sensing scope, bandwidth slider, clutter mode. Companion demo to the ISAC article.">
+<title>ISAC Command: watch a cell network guard a city | Mohamed Kadri</title>
+<meta name="description" content="Interactive 3D demo: three 5G towers sense a drone with their own radio waves. Switch between stadium, port and airport protection, watch threat alerts fire, and see the live sensing scope.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/demo/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Mohamed Kadri">
 <meta property="og:url" content="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/demo/">
-<meta property="og:title" content="ISAC City: watch a cell network sense a drone">
-<meta property="og:description" content="Three towers, one drone, a live sensing scope. See why bandwidth sets resolution and clutter sets the false-alarm floor.">
+<meta property="og:title" content="ISAC Command: watch a cell network guard a city">
+<meta property="og:description" content="Three 5G towers, one intruding drone, a live threat console. Stadium, port and airport scenarios - no radar hardware, just the network.">
 <meta property="og:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
 <meta property="og:image:alt" content="A city at dusk where amber radio wavefronts ripple out from cell towers and outline a drone, a car and a pedestrian in blue light">
 <meta name="twitter:card" content="summary_large_image">
@@ -20,35 +20,93 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0e16; --panel:#121a29; --line:#243044;
     --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
-    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff5a4d; --amber:#ffb454;
+    --ok:#5ad48a;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
     font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
   #scene{position:fixed;inset:0;display:block;cursor:grab}
   #scene:active{cursor:grabbing}
-  .hud{position:fixed;z-index:10;border:1px solid var(--line);background:rgba(18,26,41,.9);
+  .mono{font-family:'JetBrains Mono',monospace}
+  .hud{position:fixed;z-index:10;border:1px solid var(--line);background:rgba(16,22,35,.92);
     backdrop-filter:blur(10px);border-radius:12px;padding:14px 16px}
   .hud h1{font-family:'Space Grotesk',Inter,sans-serif;font-size:15px;font-weight:700;
     letter-spacing:-.01em;margin:0 0 2px;color:var(--ink)}
-  .hud .sub{font-size:11.5px;color:var(--dim);line-height:1.45;margin:0}
+  .hud .sub{font-size:11.5px;color:var(--dim);line-height:1.5;margin:0}
   .hud .sub a{color:var(--accent);text-decoration:none}
   .hud .sub a:hover{text-decoration:underline}
-  #title{top:16px;left:16px;max-width:290px}
+  #title{top:16px;left:16px;max-width:270px}
   .eyebrow{color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;margin:0 0 4px}
 
+  /* top command bar */
+  #cmdbar{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:12;
+    display:flex;align-items:center;gap:10px}
+  #modes{display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;
+    background:rgba(16,22,35,.92);backdrop-filter:blur(10px)}
+  #modes button{border:0;border-radius:0;background:none;color:var(--mut);
+    font:600 12px Inter,sans-serif;padding:9px 16px;cursor:pointer}
+  #modes button:hover{color:var(--ink)}
+  #modes button[aria-pressed="true"]{background:rgba(79,143,201,.18);color:var(--accent2)}
+  #status{display:flex;align-items:center;gap:8px;border:1px solid var(--line);
+    border-radius:999px;padding:8px 14px;background:rgba(16,22,35,.92);
+    font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em;color:var(--ok)}
+  #status .dot{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+  #status.alert{color:var(--warn);border-color:rgba(255,90,77,.6)}
+  #status.alert .dot{background:var(--warn);animation:blink .5s steps(2) infinite}
+  #clock{color:var(--dim);font:600 11px 'JetBrains Mono',monospace;letter-spacing:.08em}
+  @keyframes blink{50%{opacity:.2}}
+
+  /* threat banner */
+  #threat{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:12;
+    display:none;align-items:center;gap:12px;border:1px solid var(--warn);
+    background:rgba(60,16,14,.92);border-radius:10px;padding:10px 18px;
+    font:600 13px 'JetBrains Mono',monospace;letter-spacing:.06em;color:#ffd9d4;
+    animation:blink 1s steps(2) infinite}
+  #threat b{color:var(--warn)}
+
+  /* target reticle */
+  #ret{position:fixed;z-index:8;width:74px;height:74px;display:none;pointer-events:none;
+    transform:translate(-50%,-50%)}
+  #ret .c{position:absolute;width:16px;height:16px;border:2px solid var(--warn)}
+  #ret .c1{top:0;left:0;border-right:0;border-bottom:0}
+  #ret .c2{top:0;right:0;border-left:0;border-bottom:0}
+  #ret .c3{bottom:0;left:0;border-right:0;border-top:0}
+  #ret .c4{bottom:0;right:0;border-left:0;border-top:0}
+  #retlbl{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:6px;
+    white-space:nowrap;font:600 10.5px 'JetBrains Mono',monospace;color:#ffd9d4;
+    background:rgba(60,16,14,.85);border:1px solid var(--warn);border-radius:6px;
+    padding:3px 8px;letter-spacing:.04em}
+  #ret.track .c{border-color:var(--accent2)}
+  #ret.track #retlbl{border-color:var(--accent2);background:rgba(18,26,41,.85);color:#cfe2f5}
+
+  /* alarm vignette */
+  #vig{position:fixed;inset:0;z-index:5;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 140px 30px rgba(255,60,45,.55);transition:opacity .4s}
+
   #tips{position:fixed;top:16px;right:16px;z-index:10;border:1px solid rgba(255,180,84,.45);
-    background:rgba(30,26,18,.88);backdrop-filter:blur(10px);border-radius:12px;
-    padding:12px 16px;max-width:210px}
+    background:rgba(30,26,18,.9);backdrop-filter:blur(10px);border-radius:12px;
+    padding:12px 16px;max-width:200px}
   #tips b{display:block;color:var(--amber);font-size:10px;font-weight:600;
     letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
   #tips ul{margin:0;padding:0;list-style:none;color:#d8cfc0;font-size:12px;line-height:1.8}
+
+  /* event log */
+  #log{position:fixed;left:16px;bottom:246px;z-index:9;width:250px;max-height:150px;
+    overflow:hidden;border:1px solid var(--line);border-radius:12px;
+    background:rgba(16,22,35,.88);backdrop-filter:blur(10px);padding:10px 12px}
+  #log b{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  #log div{font:500 10.5px 'JetBrains Mono',monospace;color:var(--mut);
+    line-height:1.7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #log div.warn{color:#ffb0a8}
+  #log div.ok{color:#9fe0b8}
 
   #controls{bottom:16px;left:16px;width:250px}
   .ctl{margin:12px 0 0}
@@ -75,14 +133,14 @@
   #scopebox .scopehead b{font-family:'Space Grotesk',Inter,sans-serif;font-size:12px;
     letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
   #scopebox .scopehead span{font-size:11px;color:var(--dim)}
-  #scope{display:block;width:100%;height:190px;border:1px solid var(--line);border-radius:8px;background:#070b12;cursor:pointer}
+  #scope{display:block;width:100%;height:180px;border:1px solid var(--line);border-radius:8px;background:#070b12;cursor:pointer}
   #counters{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);
     margin-top:8px;font-variant-numeric:tabular-nums}
   #counters b{color:var(--ink)}
   #counters .flood b{color:var(--warn)}
 
-  #facts{top:16px;right:16px;width:290px;display:none;max-height:calc(100vh - 300px);
-    overflow-y:auto;transition:box-shadow .3s}
+  #facts{top:64px;right:16px;width:290px;display:none;max-height:calc(100vh - 320px);
+    overflow-y:auto;z-index:11}
   #facts .kicker{color:var(--accent);font-size:10px;font-weight:600;letter-spacing:.14em;
     text-transform:uppercase;margin:0 0 4px}
   #facts h2{font-family:'Space Grotesk',Inter,sans-serif;font-size:20px;margin:0 0 2px;color:var(--ink)}
@@ -116,37 +174,56 @@
   #story .btns{display:flex;gap:8px}
   .hl{box-shadow:0 0 0 2px var(--amber),0 8px 40px rgba(255,180,84,.3) !important}
 
-  @media(max-width:900px){
-    #title{max-width:210px}
+  @media(max-width:1000px){
+    #title{display:none}
     #tips{display:none}
+    #log{display:none}
     #controls{width:210px;padding:10px 12px}
     #scopebox{width:230px}
-    #scope{height:130px}
-    #facts{width:calc(100vw - 32px);max-height:44vh}
+    #scope{height:120px}
+    #facts{width:calc(100vw - 32px);max-height:40vh}
   }
 </style>
 </head>
 <body>
 
-<canvas id="scene" aria-label="3D scene: three cell towers sensing a drone, cars and a pedestrian with radio waves"></canvas>
+<canvas id="scene" aria-label="3D scene: cell towers guarding a city against an intruding drone using radio sensing"></canvas>
+<div id="vig"></div>
 
 <div class="hud" id="title">
   <p class="eyebrow">Interactive demo</p>
-  <h1>ISAC City</h1>
-  <p class="sub">A toy city showing how 5G towers can act as radar: the tower's own
-  signal reflects off a drone, and the network sees it - no camera, no radar dish.
-  Based on a real 2026 stadium demo. Full story:
+  <h1>ISAC Command</h1>
+  <p class="sub">A toy city where 5G towers act as radar: their own signal reflects
+  off a drone and the network sees it - no camera, no radar dish. Based on a real
+  2026 stadium demo. Full story:
   <a href="/blog/isac-cell-towers-as-sensors/">Your Cell Network Is Learning to See</a>.</p>
 </div>
+
+<div id="cmdbar">
+  <div id="modes" role="group" aria-label="Protected site">
+    <button data-mode="stadium" aria-pressed="true">Stadium</button>
+    <button data-mode="port" aria-pressed="false">Port</button>
+    <button data-mode="airport" aria-pressed="false">Airport</button>
+  </div>
+  <div id="status"><span class="dot"></span><span id="statustext">ZONE SECURE</span></div>
+  <div id="clock" aria-hidden="true">--:--:--</div>
+</div>
+
+<div id="threat"><b>THREAT DETECTED</b><span id="threattext">UNIDENTIFIED UAV IN RESTRICTED ZONE</span></div>
+
+<div id="ret"><span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span><span id="retlbl"></span></div>
 
 <div id="tips">
   <b>Tip</b>
   <ul>
     <li>Drag to rotate</li>
     <li>Scroll to zoom</li>
-    <li>Click a glowing dot to learn more</li>
+    <li>Click a glowing dot</li>
+    <li>Switch site up top</li>
   </ul>
 </div>
+
+<div id="log"><b>Event log</b><div id="logbody"></div></div>
 
 <div class="hud" id="facts">
   <button class="close" aria-label="Close">&times;</button>
@@ -163,18 +240,19 @@
     <label for="bw">Bandwidth <output id="bwout">100 MHz</output></label>
     <input type="range" id="bw" min="0" max="3" step="1" value="1"
       aria-label="Sensing bandwidth: sets range resolution">
-    <div class="readout">Range resolution: <b id="resout">1.5 m</b> <span id="resnote">(cell shown 8x for visibility)</span></div>
+    <div class="readout">Range resolution: <b id="resout">1.5 m</b> <span id="resnote">(cell shown 8x)</span></div>
   </div>
   <div class="btnrow">
     <button id="clutterbtn" aria-pressed="false">Clutter: off</button>
     <button id="orbitbtn" aria-pressed="false">Auto orbit</button>
+    <button id="soundbtn" aria-pressed="false">Sound: off</button>
     <button id="tourbtn">Replay tour</button>
   </div>
 </div>
 
 <div class="hud" id="scopebox">
   <div class="scopehead"><b>What the network sees</b><span>distance vs speed</span></div>
-  <canvas id="scope" width="576" height="342"></canvas>
+  <canvas id="scope" width="576" height="324"></canvas>
   <div id="counters">
     <span>Real targets: <b id="realct">3</b></span>
     <span class="flood">Raw detections: <b id="rawct">3</b></span>
@@ -203,11 +281,8 @@
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
-/* ---------- palette ---------- */
-const C = {
-  bg:0x0a0e16, line:0x243044, accent:0x4f8fc9, accent2:0x77aede,
-  warn:0xff6a6a, amber:0xffb454
-};
+const C = { bg:0x0a0e16, line:0x243044, accent:0x4f8fc9, accent2:0x77aede,
+  warn:0xff5a4d, amber:0xffb454, ok:0x5ad48a };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---------- renderer / scene ---------- */
@@ -215,56 +290,45 @@ const canvas = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 const scene = new THREE.Scene();
-/* dusk gradient sky */
 const skyC = document.createElement('canvas'); skyC.width = 2; skyC.height = 512;
 const sg = skyC.getContext('2d');
 const skyGrad = sg.createLinearGradient(0,0,0,512);
-skyGrad.addColorStop(0,'#0a0e18');
-skyGrad.addColorStop(0.55,'#141b2e');
-skyGrad.addColorStop(0.82,'#282338');
-skyGrad.addColorStop(1,'#3d2f3d');
+skyGrad.addColorStop(0,'#17233f'); skyGrad.addColorStop(0.45,'#2e3a5c');
+skyGrad.addColorStop(0.72,'#6a4a58'); skyGrad.addColorStop(0.88,'#b06a4a');
+skyGrad.addColorStop(1,'#e09a5e');
 sg.fillStyle = skyGrad; sg.fillRect(0,0,2,512);
 scene.background = new THREE.CanvasTexture(skyC);
-scene.fog = new THREE.Fog(0x151c2e, 260, 680);
+scene.fog = new THREE.Fog(0x51404a, 300, 780);
 
-const camera = new THREE.PerspectiveCamera(50, 1, 1, 1200);
-camera.position.set(170, 130, 210);
+const camera = new THREE.PerspectiveCamera(50, 1, 1, 1400);
+camera.position.set(190, 140, 230);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, 14, 0);
-controls.enableDamping = true;
-controls.dampingFactor = 0.06;
+controls.enableDamping = true; controls.dampingFactor = 0.06;
 controls.maxPolarAngle = Math.PI * 0.49;
-controls.minDistance = 40; controls.maxDistance = 450;
-controls.autoRotate = false;
-controls.autoRotateSpeed = 0.55;
+controls.minDistance = 40; controls.maxDistance = 520;
+controls.autoRotate = false; controls.autoRotateSpeed = 0.5;
 
-scene.add(new THREE.AmbientLight(0x8899bb, 0.35));
-scene.add(new THREE.HemisphereLight(0x33405c, 0x0d1018, 1.0));
-const key = new THREE.DirectionalLight(0xcdd8ee, 0.7);
-key.position.set(-120, 200, 80);
-scene.add(key);
+scene.add(new THREE.AmbientLight(0xaa99a0, 0.4));
+scene.add(new THREE.HemisphereLight(0x5a6a94, 0x33241c, 1.25));
+const key = new THREE.DirectionalLight(0xffc898, 0.9);
+key.position.set(-260, 90, 160); scene.add(key);
 
-/* ---------- ground, road, lamps ---------- */
-const ground = new THREE.Mesh(
-  new THREE.CircleGeometry(560, 72),
-  new THREE.MeshStandardMaterial({color:0x121722, roughness:1})
-);
-ground.rotation.x = -Math.PI/2;
-scene.add(ground);
-const grid = new THREE.GridHelper(520, 52, C.line, 0x1a2231);
-grid.material.transparent = true; grid.material.opacity = 0.3;
-grid.position.y = 0.05;
-scene.add(grid);
+/* ---------- ground / road / lamps ---------- */
+const ground = new THREE.Mesh(new THREE.CircleGeometry(620, 72),
+  new THREE.MeshStandardMaterial({color:0x1e1d26, roughness:1}));
+ground.rotation.x = -Math.PI/2; scene.add(ground);
+const grid = new THREE.GridHelper(560, 56, 0x33313e, 0x2a2833);
+grid.material.transparent = true; grid.material.opacity = 0.35;
+grid.position.y = 0.05; scene.add(grid);
 
-const road = new THREE.Mesh(new THREE.PlaneGeometry(520, 18),
+const road = new THREE.Mesh(new THREE.PlaneGeometry(560, 18),
   new THREE.MeshStandardMaterial({color:0x181f2c, roughness:0.95}));
-road.rotation.x = -Math.PI/2; road.position.set(0, 0.08, -8);
-scene.add(road);
+road.rotation.x = -Math.PI/2; road.position.set(0, 0.08, -8); scene.add(road);
 const dashMat = new THREE.MeshBasicMaterial({color:0x7f93b2});
-for (let x=-250; x<250; x+=26){
+for (let x=-270; x<270; x+=26){
   const d = new THREE.Mesh(new THREE.PlaneGeometry(9, 0.7), dashMat);
-  d.rotation.x = -Math.PI/2; d.position.set(x, 0.12, -8);
-  scene.add(d);
+  d.rotation.x = -Math.PI/2; d.position.set(x, 0.12, -8); scene.add(d);
 }
 const glowTex = (() => {
   const c = document.createElement('canvas'); c.width = c.height = 128;
@@ -274,9 +338,8 @@ const glowTex = (() => {
   x.fillStyle = g; x.fillRect(0,0,128,128);
   return new THREE.CanvasTexture(c);
 })();
-for (let i=0; i<7; i++){
-  const x = -210 + i*70;
-  const z = (i % 2) ? 8 : -24;
+for (let i=0; i<11; i++){
+  const x = -230 + i*46, z = (i % 2) ? 8 : -24;
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(.25,.32,13,6),
     new THREE.MeshStandardMaterial({color:0x2a3346, roughness:.8}));
   pole.position.set(x, 6.5, z); scene.add(pole);
@@ -288,7 +351,7 @@ for (let i=0; i<7; i++){
   glow.scale.set(11,11,1); glow.position.set(x, 13.2, z); scene.add(glow);
 }
 
-/* ---------- city: buildings with lit windows ---------- */
+/* ---------- buildings ---------- */
 function TX_X(){ return -70; }
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const rng = mulberry32(7);
@@ -296,60 +359,144 @@ function windowTex(cols, rows){
   const c = document.createElement('canvas');
   c.width = Math.max(24, cols*8); c.height = Math.max(30, rows*10);
   const x = c.getContext('2d');
-  x.fillStyle = '#1b2434'; x.fillRect(0,0,c.width,c.height);
-  const palette = ['#ffd9a0','#cfe0ff','#ffeccc','#9fb6d8'];
+  x.fillStyle = '#2c2c36'; x.fillRect(0,0,c.width,c.height);
+  const palette = ['#ffd9a0','#ffc87a','#ffeccc','#ffe3b0','#cfe0ff'];
   for (let r=0; r<rows; r++) for (let k=0; k<cols; k++){
-    if (rng() < 0.30){
+    if (rng() < 0.55){
       x.fillStyle = palette[Math.floor(rng()*palette.length)];
-      x.globalAlpha = .5 + rng()*.5;
+      x.globalAlpha = .55 + rng()*.45;
       x.fillRect(k*8+2, r*10+3, 4, 5);
       x.globalAlpha = 1;
     }
   }
-  const t = new THREE.CanvasTexture(c);
-  t.magFilter = THREE.NearestFilter;
+  const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter;
   return t;
 }
 const roofMat = new THREE.MeshStandardMaterial({color:0x151c29, roughness:.95});
-for (let i=0;i<26;i++){
+for (let i=0;i<24;i++){
   const side = i%2 ? 1 : -1;
-  const x = -220 + rng()*440;
-  const z = side * (34 + rng()*140);
+  const x = -230 + rng()*420;
+  const z = side * (34 + rng()*120);
   const w = 14+rng()*22, h = 12+rng()*66, d = 14+rng()*22;
   if (Math.hypot(x-TX_X(), z) < 34) continue;
   if (Math.hypot(x-105, z+78) < 30 || Math.hypot(x-95, z-92) < 30) continue;
+  if (Math.hypot(x-110, z-150) < 55) continue;   /* stadium plot */
   const wt = windowTex(Math.round(w/4), Math.round(h/5));
   const wall = new THREE.MeshStandardMaterial({map:wt, emissive:0xffffff,
-    emissiveMap:wt, emissiveIntensity:.85, roughness:.9});
+    emissiveMap:wt, emissiveIntensity:1.0, roughness:.9});
   const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
     [wall, wall, roofMat, roofMat, wall, wall]);
-  m.position.set(x, h/2, z);
-  scene.add(m);
+  m.position.set(x, h/2, z); scene.add(m);
+  /* warm shopfront glow at street level */
+  const shop = new THREE.Mesh(new THREE.BoxGeometry(w+0.4, 2.6, d+0.4),
+    new THREE.MeshStandardMaterial({color:0x3a2c1e, roughness:.8,
+      emissive:0xffb454, emissiveIntensity:.5}));
+  shop.position.set(x, 1.3, z); scene.add(shop);
 }
 
-/* ---------- towers: red-white banded masts, white sector panels ---------- */
+/* ---------- landmarks per use case ---------- */
+/* stadium at (110, 150) */
+const stadium = new THREE.Group();
+const bowl = new THREE.Mesh(new THREE.TorusGeometry(30, 8, 10, 40),
+  new THREE.MeshStandardMaterial({color:0x2a3448, roughness:.7,
+    emissive:0x8fb8e8, emissiveIntensity:.12}));
+bowl.rotation.x = Math.PI/2; bowl.scale.set(1, 0.8, 0.55); bowl.position.y = 5;
+stadium.add(bowl);
+const field = new THREE.Mesh(new THREE.CircleGeometry(24, 32),
+  new THREE.MeshStandardMaterial({color:0x1c3a2a, roughness:1,
+    emissive:0x2a5a3a, emissiveIntensity:.35}));
+field.rotation.x = -Math.PI/2; field.position.y = 0.3;
+field.scale.set(1, 0.72, 1);
+stadium.add(field);
+for (let k=0;k<4;k++){
+  const a = k*Math.PI/2 + Math.PI/4;
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(.4,.5,22,6),
+    new THREE.MeshStandardMaterial({color:0x3a4356}));
+  post.position.set(Math.cos(a)*33, 11, Math.sin(a)*20);
+  stadium.add(post);
+  const lamp = new THREE.Mesh(new THREE.BoxGeometry(4,2,1),
+    new THREE.MeshBasicMaterial({color:0xf2f6ff}));
+  lamp.position.set(Math.cos(a)*33, 22.5, Math.sin(a)*20);
+  lamp.lookAt(0, 8, 0);
+  stadium.add(lamp);
+}
+stadium.position.set(110, 0, 150); scene.add(stadium);
+
+/* port at (250, -60): water + ship + cranes */
+const port = new THREE.Group();
+const water = new THREE.Mesh(new THREE.PlaneGeometry(220, 240),
+  new THREE.MeshStandardMaterial({color:0x0e1d2e, roughness:.25, metalness:.4}));
+water.rotation.x = -Math.PI/2; water.position.set(320, 0.15, -40);
+port.add(water);
+const quay = new THREE.Mesh(new THREE.BoxGeometry(14, 2.4, 200),
+  new THREE.MeshStandardMaterial({color:0x232c3c, roughness:.9}));
+quay.position.set(212, 1.2, -40); port.add(quay);
+const ship = new THREE.Group();
+const hull = new THREE.Mesh(new THREE.BoxGeometry(64, 8, 15),
+  new THREE.MeshStandardMaterial({color:0x33202a, roughness:.7}));
+hull.position.y = 4; ship.add(hull);
+const bridge = new THREE.Mesh(new THREE.BoxGeometry(10, 12, 12),
+  new THREE.MeshStandardMaterial({color:0xc8cede, roughness:.6,
+    emissive:0xffd9a0, emissiveIntensity:.15}));
+bridge.position.set(-22, 14, 0); ship.add(bridge);
+const tankMat = new THREE.MeshStandardMaterial({color:0xd8d4c8, roughness:.5});
+for (const tx of [-4, 12, 28]){
+  const tank = new THREE.Mesh(new THREE.SphereGeometry(6.5, 14, 10), tankMat);
+  tank.position.set(tx, 10, 0); ship.add(tank);
+}
+ship.position.set(258, 0, -55); port.add(ship);
+for (const cz of [-95, 10]){
+  const crane = new THREE.Group();
+  const legA = new THREE.Mesh(new THREE.BoxGeometry(2,26,2),
+    new THREE.MeshStandardMaterial({color:0x5a4a30, roughness:.7,
+      emissive:0xffb454, emissiveIntensity:.12}));
+  legA.position.set(0,13,-5); crane.add(legA);
+  const legB = legA.clone(); legB.position.z = 5; crane.add(legB);
+  const boom = new THREE.Mesh(new THREE.BoxGeometry(34,2.2,2.2), legA.material);
+  boom.position.set(9,27,0); crane.add(boom);
+  crane.position.set(214, 0, cz); port.add(crane);
+}
+scene.add(port);
+
+/* airport at (-190, 150): runway */
+const airport = new THREE.Group();
+const runway = new THREE.Mesh(new THREE.PlaneGeometry(170, 24),
+  new THREE.MeshStandardMaterial({color:0x1e2530, roughness:.95}));
+runway.rotation.x = -Math.PI/2; runway.position.set(-185, 0.12, 150);
+airport.add(runway);
+for (let x=-255; x<-115; x+=16){
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(7, 1), dashMat);
+  d.rotation.x = -Math.PI/2; d.position.set(x, 0.16, 150); airport.add(d);
+}
+for (const sz of [-13, 13]){
+  for (let x=-260; x<-110; x+=14){
+    const l = new THREE.Mesh(new THREE.SphereGeometry(.45,6,6),
+      new THREE.MeshBasicMaterial({color: 0x6fd8ff}));
+    l.position.set(x, .5, 150+sz); airport.add(l);
+  }
+}
+const towerB = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.4, 20, 8),
+  new THREE.MeshStandardMaterial({color:0x2c3548, roughness:.7,
+    emissive:0xcfe0ff, emissiveIntensity:.1}));
+towerB.position.set(-115, 10, 122); airport.add(towerB);
+scene.add(airport);
+
+/* ---------- towers ---------- */
 const stripeTex = (() => {
   const c = document.createElement('canvas'); c.width = 8; c.height = 160;
   const x = c.getContext('2d');
-  for (let i=0; i<8; i++){
-    x.fillStyle = i%2 ? '#e9eaee' : '#d8493c';
-    x.fillRect(0, i*20, 8, 20);
-  }
+  for (let i=0; i<8; i++){ x.fillStyle = i%2 ? '#e9eaee' : '#d8493c'; x.fillRect(0, i*20, 8, 20); }
   return new THREE.CanvasTexture(c);
 })();
 const avLights = [];
 function tower(x, z, isTX){
   const grp = new THREE.Group();
-  const mast = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.15, 1.7, 46, 12),
-    new THREE.MeshStandardMaterial({map:stripeTex, roughness:0.65})
-  );
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.7, 46, 12),
+    new THREE.MeshStandardMaterial({map:stripeTex, roughness:0.65}));
   mast.position.y = 23; grp.add(mast);
-  /* platform ring */
   const ring = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.7, 12),
     new THREE.MeshStandardMaterial({color:0x3a4356, roughness:0.7}));
   ring.position.y = 41.5; grp.add(ring);
-  /* three white sector panels, color-coded rim glow */
   const glowCol = isTX ? C.amber : C.accent;
   for (let k=0;k<3;k++){
     const p = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 1.0),
@@ -360,7 +507,6 @@ function tower(x, z, isTX){
     p.rotation.y = -a + Math.PI/2;
     grp.add(p);
   }
-  /* spike + blinking aviation light */
   const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.3, 6, 6),
     new THREE.MeshStandardMaterial({color:0x9aa2b4, roughness:0.6}));
   spike.position.y = 52; grp.add(spike);
@@ -371,7 +517,6 @@ function tower(x, z, isTX){
     opacity:0.9, color:0xff5044, depthWrite:false, blending:THREE.AdditiveBlending}));
   avGlow.scale.set(8,8,1); avGlow.position.y = 55.4; grp.add(avGlow);
   avLights.push({av, avGlow});
-  /* role beacon glow at the panels */
   const beacon = new THREE.PointLight(glowCol, 10, 80);
   beacon.position.y = 46; grp.add(beacon);
   const roleGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true,
@@ -388,7 +533,7 @@ const TX  = new THREE.Vector3(TX_X(), 44, 0);
 const RXA = new THREE.Vector3(105, 44, -78);
 const RXB = new THREE.Vector3(95, 44, 92);
 
-/* ---------- text labels ---------- */
+/* ---------- labels ---------- */
 function textLabel(text, color){
   const c = document.createElement('canvas'); c.width = 512; c.height = 96;
   const x = c.getContext('2d');
@@ -406,8 +551,7 @@ const lblTX = textLabel('Transmitter', '#ffb454'); lblTX.position.set(0, 62, 0);
 const lblRA = textLabel('Receiver', '#77aede');    lblRA.position.set(0, 62, 0); rxTowerA.add(lblRA);
 const lblRB = textLabel('Receiver', '#77aede');    lblRB.position.set(0, 62, 0); rxTowerB.add(lblRB);
 
-/* ---------- moving targets ---------- */
-/* a recognizable quadcopter */
+/* ---------- quadcopter ---------- */
 function dmat(col){ return new THREE.MeshStandardMaterial({color:col, roughness:.55,
   emissive:0x77aede, emissiveIntensity:0}); }
 const drone = new THREE.Group();
@@ -432,10 +576,10 @@ const ledL = new THREE.Mesh(new THREE.SphereGeometry(.15,6,6), new THREE.MeshBas
 ledL.position.set(-1.75, .5, 1.75); drone.add(ledL);
 const ledR = new THREE.Mesh(new THREE.SphereGeometry(.15,6,6), new THREE.MeshBasicMaterial({color:0x59ff8a}));
 ledR.position.set(1.75, .5, 1.75); drone.add(ledR);
-const lblDrone = textLabel('Drone - no SIM', '#eef1f6'); lblDrone.position.set(0, 8.5, 0); drone.add(lblDrone);
+drone.scale.setScalar(1.25);
 scene.add(drone);
 
-/* car with headlights */
+/* car + pedestrian */
 const car = new THREE.Group();
 const cb = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.4, 3.6), dmat(0x33405c)); cb.position.y=1.5; car.add(cb);
 const ct = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.6, 3.2), dmat(0x222c42)); ct.position.set(-0.4,3.5,0); car.add(ct);
@@ -446,19 +590,40 @@ for (const sz of [-1,1]){
   tl.position.set(-3.7, 1.5, sz*1.1); car.add(tl);
 }
 scene.add(car);
+/* ambient traffic: a river of head- and taillights (not radar targets) */
+const traffic = [];
+const paints = [0x4a3b52, 0x3b4a5e, 0x55402e, 0x2e4a44, 0x4e2e38, 0x39445a];
+for (let i=0; i<8; i++){
+  const dir = i%2 ? 1 : -1;
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(6.6, 2.2, 3.2),
+    new THREE.MeshStandardMaterial({color:paints[i%paints.length], roughness:.6}));
+  body.position.y = 1.4; g.add(body);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(3.4, 1.4, 2.9),
+    new THREE.MeshStandardMaterial({color:0x232c3e, roughness:.6}));
+  top.position.set(-0.3*dir, 3.1, 0); g.add(top);
+  for (const sz of [-1,1]){
+    const hl = new THREE.Mesh(new THREE.SphereGeometry(.26,6,6), new THREE.MeshBasicMaterial({color:0xfff2d0}));
+    hl.position.set(3.4*dir, 1.4, sz*1.0); g.add(hl);
+    const tl = new THREE.Mesh(new THREE.SphereGeometry(.2,6,6), new THREE.MeshBasicMaterial({color:0xff4a3c}));
+    tl.position.set(-3.4*dir, 1.4, sz*1.0); g.add(tl);
+  }
+  g.rotation.y = dir > 0 ? 0 : Math.PI;
+  scene.add(g);
+  traffic.push({g, dir, speed: 16 + (i%3)*7, off: i*67, z: dir>0 ? -3.5 : -12.5});
+}
 const ped = new THREE.Mesh(new THREE.CapsuleGeometry(0.85, 2.4, 4, 8), dmat(0x5d6a84));
 scene.add(ped);
 
 /* resolution cell */
-const cellMat = new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.14, side:THREE.DoubleSide});
-const cell = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), cellMat);
+const cell = new THREE.Mesh(new THREE.BoxGeometry(1,1,1),
+  new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.14, side:THREE.DoubleSide}));
 const cellEdge = new THREE.LineSegments(
   new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),
-  new THREE.LineBasicMaterial({color:C.accent2, transparent:true, opacity:0.6})
-);
+  new THREE.LineBasicMaterial({color:C.accent2, transparent:true, opacity:0.6}));
 scene.add(cell); scene.add(cellEdge);
 
-/* birds (clutter) */
+/* birds */
 const birds = [];
 for (let i=0;i<3;i++){
   const b = new THREE.Mesh(new THREE.TetrahedronGeometry(1.3),
@@ -467,7 +632,107 @@ for (let i=0;i<3;i++){
   birds.push({mesh:b, seed:i*17+3});
 }
 
-/* ---------- wavefronts ---------- */
+/* ---------- geofence ---------- */
+const zoneMat = new THREE.MeshBasicMaterial({color:C.amber, transparent:true,
+  opacity:0.07, side:THREE.DoubleSide, depthWrite:false});
+const zone = new THREE.Mesh(new THREE.CylinderGeometry(1, 1, 56, 48, 1, true), zoneMat);
+zone.position.y = 28; scene.add(zone);
+const zoneRingMat = new THREE.MeshBasicMaterial({color:C.amber, transparent:true,
+  opacity:0.55, side:THREE.DoubleSide});
+const zoneRing = new THREE.Mesh(new THREE.RingGeometry(0.96, 1, 64), zoneRingMat);
+zoneRing.rotation.x = -Math.PI/2; zoneRing.position.y = 0.3; scene.add(zoneRing);
+
+/* ---------- use cases ---------- */
+const MODES = {
+  stadium: {label:'STADIUM PERIMETER', center:new THREE.Vector3(110,0,150), r:58,
+    orbit:new THREE.Vector3(55,0,80), rx:110, rz:120, alt:30,
+    cam:[[240,150,300],[60,15,60]]},
+  port:    {label:'PORT / LNG TERMINAL', center:new THREE.Vector3(235,0,-50), r:70,
+    orbit:new THREE.Vector3(140,0,-30), rx:150, rz:90, alt:34,
+    cam:[[340,160,160],[180,10,-40]]},
+  airport: {label:'RUNWAY CORRIDOR', center:new THREE.Vector3(-185,0,150), r:75,
+    orbit:new THREE.Vector3(-100,0,90), rx:140, rz:110, alt:32,
+    cam:[[-320,170,300],[-150,10,120]]}
+};
+let mode = MODES.stadium, modeName = 'stadium';
+function setZone(){
+  zone.scale.set(mode.r, 1, mode.r);
+  zone.position.set(mode.center.x, 28, mode.center.z);
+  zoneRing.scale.set(mode.r, mode.r, 1);
+  zoneRing.position.set(mode.center.x, 0.3, mode.center.z);
+}
+setZone();
+document.querySelectorAll('#modes button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#modes button').forEach(o => o.setAttribute('aria-pressed','false'));
+    b.setAttribute('aria-pressed','true');
+    modeName = b.dataset.mode; mode = MODES[modeName];
+    setZone();
+    if (alarm) endAlarm(true);
+    logLine('MODE: ' + mode.label + ' ARMED', 'ok');
+    flyTo(...mode.cam);
+  });
+});
+
+/* ---------- event log / clock / alarm ---------- */
+const logBody = document.getElementById('logbody');
+function stamp(){
+  return new Date().toISOString().substr(11,8) + 'Z';
+}
+function logLine(msg, cls){
+  const d = document.createElement('div');
+  if (cls) d.className = cls;
+  d.textContent = stamp() + '  ' + msg;
+  logBody.prepend(d);
+  while (logBody.children.length > 6) logBody.lastChild.remove();
+}
+/* clock text is updated by the render loop (doubles as an is-alive indicator) */
+
+let alarm = false, trackId = 0;
+const statusEl = document.getElementById('status');
+const threatEl = document.getElementById('threat');
+const vig = document.getElementById('vig');
+let audioCtx = null, soundOn = false;
+document.getElementById('soundbtn').addEventListener('click', e => {
+  soundOn = !soundOn;
+  e.target.textContent = 'Sound: ' + (soundOn ? 'on' : 'off');
+  e.target.setAttribute('aria-pressed', String(soundOn));
+  if (soundOn && !audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+});
+function ping(freq, dur){
+  if (!soundOn || !audioCtx) return;
+  const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+  o.frequency.value = freq; o.type = 'sine';
+  g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + dur);
+  o.connect(g); g.connect(audioCtx.destination);
+  o.start(); o.stop(audioCtx.currentTime + dur);
+}
+function startAlarm(){
+  alarm = true; trackId++;
+  statusEl.classList.add('alert');
+  document.getElementById('statustext').textContent = 'THREAT - ' + mode.label;
+  document.getElementById('threattext').textContent =
+    'UNIDENTIFIED UAV IN RESTRICTED ZONE - TRK-' + String(trackId).padStart(3,'0');
+  threatEl.style.display = 'flex';
+  vig.style.opacity = '1';
+  zoneMat.color.setHex(C.warn); zoneRingMat.color.setHex(C.warn);
+  logLine('ALERT: UAV BREACH - ' + mode.label, 'warn');
+  ping(880, .35); setTimeout(() => ping(660, .35), 380);
+}
+function endAlarm(silent){
+  alarm = false;
+  statusEl.classList.remove('alert');
+  document.getElementById('statustext').textContent = 'ZONE SECURE';
+  threatEl.style.display = 'none';
+  vig.style.opacity = '0';
+  zoneMat.color.setHex(C.amber); zoneRingMat.color.setHex(C.amber);
+  if (!silent){ logLine('ZONE CLEAR - TRACK TRK-' + String(trackId).padStart(3,'0') + ' EXITED', 'ok'); ping(520, .3); }
+}
+logLine('SYSTEM ARMED - ' + mode.label, 'ok');
+logLine('3 SITES SYNCHRONIZED - MULTISTATIC');
+
+/* ---------- waves / echoes / scope (physics core) ---------- */
 const waves = [];
 let waveSpeed = 95;
 const ringGeo = new THREE.RingGeometry(0.98, 1, 128);
@@ -483,9 +748,7 @@ function spawnWave(){
   scene.add(sphere);
   waves.push({ring, sphere, r:1, hit:new Set()});
 }
-
-const echoes = [];
-const paths = [];
+const echoes = [], paths = [];
 function echoAt(obj, radialSpeed, rangeFromTX, strong){
   const p = obj.position ? obj.position : obj;
   const em = new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.75, side:THREE.DoubleSide});
@@ -503,19 +766,18 @@ function echoAt(obj, radialSpeed, rangeFromTX, strong){
   addBlip(rangeFromTX, radialSpeed, strong);
 }
 
-/* ---------- scope ---------- */
 const scope = document.getElementById('scope');
 const sctx = scope.getContext('2d');
 const SW = scope.width, SH = scope.height;
-const RANGE_MAX = 260, V_MAX = 22;
+const RANGE_MAX = 400, V_MAX = 22;
 const blips = [];
 let speckleCount = 0, rawShown = 3, counterTimer = 0;
 function addBlip(range, v, strong){
   blips.push({
     x: Math.min(range, RANGE_MAX)/RANGE_MAX * SW,
     y: SH/2 - (Math.max(-V_MAX, Math.min(V_MAX, v))/V_MAX) * (SH/2 - 14),
-    w: Math.max(3, dR() / RANGE_MAX * SW * 8),
-    life: 1, strong
+    w: Math.max(3, dR() / RANGE_MAX * SW * 10),
+    life: 1, strong, hot: strong && alarm
   });
 }
 function drawScope(dt){
@@ -528,49 +790,53 @@ function drawScope(dt){
   sctx.stroke();
   sctx.fillStyle = 'rgba(106,118,137,0.95)';
   sctx.font = '600 13px Inter, sans-serif';
-  sctx.fillText('near', 6, SH-8);
-  sctx.fillText('far', SW-30, SH-8);
   sctx.fillText('approaching', 6, 18);
   sctx.fillText('receding', 6, SH-26);
   sctx.textAlign = 'center';
   sctx.fillText('distance from tower', SW/2, SH-8);
+  sctx.textAlign = 'left';
+  sctx.fillText('near', 6, SH-8);
+  sctx.textAlign = 'right';
+  sctx.fillText('far', SW-6, SH-8);
   sctx.textAlign = 'left';
   for (let i=blips.length-1; i>=0; i--){
     const b = blips[i];
     b.life -= dt * (b.strong ? 0.5 : 1.6);
     if (b.life <= 0){ blips.splice(i,1); continue; }
     const a = Math.max(0, b.life);
+    const col = b.hot ? '255,90,77' : (b.strong ? '119,174,222' : '255,106,106');
     const grad = sctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.w);
-    const col = b.strong ? '119,174,222' : '255,106,106';
     grad.addColorStop(0, `rgba(${col},${0.9*a})`);
     grad.addColorStop(1, `rgba(${col},0)`);
     sctx.fillStyle = grad;
     sctx.beginPath();
     sctx.ellipse(b.x, b.y, b.w, Math.max(3, b.w*0.45), 0, 0, Math.PI*2);
     sctx.fill();
+    if (b.hot && a > .5){
+      sctx.strokeStyle = `rgba(255,90,77,${a})`;
+      sctx.strokeRect(b.x-b.w-4, b.y-b.w*0.45-4, (b.w+4)*2, (b.w*0.45+4)*2);
+    }
   }
 }
 
 /* ---------- controls state ---------- */
 const BW = [20, 100, 200, 400];
 const bwSlider = document.getElementById('bw');
-const bwOut = document.getElementById('bwout');
-const resOut = document.getElementById('resout');
 function dR(){ return 299.792458 / (2 * BW[bwSlider.value]); }
 function refreshBW(){
-  bwOut.textContent = BW[bwSlider.value] + ' MHz';
-  resOut.textContent = dR().toFixed(dR() < 1 ? 2 : 1) + ' m';
+  document.getElementById('bwout').textContent = BW[bwSlider.value] + ' MHz';
+  document.getElementById('resout').textContent = dR().toFixed(dR() < 1 ? 2 : 1) + ' m';
 }
 bwSlider.addEventListener('input', refreshBW);
 refreshBW();
 
 let clutter = false;
-const clutterBtn = document.getElementById('clutterbtn');
-clutterBtn.addEventListener('click', () => {
+document.getElementById('clutterbtn').addEventListener('click', e => {
   clutter = !clutter;
-  clutterBtn.textContent = 'Clutter: ' + (clutter ? 'on' : 'off');
-  clutterBtn.setAttribute('aria-pressed', String(clutter));
+  e.target.textContent = 'Clutter: ' + (clutter ? 'on' : 'off');
+  e.target.setAttribute('aria-pressed', String(clutter));
   birds.forEach(b => b.mesh.visible = clutter);
+  logLine(clutter ? 'CLUTTER INJECTION ON' : 'CLUTTER INJECTION OFF');
 });
 const orbitBtn = document.getElementById('orbitbtn');
 orbitBtn.addEventListener('click', () => {
@@ -585,13 +851,13 @@ function flyTo(pos, look){
 }
 renderer.domElement.addEventListener('pointerdown', () => { camGoal = null; });
 
-/* ---------- facts panel (anatomy-app pattern) ---------- */
+/* ---------- facts ---------- */
 const FACTS = {
   tx: {kicker:'The illuminator', title:'Transmitter tower', tag:'A floodlight made of radio',
     desc:'This tower sends the exact 5G signal that carries calls and data. In sensing mode the same signal doubles as a probe: everything it touches reflects a little of it back.',
-    rows:[['Signal','Normal 5G waveform, nothing special added'],
+    rows:[['Signal','Normal 5G waveform, nothing added'],
           ['New hardware','None - sensing runs as software'],
-          ['Role','Illuminates the street with radio energy']],
+          ['Role','Illuminates the scene with radio energy']],
     dyk:'In the July 2026 Arlington demo, sensing ran on existing commercial radios. No radar was installed.',
     cam:()=>[[TX.x-40, 70, 90],[TX.x, 30, TX.z]]},
   rx: {kicker:'The listener', title:'Receiver tower', tag:'One echo says how far. Three say where.',
@@ -606,15 +872,23 @@ const FACTS = {
     rows:[['Carries','No SIM, no transponder'],
           ['Detected by','Body reflections only'],
           ['Field trials','700 to 1,400 m range, 6-20 m position error'],
-          ['Weak spot','Drops out when crossing building clutter']],
+          ['Weak spot','Drops out over building clutter']],
     dyk:'Live trials measured about 3 percent false alarms - the simulation-era target was one in a million.',
-    cam:()=>{const p=drone.position;return [[p.x+30, p.y+18, p.z+34],[p.x, p.y, p.z]]}},
+    cam:()=>{const p=drone.position;return [[p.x+34, p.y+20, p.z+40],[p.x, p.y, p.z]]}},
+  zone: {kicker:'The security layer', title:'Protected zone', tag:'A geofence made of radio coverage',
+    desc:'The glowing cylinder is a restricted zone around the protected site. When the network tracks an unidentified object crossing the boundary, it raises a threat alert: banner, target lock, log entry. Switch sites at the top - stadium, port, airport.',
+    rows:[['Trigger','Track crosses the zone boundary'],
+          ['Output','Position, speed, heading of the intruder'],
+          ['Response','Detection only - interception is a legal matter'],
+          ['Who is building it','Defense primes: prototypes, not yet deployed']],
+    dyk:'On July 30, 2026, a drone set two LNG vessels on fire at Damietta port, Egypt. Ports and stadiums are where network sensing would matter first.',
+    cam:()=>[[mode.center.x+80, 110, mode.center.z+120],[mode.center.x, 12, mode.center.z]]},
   scope: {kicker:'The output', title:'What the network sees', tag:'The whole world, as two numbers',
-    desc:'Every echo lands on this chart as a glowing dot: distance from the transmitter across, speed toward or away vertically. No shapes, no faces, no pictures - this delay-Doppler map is everything the network knows about the street.',
+    desc:'Every echo lands on this chart as a glowing dot: distance from the transmitter across, speed toward or away vertically. No shapes, no faces, no pictures - this delay-Doppler map is everything the network knows.',
     rows:[['Across','Distance from tower'],
           ['Vertical','Speed toward / away'],
           ['Dot width','Range resolution (set by bandwidth)'],
-          ['Red dots','Clutter: birds, buildings, false alarms']],
+          ['Red box','Track inside a restricted zone']],
     dyk:'A live 5G-Advanced station produced an average of 168 raw detections per frame for one real drone.',
     cam:null}
 };
@@ -652,8 +926,7 @@ function marker(pos, key, parent, hex){
   const s = new THREE.Sprite(new THREE.SpriteMaterial({map:dotTexture(hex), transparent:true, depthTest:false}));
   s.scale.set(9,9,1);
   s.position.copy(pos);
-  s.userData.key = key;
-  s.userData.baseScale = 9;
+  s.userData.key = key; s.userData.baseScale = 9;
   (parent || scene).add(s);
   markers.push(s);
 }
@@ -661,6 +934,9 @@ marker(new THREE.Vector3(0, 52, 0), 'tx', txTower, '#ffb454');
 marker(new THREE.Vector3(0, 52, 0), 'rx', rxTowerA, '#77aede');
 marker(new THREE.Vector3(0, 52, 0), 'rx', rxTowerB, '#77aede');
 marker(new THREE.Vector3(0, 4.5, 0), 'drone', drone, '#eef1f6');
+const zoneMarker = new THREE.Sprite(new THREE.SpriteMaterial({map:dotTexture('#ffb454'), transparent:true, depthTest:false}));
+zoneMarker.scale.set(9,9,1); zoneMarker.userData.key = 'zone'; zoneMarker.userData.baseScale = 9;
+scene.add(zoneMarker); markers.push(zoneMarker);
 
 const ray = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
@@ -678,9 +954,9 @@ document.getElementById('scope').addEventListener('click', () => { if (!storyMod
 
 /* ---------- guided tour ---------- */
 const STEPS = [
-  {t:'This is a city block with three ordinary 5G towers. The amber tower TRANSMITS. The two blue towers LISTEN. Nothing here is radar hardware.',
-   go(){ flyTo([170,130,210],[0,20,0]); }},
-  {t:'The amber tower sends its normal 5G signal - the same one that carries your calls. The expanding amber ring is that signal sweeping across the street.',
+  {t:'This is a city with three ordinary 5G towers. The amber tower TRANSMITS. The two blue towers LISTEN. The amber cylinder is a protected zone around the stadium. Nothing here is radar hardware.',
+   go(){ flyTo([190,140,230],[20,20,40]); }},
+  {t:'The amber tower sends its normal 5G signal - the same one that carries your calls. The expanding amber ring is that signal sweeping across the city.',
    go(){ flyTo([TX.x-10, 60, 130],[TX.x, 24, TX.z]); waveSpeed = 60; spawnWave(); }},
   {t:'When the signal reaches the drone, its body reflects a little of it. The drone carries no SIM and is connected to nothing - its body alone gives it away.',
    go(){ const p = drone.position; flyTo([p.x+34, p.y+20, p.z+40],[p.x, p.y, p.z]); }},
@@ -688,10 +964,12 @@ const STEPS = [
    go(){ flyTo([180, 95, 40],[30, 25, 0]); }},
   {t:'Every echo becomes a dot on this panel: distance across, speed up and down. No shapes, no faces. This chart is everything the network "sees".',
    go(){ document.getElementById('scopebox').classList.add('hl'); }},
-  {t:'Why it matters: this exact idea detected drones over a World Cup stadium in July 2026, with no radar installed. The same capability extends to airports, ports, borders and other critical sites - geofencing with hardware that is already everywhere.',
+  {t:'Now the security layer. The moment the drone crosses into the protected zone, the system raises a threat alert: red banner, target lock, event log. Watch - it happens on its own as the drone circles.',
    go(){ document.getElementById('scopebox').classList.remove('hl');
-        flyTo([170,130,210],[0,20,0]); }},
-  {t:'Your turn. The bandwidth slider sharpens distance vision. The Clutter button shows the real-world problem: about 100 false detections for every real drone. Drag anywhere to look around, and click any glowing dot.',
+        flyTo([mode.center.x+90, 120, mode.center.z+130],[mode.center.x, 14, mode.center.z]); }},
+  {t:'Why it matters: this exact idea detected drones over a World Cup stadium in July 2026, and days-old attacks like the Damietta port strike show what undefended sites face. Switch the protected site up top: Stadium, Port, Airport.',
+   go(){ }},
+  {t:'Your turn. Bandwidth sharpens distance vision. Clutter shows the real problem: about 100 false detections per real drone. Turn Sound on for alert tones, drag to look around, click any glowing dot.',
    go(){ document.getElementById('controls').classList.add('hl'); }}
 ];
 let storyMode = true, stepIdx = -1, stepTimer = 0;
@@ -751,14 +1029,29 @@ const glowing = new Set();
 function flash(obj){
   obj.traverse(o => { if (o.material && o.material.emissive){ o.material.emissiveIntensity = 1.4; glowing.add(o.material); } });
 }
+const retEl = document.getElementById('ret');
+const retLbl = document.getElementById('retlbl');
+const projV = new THREE.Vector3();
 
+let frameCount = 0, fpsTimer = 0;
 function animate(){
   requestAnimationFrame(animate);
+  try { frame(); } catch(e){
+    window.__err = window.__err || [];
+    if (window.__err.length < 4) window.__err.push(String(e) + ' | ' + (e.stack||'').split('\n')[1]);
+  }
+}
+function frame(){
+  window.__alive = (window.__alive || 0) + 1;
   const dt = Math.min(clock.getDelta(), 0.05);
   const t = clock.elapsedTime;
+  frameCount++; fpsTimer += dt;
+  if (fpsTimer >= 1){
+    document.getElementById('clock').textContent = stamp() + '  ' + frameCount + 'fps';
+    frameCount = 0; fpsTimer = 0;
+  }
   controls.update();
 
-  /* camera tween */
   if (camGoal){
     const k = 1 - Math.exp(-dt*2.2);
     camera.position.lerp(camGoal.pos, k);
@@ -766,19 +1059,28 @@ function animate(){
     if (camera.position.distanceTo(camGoal.pos) < 1.2) camGoal = null;
   }
 
-  /* target motion */
+  /* motion: drone orbits near the protected zone and periodically breaches it */
   prevPos.drone.copy(drone.position);
   prevPos.car.copy(car.position);
   prevPos.ped.copy(ped.position);
-  drone.position.set(60*Math.cos(t*0.21), 26 + Math.sin(t*0.7)*6, 55*Math.sin(t*0.42));
-  drone.rotation.y = t*0.6;
+  const o = mode.orbit;
+  drone.position.set(
+    o.x + mode.rx*Math.cos(t*0.16),
+    mode.alt + Math.sin(t*0.7)*5,
+    o.z + mode.rz*Math.sin(t*0.16)
+  );
+  drone.rotation.y = -t*0.16 + Math.PI/2;
   for (const r of rotors) r.rotation.y += dt*45;
   const blink = (t % 1) < 0.5;
   ledL.visible = blink; ledR.visible = !blink;
   const avOn = (t % 1.4) < 0.8;
   for (const l of avLights){ l.av.visible = avOn; l.avGlow.visible = avOn; }
-  const cx = ((t*14) % 480) - 240;
+  const cx = ((t*14) % 520) - 260;
   car.position.set(cx, 0, -8);
+  for (const v of traffic){
+    const s = ((t*v.speed + v.off) % 540) - 270;
+    v.g.position.set(v.dir > 0 ? s : -s, 0, v.z);
+  }
   ped.position.set(30 + Math.sin(t*0.12)*40, 2.1, 20);
   birds.forEach(b => {
     if (!b.mesh.visible) return;
@@ -790,37 +1092,43 @@ function animate(){
     );
   });
 
-  /* marker pulse */
+  /* geofence breach detection */
+  const dz = Math.hypot(drone.position.x - mode.center.x, drone.position.z - mode.center.z);
+  if (dz < mode.r && !alarm) startAlarm();
+  else if (dz >= mode.r + 6 && alarm) endAlarm();
+  zoneMat.opacity = 0.07 + (alarm ? 0.06*Math.abs(Math.sin(t*5)) : 0);
+  zoneRingMat.opacity = alarm ? 0.5 + 0.4*Math.abs(Math.sin(t*5)) : 0.55;
+  zoneMarker.position.set(mode.center.x, 60, mode.center.z);
+
+  /* markers pulse */
   for (const m of markers){
     const p = m.userData.baseScale * (1 + 0.1*Math.sin(t*3 + m.id));
     m.scale.set(p, p, 1);
   }
 
-  /* resolution cell follows drone */
+  /* resolution cell */
   const rhat = drone.position.clone().sub(TX).setY(0).normalize();
   cell.position.copy(drone.position);
   cellEdge.position.copy(drone.position);
   const depth = Math.max(dR()*8, 1.2);
-  cell.scale.set(11, 11, depth);
+  cell.scale.set(13, 13, depth);
   cellEdge.scale.copy(cell.scale);
   const yaw = Math.atan2(rhat.x, rhat.z);
   cell.rotation.set(0, yaw, 0);
   cellEdge.rotation.copy(cell.rotation);
 
-  /* spawn waves (auto only outside the wave-focused tour steps) */
+  /* waves */
   waveTimer -= dt;
   if (waveTimer <= 0 && (!storyMode || stepIdx >= 2)){
     spawnWave();
     waveTimer = reduceMotion ? 4.2 : (storyMode ? 3.4 : 2.6);
   }
-
-  /* propagate waves */
   for (let i=waves.length-1; i>=0; i--){
     const w = waves[i];
     w.r += waveSpeed*dt;
     w.ring.scale.set(w.r, w.r, 1);
     w.sphere.scale.setScalar(w.r);
-    const fade = Math.max(0, 1 - w.r/300);
+    const fade = Math.max(0, 1 - w.r/420);
     w.ring.material.opacity = 0.85*fade;
     w.sphere.material.opacity = 0.06*fade;
     for (const tg of targets){
@@ -852,13 +1160,12 @@ function animate(){
         speckleCount += n;
       }
     }
-    if (w.r > 330){
+    if (w.r > 460){
       scene.remove(w.ring, w.sphere);
       waves.splice(i,1);
     }
   }
 
-  /* decay */
   for (let i=echoes.length-1;i>=0;i--){
     const e = echoes[i];
     e.r += 40*dt; e.life -= dt*1.1;
@@ -876,9 +1183,23 @@ function animate(){
     m.emissiveIntensity = Math.max(0, m.emissiveIntensity - dt*1.4);
   }
 
+  /* target reticle: project drone to screen */
+  projV.copy(drone.position); projV.project(camera);
+  if (projV.z < 1){
+    retEl.style.display = 'block';
+    retEl.className = alarm ? '' : 'track';
+    retEl.style.left = ((projV.x+1)/2*innerWidth) + 'px';
+    retEl.style.top  = ((-projV.y+1)/2*innerHeight) + 'px';
+    const rng2 = drone.position.distanceTo(TX);
+    const vr = radialSpeed(drone, prevPos.drone, dt);
+    retLbl.textContent = (alarm ? 'TRK-' + String(trackId).padStart(3,'0') + ' HOSTILE? ' : 'TRACK ')
+      + Math.round(rng2) + 'm ' + (vr>=0?'+':'') + vr.toFixed(0) + 'm/s';
+  } else {
+    retEl.style.display = 'none';
+  }
+
   drawScope(dt);
 
-  /* counters */
   counterTimer += dt;
   if (counterTimer >= 1){
     rawShown = 3 + speckleCount;
@@ -890,16 +1211,14 @@ function animate(){
     document.getElementById('rawct').textContent = 3;
   }
 
-  /* tour auto-advance */
   if (storyMode && !reduceMotion){
     stepTimer += dt;
-    if (stepTimer > 9 && stepIdx < STEPS.length-1) setStep(stepIdx+1);
+    if (stepTimer > 10 && stepIdx < STEPS.length-1) setStep(stepIdx+1);
   }
 
   renderer.render(scene, camera);
 }
 
-/* ---------- resize ---------- */
 function resize(){
   renderer.setSize(innerWidth, innerHeight);
   camera.aspect = innerWidth/innerHeight;
