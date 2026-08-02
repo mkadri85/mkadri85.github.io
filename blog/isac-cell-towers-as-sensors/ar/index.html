@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شبكتك الخلوية تتعلم أن ترى: شرح ISAC | محمد قدري</title>
+<meta name="description" content="أبراج الاتصالات كمستشعرات: ماذا يفعل استشعار ISAC في شبكات 5G اليوم فعلا، وما الحجم الحقيقي للنماذج التأسيسية اللاسلكية، وما فرصة العمل التي لم يبنها أحد. بأرقام ميدانية موثقة.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/ar/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="ar_AE">
+<meta property="og:url" content="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/ar/">
+<meta property="og:title" content="شبكتك الخلوية تتعلم أن ترى: شرح ISAC">
+<meta property="og:description" content="الأبراج نفسها التي تحمل مكالماتك تستطيع تتبع طائرة مسيرة. ما الحقيقي، وما زال في المختبر، والعمل التجاري الذي لم يبنه أحد.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="مدينة عند الغسق تنتشر فيها موجات راديو من أبراج الاتصالات وترسم بالضوء طائرة مسيرة وسيارة وأحد المشاة: الشبكة تستشعر العالم المادي">
+<meta property="article:published_time" content="2026-08-03">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="اتصالات">
+<meta property="article:tag" content="ISAC">
+<meta property="article:tag" content="الاستشعار والاتصال المتكامل">
+<meta property="article:tag" content="الجيل السادس">
+<meta property="article:tag" content="استشعار الشبكات">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="شبكتك الخلوية تتعلم أن ترى: شرح ISAC">
+<meta name="twitter:description" content="الأبراج نفسها التي تحمل مكالماتك تستطيع تتبع طائرة مسيرة. ما الحقيقي، وما زال في المختبر، والعمل الذي لم يبنه أحد.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
+<meta name="twitter:image:alt" content="موجات راديو من أبراج الاتصالات ترسم طائرة مسيرة فوق مدينة عند الغسق">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "شبكتك الخلوية تتعلم أن ترى: شرح ISAC من مهندس اتصالات",
+  "description": "أبراج الاتصالات كمستشعرات: ماذا يفعل استشعار ISAC في شبكات 5G اليوم فعلا، وما الحجم الحقيقي للنماذج التأسيسية اللاسلكية، وما فرصة العمل التي لم يبنها أحد.",
+  "image": "https://mkadri85.github.io/assets/isac-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-08-03",
+  "dateModified": "2026-08-03",
+  "inLanguage": "ar",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/ar/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","inLanguage":"ar","mainEntity":[
+{"@type":"Question","name":"ما هو الاستشعار والاتصال المتكامل (ISAC) بكلمات بسيطة؟","acceptedAnswer":{"@type":"Answer","text":"ISAC يعني أن إشارات الراديو نفسها التي تحمل مكالماتك وبياناتك تحلل أيضا بحثا عن الانعكاسات. عندما ترتد موجة راديو عن طائرة مسيرة أو سيارة أو إنسان، تعود متغيرة. عالج هذه التغيرات عبر بضعة مواقع أبراج فتستطيع الشبكة تقدير مكان الجسم وسرعته، مثل الرادار، بمعدات منصوبة أصلا. الجسم لا يحتاج شريحة SIM ولا جهازا ولا أي شيء."}},
+{"@type":"Question","name":"هل تستطيع أبراج 5G فعلا اكتشاف الطائرات المسيرة اليوم؟","acceptedAnswer":{"@type":"Answer","text":"نعم، في التجارب. في يوليو 2026 تتبعت AT&T و Ericsson طائرات مسيرة تحلق بين 300 و400 قدم باستخدام ثلاثة مواقع 5G تجارية عادية قرب ملعب في تكساس، دون إضافة أي عتاد رادار. ونشر مشغلون صينيون أرقاما ميدانية في مجلات محكمة: مدى استشعار يقارب 700 إلى 1,000 متر في تجارب ميدانية، وأخطاء تموضع من 6 إلى 20 مترا، ومعدلات إنذار كاذب حول 3%. الاكتشاف يعمل؛ والدقة المنشورة عند التشغيل على نطاق واسع ما زالت بعيدة عن الرادار المخصص."}},
+{"@type":"Question","name":"ما هو النموذج التأسيسي اللاسلكي؟","acceptedAnswer":{"@type":"Answer","text":"نموذج يدرب مسبقا على كميات كبيرة من بيانات القنوات الراديوية بحيث يمكن تكييفه لمهام لاسلكية عديدة، كما تدرب نماذج اللغة مسبقا على النصوص. حتى منتصف 2026 النماذج المنشورة المدربة من الصفر صغيرة - كلها أصغر حتى من أصغر نسخة من GPT-2 الصادر عام 2019 - ومعظم النماذج المذكورة في هذا المقال مدرب مسبقا على قنوات محاكاة لا على بيانات لاسلكية حقيقية. الاتجاه حقيقي؛ الحجم لم يصل بعد."}},
+{"@type":"Question","name":"هل استشعار الشبكات خطر على الخصوصية؟","acceptedAnswer":{"@type":"Answer","text":"سؤال مفتوح لم تجب عنه أي جهة تنظيمية. أظهر بحث محكم إعادة تعرف على الأفراد بدقة 99.5% من إشارات تشكيل الحزمة في WiFi، دون أن يحمل الشخص أي جهاز. وتحاجج الصناعة بأن الاستشعار الخلوي يفتقر إلى الدقة اللازمة لتحديد هوية شخص بعينه. حتى أغسطس 2026، لا توجد قاعدة ملزمة بشأن خصوصية الاستشعار الراديوي من FCC أو هيئات حماية البيانات الأوروبية أو ICO البريطانية."}},
+{"@type":"Question","name":"متى ستبيع الشبكات الخلوية الاستشعار كخدمة؟","acceptedAnswer":{"@type":"Answer","text":"المعايير تصل أولا: وضعت 3GPP نموذج قناة ISAC في الإصدار Release 19، وتدرس استشعار المحطات القاعدية في Release 20، وتخطط لأول مواصفات ملزمة للجيل السادس شاملة ISAC في Release 21، على جدول ITU الزمني IMT-2030 نحو عام 2030. وتصف AT&T مسار التسويق التجاري بأنه تدريجي، بعملاء أوائل في السلامة العامة والبنية التحتية الحرجة. واليوم، لا توجد شركة مستقلة عن المشغلين تبيع بيانات الاستشعار الخلوي بالترددات الراديوية كمنتج."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'IBM Plex Sans Arabic',Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.9;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'IBM Plex Sans Arabic',Inter,sans-serif;line-height:1.35}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-size:19px;font-weight:700;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;margin:56px 0 14px}
+  h1{font-size:clamp(26px,5vw,38px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.7}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-size:21px;line-height:1.6;color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;margin-bottom:10px}
+  .toc ol{margin:0;padding-right:20px;padding-left:0;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  ul,ol{padding-right:24px;padding-left:0}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-right:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-right-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout ul{margin:8px 0 0}
+  .demo-card{display:block;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(79,143,201,.12),rgba(18,26,41,.9));
+    border-radius:14px;padding:20px 24px;margin:26px 0;transition:transform .15s,box-shadow .15s}
+  .demo-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 8px 30px rgba(79,143,201,.15)}
+  .demo-card b{display:block;font-size:18px;color:var(--ink);margin-bottom:6px}
+  .demo-card span{color:var(--mut);font-size:14.5px;line-height:1.7;display:block}
+  .demo-card .go{color:var(--accent);font-size:14px;font-weight:600;margin-top:10px;display:inline-block}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut);direction:ltr;text-align:left}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.7}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">الرئيسية</a><a href="/blog/">المقالات</a><a href="/blog/isac-cell-towers-as-sensors/">English</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">اتصالات / استشعار الشبكات</div>
+  <h1>شبكتك الخلوية تتعلم أن ترى</h1>
+  <p class="subtitle">أبراج الاتصالات كمستشعرات: ما الحقيقي منها، وما الذي ما زال في المختبر، وما العمل التجاري الذي لم يبنه أحد - شرح من مهندس يعمل في تشغيل الشبكات.</p>
+  <div class="meta">محمد قدري &middot; 3 أغسطس 2026 &middot; 13 دقيقة قراءة &middot; <a href="/blog/isac-cell-towers-as-sensors/">Read in English</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">العرض التفاعلي ثلاثي الأبعاد</a></div>
+
+  <figure class="hero">
+    <img src="/assets/isac-hero.jpg" alt="مدينة عند الغسق تنتشر فيها موجات راديو ناعمة من ثلاثة أبراج اتصالات وترسم بالضوء الخافت طائرة مسيرة وسيارة وأحد المشاة، بينما يبقى كل شيء آخر معتما" width="1376" height="768">
+    <figcaption>الموجات نفسها التي تحمل مكالماتك تعود حاملة شكل الشارع.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">في هذا المقال</div>
+    <ol>
+      <li><a href="#demo">عرض الملعب</a></li>
+      <li><a href="#how">كيف يتحول البرج إلى رادار</a></li>
+      <li><a href="#see-it">شاهدها ثلاثية الأبعاد</a></li>
+      <li><a href="#boundary">ما الذي يستطيع البرج رؤيته وما لا يستطيع</a></li>
+      <li><a href="#models">&laquo;النماذج التأسيسية&raquo; أصغر مما تظن</a></li>
+      <li><a href="#business">العمل التجاري الموجود، والعمل الذي لا وجود له</a></li>
+      <li><a href="#privacy">سؤال الخصوصية الذي لم يجب عنه أحد</a></li>
+      <li><a href="#ops">ماذا يعني هذا إن كنت تدير الشبكات</a></li>
+      <li><a href="#faq">أسئلة وأجوبة سريعة</a></li>
+      <li><a href="#refs">المصادر والمراجع</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">في 10 يوليو 2026، حلقت طائرة مسيرة باتجاه ملعب في أرلينغتون بولاية تكساس. لا رادار كان يراقبها، ولا كاميرا التقطتها.</p>
+
+  <p class="lead">ثلاثة أبراج 5G عادية رأتها مع ذلك.</p>
+
+  <h2 id="demo">عرض الملعب</h2>
+
+  <p>جاء العرض التوضيحي من AT&amp;T و Ericsson، بتوقيت مواكب لمباريات كأس العالم في ملعب AT&amp;T Stadium <a href="#ref-1">[1]</a>. جرى تزامن ثلاثة مواقع 5G تجارية قرب الملعب لتكوين شبكة استشعار واحدة. طائرات مسيرة تحلق بين 300 و400 قدم اكتشفت وحدد موقعها وتوبعت باستمرار - من بينها مسيرة لم تكن متصلة بالشبكة إطلاقا <a href="#ref-2">[2]</a>. تقول Ericsson إن العرض لم يحتج إلى أي تقنية استشعار مستقلة <a href="#ref-1">[1]</a>؛ ويصف التقرير المستقل وحدات Massive MIMO الراديوية القائمة - ألواح الهوائيات المتعددة على الأبراج الحديثة - وقد أعيد توظيفها لتشغيل الاستشعار برمجيا <a href="#ref-2">[2]</a>.</p>
+
+  <p>تقرير مستقل واحد يستحق التوقف عنده. كتبت RCR Wireless، التي حضرت العرض، أن المسيرات توبعت على مديات قيل إنها تصل إلى 6 كيلومترات، وأن المسار المشتق من الشبكة عرض فوق بيانات القياس عن بعد (Telemetry) الخاصة بالمسيرة نفسها وكاد يطابقها <a href="#ref-2">[2]</a>. ولاحظ التقرير نفسه ما كان غائبا: لا معدلات إنذار كاذب، ولا احتمالات اكتشاف، ولا أرقام في الطقس السيئ - وحين سئلت الشركتان كيف قرر الذكاء الاصطناعي أن الجسم طائرة مسيرة وليس شيئا آخر، لم تقدم أي منهما إجابة مقنعة <a href="#ref-2">[2]</a>.</p>
+
+  <p>ومما يستحق المعرفة أيضا: العرض يكتشف ولا يعترض. تحويل مسيرة مكتشفة إلى مسيرة موقوفة عن الطيران مهمة جهة أخرى بحكم القانون <a href="#ref-3">[3]</a>.</p>
+
+  <p>هذه حالة أحدث التقنية في فقرة واحدة: الفيزياء تعمل، على عتاد منصوب أصلا، والأرقام التشغيلية التي تصنع منها منتجا ليست علنية بعد. بقية هذا المقال يشرح كيف تعمل، وما حدودها المقاسة، ولماذا الطبقة الأكثر إثارة في القصة - من يبيع البيانات - ما زالت فارغة.</p>
+
+  <h2 id="how">كيف يتحول البرج إلى رادار</h2>
+
+  <p>كل إرسال لاسلكي ينعكس عن العالم المادي. الجدران والسيارات والمطر والطائرات المسيرة والبشر - كل انعكاس يعود متغيرا: متأخرا بمقدار المسافة، ومزاحا في التردد بسبب الحركة، ومتأثرا بشكل الجسم. شبكتك تنتج هذه الانعكاسات منذ اليوم الأول، لكنها كانت ببساطة تتجاهلها.</p>
+
+  <p><strong>ISAC</strong> - الاستشعار والاتصال المتكامل (Integrated Sensing and Communication) - هو قرار التوقف عن تجاهلها. الإشارة نفسها التي تحمل البيانات تعمل في الوقت نفسه كمسبار. والمعايير تعرفه بوضوح: تقدر الشبكة التأخير ودوبلر والزاوية من إشاراتها المنعكسة، وتستخرج منها موقع الأجسام وسرعتها وشكلها - دون أي اشتراط بأن يحمل الجسم جهازا <a href="#ref-4">[4]</a>.</p>
+
+  <p>الآلية قريبة من رادار دوبلر النبضي الكلاسيكي، لكنها تعمل على شبكة إشارات 5G. يرسل البرج إشارته العادية الحاملة للبيانات، ويستقبل برج آخر (أو البرج نفسه) الانعكاسات. تحويل رياضي ثنائي الأبعاد عبر محوري التردد والزمن للإشارة ينتج خريطة التأخير-دوبلر (Delay-Doppler): المسافة على محور، والسرعة على محور آخر، والأجسام تظهر كقمم <a href="#ref-27">[27]</a>. استخدم موقعا واحدا للإرسال ومواقع أخرى للاستقبال فتحصل على استشعار متعدد المواقع (Multistatic) - عدة زوايا نظر إلى الجسم نفسه، وهذا بالضبط ما فعله عرض أرلينغتون بثلاثة مواقع <a href="#ref-2">[2]</a>.</p>
+
+  <p>وهذه ليست فكرة هامشية. أنجزت 3GPP نموذج قناة ISAC في الإصدار Release 19 ونشرت متطلبات خدمة ملزمة للاستشعار اللاسلكي في شبكات 5G <a href="#ref-4">[4]</a><a href="#ref-5">[5]</a>. ويدرس الإصدار Release 20 استشعار المحطات القاعدية للطائرات المسيرة، ومن المخطط أن يحمل الإصدار Release 21 أول مواصفات ملزمة للجيل السادس، بما فيها ISAC، على جدول ITU الزمني IMT-2030 نحو عام 2030 <a href="#ref-6">[6]</a>. وتدير ETSI مجموعة صناعية مخصصة نشرت أربعة تقارير في الموضوع، من حالات الاستخدام إلى الخصوصية <a href="#ref-7">[7]</a>. الجهات التي تكتب معايير الاتصالات قررت بالفعل أن الشبكة ستستشعر. المفتوح الآن: إلى أي حد، ولمصلحة من.</p>
+
+  <h2 id="see-it">شاهدها ثلاثية الأبعاد</h2>
+
+  <p>القراءة عن الاستشعار متعدد المواقع شيء، ومشاهدته شيء آخر. بنيت مشهدا تفاعليا ثلاثي الأبعاد لحي صغير: ثلاثة أبراج، وطائرة مسيرة، وسيارات تتحرك، وأحد المشاة. الموجات تنتشر، والانعكاسات تضيء، ولوحة التأخير-دوبلر تعرض ما تراه الشبكة لحظيا. حرك شريط عرض النطاق وشاهد كيف تتحسن قدرة الشبكة على الفصل بين الأجسام؛ وفعل وضع الفوضى الراديوية (Clutter) وشاهد الاكتشافات الكاذبة تغمر اللوحة. (واجهة العرض بالإنجليزية.)</p>
+
+  <a class="demo-card" href="/blog/isac-cell-towers-as-sensors/demo/">
+    <b>مدينة ISAC: عرض تفاعلي ثلاثي الأبعاد</b>
+    <span>ثلاثة أبراج، وطائرة مسيرة واحدة، وعرض تأخير-دوبلر حي. جرب عرض النطاق والفوضى الراديوية لترى لماذا تبدو الأرقام الميدانية أدناه على ما هي عليه. يعمل في متصفحك، دون تثبيت.</span>
+    <span class="go">افتح العرض &larr;</span>
+  </a>
+
+  <h2 id="boundary">ما الذي يستطيع البرج رؤيته وما لا يستطيع</h2>
+
+  <p>صفحات الموردين تخبرك بما سيفعله ISAC يوما ما. التجارب الميدانية تخبرك بما يفعله الآن. وأصدق الأرقام تأتي من تجارب مشغلين منشورة في مجلات محكمة، معظمها في الصين، لأنها تنشر المقاييس التي لم تنشرها العروض الغربية حتى الآن.</p>
+
+  <p>ما يقوله السجل المقاس:</p>
+
+  <ul>
+    <li><strong>المدى:</strong> اكتشفت تجارب China Mobile التعاونية على تردد 4.9 GHz طائرات مسيرة على مسافة 700 إلى 900 متر في تشكيلات من موقعين وثلاثة مواقع، بأخطاء تموضع من 6 إلى 20 مترا <a href="#ref-8">[8]</a>. وحافظت محطة قاعدية تجارية 5G-Advanced تعمل فعليا في شنغهاي على نطاق استشعار يقارب 1,000 متر <a href="#ref-9">[9]</a>. وأبلغت ZTE عن تتبع مسيرة حتى 1.43 كيلومتر <a href="#ref-10">[10]</a>. وحققت Nokia Bell Labs، على عتاد موجات ميليمترية (mmWave) تجاري دون تعديل، دقة مسافة دون المتر بعد 500 متر <a href="#ref-10">[10]</a>.</li>
+    <li><strong>الإنذارات الكاذبة:</strong> قاست تجارب China Mobile نفسها معدلات إنذار كاذب واكتشاف فائت بين 3 و3.6% تقريبا <a href="#ref-8">[8]</a>. وكان الهدف في زمن المحاكاة احتمال إنذار كاذب واحدا في المليون <a href="#ref-8">[8]</a>. الواقع المقاس يبعد عن الهدف نحو أربع مراتب ونصف من حيث الحجم.</li>
+    <li><strong>الضوضاء:</strong> على محطة شنغهاي العاملة، أنتجت المعالجة الخام أكثر من 100 مرشح اكتشاف لكل مسيرة حقيقية - بمتوسط 168 اكتشافا في الإطار الواحد لطائرة واحدة - قبل أن يخفضها الترشيح <a href="#ref-9">[9]</a>. واضطرت تجربة Nokia إلى تخفيف عتبة الإنذار الكاذب بمرتبتين من حيث الحجم للحفاظ على المدى، وفقدت الاكتشاف كلما عبرت المسيرة فوق المباني <a href="#ref-10">[10]</a>.</li>
+  </ul>
+
+  <p>والآن الفيزياء التي تفسر هذه الأرقام. دقة التمييز في المسافة - كم يجب أن يبتعد جسمان أحدهما عن الآخر حتى يفرق الرادار بينهما - تتناسب عكسيا مع عرض النطاق <a href="#ref-12">[12]</a>؛ والقاعدة الرادارية الكلاسيكية هي سرعة الضوء مقسومة على ضعف عرض النطاق الممسوح، وهي العلاقة نفسها وراء رقم الأربعة سنتيمترات أدناه. حامل 5G نموذجي بعرض 100 MHz في النطاق المتوسط يعطي نحو 1.5 متر. أما جانبيا فالوضع أسوأ: دقة الفصل بين الاتجاهات يحددها حجم الهوائي <a href="#ref-11">[11]</a>، وعلى بعد كيلومتر ينتشر عدم اليقين الجانبي عبر عشرات إلى مئات الأمتار. لهذا تسجل التجارب دقة مسافة دون المتر مع أخطاء تموضع من 6 إلى 20 مترا: البرج يعرف بعد المسيرة عنه أفضل بكثير مما يعرف مكانها.</p>
+
+  <p>وللمعايرة: شريحة رادار سيارات مخصصة، من النوع الذي يكلف عشرات الدولارات، تمسح 4 GHz من عرض النطاق وتميز 4 سنتيمترات <a href="#ref-12">[12]</a> - أدق بنحو أربعين مرة من موقع 5G كبير. ورادار مخصص لمكافحة المسيرات يتتبع طائرة رباعية صغيرة على مدى يحدده المورد بين 1 و3 كيلومترات <a href="#ref-28">[28]</a>. الشبكة لن تتفوق في الدقة. ميزتها أن الأبراج منصوبة أصلا، ومغذاة بالطاقة أصلا، وموجودة في كل مكان.</p>
+
+  <div class="callout warn">
+    <p><strong>ما لا يوجد له أي دليل مقاس إطلاقا (حتى أغسطس 2026)</strong></p>
+    <ul>
+      <li>مراقبة السلامة الإنشائية للجسور عبر ISAC: لا توجد تجربة منشورة واحدة على محطة قاعدية. الفكرة موجودة على شرائح العروض التقديمية فقط.</li>
+      <li>أداء الاستشعار في المطر أو الضباب أو الثلج: كل التجارب المنشورة جرت في طقس جيد.</li>
+      <li>اكتشاف المشاة على مسافة مئات الأمتار: الأرقام البشرية الموثقة الوحيدة قصيرة المدى؛ ورقم الـ 60 مترا المتداول هو حساب ميزانية وصلة مستنتج من قياس مختبري على مسافة 3 أمتار <a href="#ref-31">[31]</a>.</li>
+      <li>التمييز الموثوق بين طائرة مسيرة وطائر في الميدان: التجارب تكتشف وتتتبع؛ والتحقق من التصنيف ما زال ضعيفا - كما أظهرت أسئلة عرض أرلينغتون.</li>
+    </ul>
+  </div>
+
+  <h2 id="models">&laquo;النماذج التأسيسية&raquo; أصغر مما تظن</h2>
+
+  <p>أين يدخل الذكاء الاصطناعي؟ الحلم هو نموذج تأسيسي لاسلكي (Wireless Foundation Model): درب نموذجا واحدا مسبقا على كميات هائلة من بيانات الراديو، كما درب GPT مسبقا على النصوص، ثم كيفه لأي مهمة استشعار أو اتصال. موجة البحث حقيقية - وحجمها الفعلي هو الحقيقة الأقل ذكرا في هذا المجال.</p>
+
+  <p>راجعت كل نموذج رئيسي منشور مقابل ورقته البحثية وملفاته المنشورة، لا مقابل التغطية الصحفية:</p>
+
+  <ul>
+    <li><strong>LWM</strong> (جامعة ولاية أريزونا، 2024)، المقدم بوصفه أول نموذج تأسيسي للقنوات اللاسلكية: 600 ألف من المعاملات. ملف النموذج المنشور حجمه 2.5 ميجابايت <a href="#ref-13">[13]</a>. مدرب مسبقا بالكامل على قنوات محاكاة بتتبع الأشعة.</li>
+    <li><strong>WiFo</strong> (جامعة بكين، 2024): عائلة نماذج من 0.3 إلى 86 مليونا من المعاملات، مدربة مسبقا على 160 ألف عينة قناة محاكاة. وتذكر ورقتها نفسها أن التوسع بعد حد معين يتوقف عن التحسن بسبب محدودية بيانات التدريب المسبق <a href="#ref-14">[14]</a>.</li>
+    <li><strong>WirelessGPT</strong> (مختبر Pengcheng، 2025): نحو 80 مليونا من المعاملات. تصف الورقة مجموعة بيانات التدريب البالغة 300 جيجابايت بأنها متاحة للعموم؛ وحتى كتابة هذه السطور لم أجد البيانات ولا الشيفرة ولا الأوزان في أي مكان <a href="#ref-15">[15]</a>.</li>
+    <li><strong>WavesFM</strong> (جامعة كالجاري، 2025): 38 مليونا من المعاملات، وهو الوحيد بين الخمسة المدرب مسبقا على التقاطات لاسلكية حقيقية - وعددها 4,648 عينة <a href="#ref-16">[16]</a>.</li>
+    <li><strong>RF-GPT</strong> (جامعة خليفة، 2026): ليس نموذجا مدربا من الصفر أصلا، بل ضبط دقيق لنموذج رؤية-لغة قائم (Qwen2.5-VL) على مشاهد راديوية اصطناعية بالكامل. نتائج قوية على اختباراته الاصطناعية الخاصة؛ ولا شيفرة ولا أوزان منشورة <a href="#ref-17">[17]</a>.</li>
+  </ul>
+
+  <p>بوضوح: كل نموذج تأسيسي لاسلكي منشور مدرب من الصفر حتى الآن أصغر حتى من أصغر نسخة من GPT-2 الصادر عام 2019 - أكبرها، نموذج للإشارات الكهرومغناطيسية اسمه EMind، يبلغ 110 ملايين من المعاملات <a href="#ref-32">[32]</a> - وأربعة من النماذج الخمسة أعلاه لم تر موجة راديو حقيقية واحدة أثناء التدريب المسبق. هذا ليس نقدا للباحثين - فالبيانات اللاسلكية الحقيقية الموسومة بكميات كبيرة شبه غير موجودة، والمحاكاة نقطة البداية المنطقية. لكنه مهم للجدول الزمني. لحظة GPT للراديو لم تحدث بعد. الموجود اليوم يعادل حال نمذجة اللغة نحو عام 2018: بنى واعدة، ونماذج صغيرة، والجميع ينتظر من يجلب البيانات.</p>
+
+  <p>والجهة الأقدر على جلب البيانات ليست مختبرا. بل من يشغل أسطولا وطنيا من المحطات القاعدية.</p>
+
+  <h2 id="business">العمل التجاري الموجود، والعمل الذي لا وجود له</h2>
+
+  <p>استشعار الترددات الراديوية كعمل تجاري ليس افتراضا. لقد حدث فعلا مرة واحدة، على شبكة في طبقة أدنى.</p>
+
+  <p>استشعار WiFi - اكتشاف الحركة داخل المنزل من طريقة تأثير الأجسام على إشارة WiFi بين الراوتر وأجهزته - تحول بهدوء إلى خط منتجات لمزودي الإنترنت. شركة Cognitive Systems، مورد التقنية، أحصت 37 مزود خدمة يقدمون ميزة WiFi Motion عام 2021، وتقول اليوم إن العدد تجاوز 100 مزود و20 مليون منزل <a href="#ref-19">[19]</a> (أرقام من المورد، لم تدقق باستقلالية قط). و Comcast تقدم الميزة على أجهزة راوتر Xfinity اليوم. وفي فبراير 2026 سجل القطاع أول صفقة خروج كبيرة: استحوذت ADT على Origin AI، إحدى الشركات الرائدة في استشعار WiFi، في صفقة أعلن عنها بقيمة 170 مليون دولار - بينما تسجل ملفات هيئة SEC تحويل 164 مليونا <a href="#ref-18">[18]</a>. اكتشاف الوجود بلا كاميرات كان يساوي مبلغا من تسعة أرقام لشركة أمن منزلي.</p>
+
+  <p>مشغلو الشبكات الخلوية، في المقابل، يديرون بالفعل أعمال بيع منتجات بيانات: تحليلات التنقل والحشود المشتقة من إشارات الشبكة - Smart Steps من Telefonica، و Vodafone Analytics، و Active Intelligence من BT. أنماط تنقل وإقبال مجهولة الهوية تباع للمدن ولتجار التجزئة. استشعار الترددات لن ينشئ هذا العمل من الصفر؛ بل سيكون البند التالي والأغنى بكثير على رف موجود أصلا.</p>
+
+  <p>الصناعة سمته أيضا: تسميه 5G Americas الاستشعار كخدمة (Sensing as a Service)، حيث يبيع المشغلون بيانات الموقع والحركة والتعرف على الأجسام عبر واجهات برمجية <a href="#ref-20">[20]</a>. وتقدر شركة التحليلات ABI تكلفة ترقية الموقع الخلوي للاستشعار بين 50 و100 ألف دولار، وتصف ISAC بأنه فرصة المشغلين ليصبحوا وسطاء بيانات العالم المادي - مع امتناعها الصريح عن تقدير حجم الإيرادات <a href="#ref-21">[21]</a>. وكل رقم دولاري متداول عن &laquo;سوق ISAC&raquo; يعود إلى شركات تقارير تجارية منخفضة المصداقية؛ لم ينشر أي محلل جاد رقما.</p>
+
+  <p>وهذه هي الفجوة التي لم أستطع سدها بعد بحث مطول: <strong>لا أحد يبيع بيانات الاستشعار الخلوي بالترددات الراديوية كمنتج مستقل عن المشغلين اليوم.</strong> ولا شركة واحدة. العروض مملوكة للمشغلين (AT&amp;T و Ericsson تبقيان تجربتهما داخل الشركة). والنماذج الأولية ممولة من جهات دفاعية (مفهوم NetSense من Lockheed Martin لاكتشاف المسيرات؛ وعقد Cohere بقيمة 28 مليون دولار من وزارة الدفاع الأمريكية لتحويل الشبكات التجارية إلى مستشعرات خفية للمسيرات). وما تصفه ZTE و China Unicom بأنه أول نشر تجاري لـ ISAC في الصين هو شبكة خاصة بين المورد والمشغل تحرس ممر توصيل بالطائرات المسيرة. وأقرب كيان قائم إلى لاعب محايد شركة فنلندية ناشئة اسمها Skyfora جمعت 6.5 مليون يورو في يونيو 2026 لتحويل مستقبلات GNSS في المحطات القاعدية إلى مستشعرات طقس <a href="#ref-25">[25]</a> - استشعار جوي من بنية الأبراج، لكنه ليس استشعارا بانعكاس الترددات الراديوية.</p>
+
+  <p>لماذا الفجوة؟ ثلاثة أسباب صريحة. البيانات ملك للمشغلين، وهم يتحركون ببطء ويفضلون إبقاء الإيرادات الجديدة داخل الشركة. والمعايير التي تجعل الاستشعار قدرة قابلة للنقل بين الموردين تصل مع الجيل السادس نحو 2030. والأداء المقاس الذي رأيته أعلاه ليس بعد منتجا يوقع عليه مشتر أمني - لا أحد ينشر عدد الإنذارات الكاذبة في اليوم، والإنذارات الكاذبة هي ما ينهي عقود الاستشعار. من يحل الثلاثة - الوصول إلى البيانات، والتوقيت، وهندسة الموثوقية غير اللامعة - يحصل على طبقة من العالم المادي لا تغطيها الكاميرات ولا تصل إليها الأقمار الصناعية عبر السحب. وصفقة WiFi تعطي مؤشرا على قيمتها المحتملة.</p>
+
+  <h2 id="privacy">سؤال الخصوصية الذي لم يجب عنه أحد</h2>
+
+  <p>كل عرض تسويقي للاستشعار يتضمن عبارة &laquo;متوافق مع الخصوصية&raquo;، بمنطق أن الرادار يرى كتلا لا وجوها. وصيغة Ericsson مثال تمثيلي: الاستشعار يكشف أن جسما بحجم إنسان موجود هنا، لا أن شخصا محددا موجود هنا - والتعرف على الوجوه ببساطة غير ممكن على الترددات الخلوية <a href="#ref-26">[26]</a>. هذه الفيزياء صحيحة. لكنها ليست القصة كاملة.</p>
+
+  <p>في أكتوبر 2025، أظهر باحثون في معهد كارلسروه للتقنية (KIT) نتيجة مقلقة: أمكن إعادة التعرف على أفراد من إشارات تشكيل الحزمة (Beamforming) في WiFi بدقة 99.5% عبر 197 شخصا، بعتاد متوفر تجاريا، ودون أن يحمل الشخص أي جهاز <a href="#ref-22">[22]</a>. ونظام أسبق اسمه WhoFi حقق 95.5% في إعادة التعرف من معلومات حالة القناة (CSI) <a href="#ref-23">[23]</a>. لا حاجة إلى وجه إذا كانت طريقة إخلال الجسم بموجات الراديو بصمة بحد ذاتها. طلب الباحثون ضمانات خصوصية في معيار استشعار WiFi <a href="#ref-22">[22]</a>؛ وصدر المعيار عام 2025 دون أن يجعل سرية إشارات الاستشعار إلزامية <a href="#ref-29">[29]</a>.</p>
+
+  <p>سجل الجهات التنظيمية، حتى أغسطس 2026، قصير. متطلبات 3GPP تجعل الاستشعار مشروطا بموافقة المستخدم وبالمتطلبات التنظيمية - ولم تكتب أي جهة تنظيمية تلك المتطلبات <a href="#ref-4">[4]</a>. ونشرت ETSI الدراسة الوحيدة المخصصة لخصوصية ISAC، شاملة أصعب الحالات: أشخاص يجري استشعارهم دون أن يكونوا مشتركين في أي خدمة - وهي دراسة استرشادية غير ملزمة <a href="#ref-24">[24]</a>. وأشارت FCC إلى أن الاستشعار يطرح أسئلة تنظيمية جديدة ولم تصدر أي قاعدة. ولم أجد أي إرشاد ملزم من هيئات حماية البيانات الأوروبية أو من ICO البريطانية، وأكثر منظمات الحقوق الرقمية حضورا لم تتناول الموضوع بعد. وفي هذه الأثناء، البنود الدقيقة سارية بالفعل: كما نقلت عدة وسائل إعلامية، تنص سياسة WiFi Motion لدى Comcast على جواز الإفصاح عن بيانات الحركة لجهات إنفاذ القانون دون إشعار إضافي للعميل <a href="#ref-30">[30]</a>.</p>
+
+  <p>أنا أعمل في تشغيل الشبكات، وأريد لهذه التقنية أن توجد - فهي أكثر ما حدث إثارة للاهتمام في بنية الاتصالات منذ عقد. ولهذا السبب بالذات لا أقبل أن تعلن الصناعة أن الخصوصية مسألة محسومة. سؤال بهذا الحجم يستحق إجابة يكتبها طرف غير الأطراف التي تربح إذا كانت الإجابة نعم.</p>
+
+  <h2 id="ops">ماذا يعني هذا إن كنت تدير الشبكات</h2>
+
+  <p>هذا القسم الأخير رأي شخصي، من جهة العمليات.</p>
+
+  <p>كل ما سبق يصف فئة جديدة من القياس عن بعد تصل إلى الأبراج. إذا صار الاستشعار خدمة فعلى جهة ما أن تشغله - والتجارب تظهر بالفعل شكل هذه الوظيفة. مئة مرشح كاذب لكل هدف حقيقي تعني خط ترشيح يجب أن تملكه جهة ما. خرائط الفوضى الراديوية التي تتقادم خلال دقائق تعني جدول معايرة يجب أن تديره جهة ما. الاكتشاف الذي يسقط حين تعبر المسيرة فوق مبنى يعني مشكلة تخطيط تغطية يجب أن تحسبها جهة ما. واتفاقية مستوى خدمة للاستشعار - سنكتشف مسيرة متطفلة خلال عدد محدد من الثواني وبعدد محدد من الإنذارات الكاذبة في الأسبوع - التزام إتاحة يجب أن يتحمل أحدهم مناوبته.</p>
+
+  <p>تلك الجهة هي مركز عمليات الشبكة (NOC). والمهارات هي نفسها التي تمتلكها عمليات الشبكات اليوم - تحديد خطوط الأساس، وضبط العتبات، وربط الإنذارات بين المواقع، وتعقب الأعطال المتقطعة - موجهة إلى شاشة رادار بدلا من لوحة مؤشرات الأداء. إن كنت تعمل في تشغيل الشبكات اليوم، فالاستشعار ليس تهديدا لوظيفتك، بل أول قدرة جديدة فعلا تتعلمها أبراجك منذ زمن طويل، والانضباط التشغيلي الذي تحتاجه هو الانضباط الذي تمارسه أصلا. كتبت عن تشغيل أساطيل الوكلاء بانضباط مركز عمليات الشبكة <a href="/blog/agent-noc/ar/">هنا</a>؛ والاستشعار سيحتاج المعاملة نفسها، وفي وقت أبكر مما يوحي به تاريخ الجيل السادس.</p>
+
+  <p>المختبر لديه النماذج دون البيانات. والمشغلون لديهم البيانات دون منتج مبني عليها بعد، والجهات التنظيمية لم تجب عن السؤال الذي سيطرحه ذلك المنتج. فجوات كهذه لا تبقى مفتوحة عقدا كاملا.</p>
+
+  <p class="closing">الأبراج كانت ترسل منذ البداية. <span class="grad">وأخيرا بدأ من يستمع إلى الصدى.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="محمد قدري" width="64" height="64">
+    <div class="who"><b>محمد قدري</b> يعمل في تشغيل وتحويل شبكات اتصالات من الفئة الأولى، وقاد
+      انتقال مركز عمليات الشبكة من المستوى L2 إلى L3 بأتمتة 75% من حوادث المستوى الأول.
+      يبني اليوم منتجات ذكاء اصطناعي وسحابة، ويشرف على مشروع
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a> مفتوح المصدر.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">أسئلة وأجوبة سريعة</h2>
+
+  <h3>ما هو الاستشعار والاتصال المتكامل (ISAC) بكلمات بسيطة؟</h3>
+  <p>ISAC يعني أن إشارات الراديو نفسها التي تحمل مكالماتك وبياناتك تحلل أيضا بحثا عن الانعكاسات. عندما ترتد موجة راديو عن طائرة مسيرة أو سيارة أو إنسان، تعود متغيرة. عالج هذه التغيرات عبر بضعة مواقع أبراج فتستطيع الشبكة تقدير مكان الجسم وسرعته، مثل الرادار، بمعدات منصوبة أصلا. الجسم لا يحتاج شريحة SIM ولا جهازا ولا أي شيء.</p>
+
+  <h3>هل تستطيع أبراج 5G فعلا اكتشاف الطائرات المسيرة اليوم؟</h3>
+  <p>نعم، في التجارب. في يوليو 2026 تتبعت AT&amp;T و Ericsson طائرات مسيرة تحلق بين 300 و400 قدم باستخدام ثلاثة مواقع 5G تجارية عادية قرب ملعب في تكساس، دون إضافة أي عتاد رادار. ونشر مشغلون صينيون أرقاما ميدانية في مجلات محكمة: مدى استشعار يقارب 700 إلى 1,000 متر في تجارب ميدانية، وأخطاء تموضع من 6 إلى 20 مترا، ومعدلات إنذار كاذب حول 3%. الاكتشاف يعمل؛ والدقة المنشورة عند التشغيل على نطاق واسع ما زالت بعيدة عن الرادار المخصص.</p>
+
+  <h3>ما هو النموذج التأسيسي اللاسلكي؟</h3>
+  <p>نموذج يدرب مسبقا على كميات كبيرة من بيانات القنوات الراديوية بحيث يمكن تكييفه لمهام لاسلكية عديدة، كما تدرب نماذج اللغة مسبقا على النصوص. حتى منتصف 2026 النماذج المنشورة المدربة من الصفر صغيرة - كلها أصغر حتى من أصغر نسخة من GPT-2 الصادر عام 2019 - ومعظم النماذج المذكورة في هذا المقال مدرب مسبقا على قنوات محاكاة لا على بيانات لاسلكية حقيقية. الاتجاه حقيقي؛ الحجم لم يصل بعد.</p>
+
+  <h3>هل استشعار الشبكات خطر على الخصوصية؟</h3>
+  <p>سؤال مفتوح لم تجب عنه أي جهة تنظيمية. أظهر بحث محكم إعادة تعرف على الأفراد بدقة 99.5% من إشارات تشكيل الحزمة في WiFi، دون أن يحمل الشخص أي جهاز. وتحاجج الصناعة بأن الاستشعار الخلوي يفتقر إلى الدقة اللازمة لتحديد هوية شخص بعينه. حتى أغسطس 2026، لا توجد قاعدة ملزمة بشأن خصوصية الاستشعار الراديوي من FCC أو هيئات حماية البيانات الأوروبية أو ICO البريطانية.</p>
+
+  <h3>متى ستبيع الشبكات الخلوية الاستشعار كخدمة؟</h3>
+  <p>المعايير تصل أولا: وضعت 3GPP نموذج قناة ISAC في الإصدار Release 19، وتدرس استشعار المحطات القاعدية في Release 20، وتخطط لأول مواصفات ملزمة للجيل السادس شاملة ISAC في Release 21، على جدول ITU الزمني IMT-2030 نحو عام 2030. وتصف AT&amp;T مسار التسويق التجاري بأنه تدريجي، بعملاء أوائل في السلامة العامة والبنية التحتية الحرجة. واليوم، لا توجد شركة مستقلة عن المشغلين تبيع بيانات الاستشعار الخلوي بالترددات الراديوية كمنتج.</p>
+
+  <hr>
+
+  <h2 id="refs">المصادر والمراجع</h2>
+  <p>مرقمة حسب موضع دعمها لهذا المقال. المصادر بالإنجليزية، ومصادر الموردين معلمة في النص.</p>
+  <ol class="refs">
+    <li id="ref-1"><a href="https://www.ericsson.com/en/press-releases/6/2026/ericsson-att-drone-detection">Ericsson press release: AT&amp;T and Ericsson demonstrate drone detection</a>, July 10, 2026 (vendor).</li>
+    <li id="ref-2">Christian de Looper: <a href="https://www.rcrwireless.com/20260724/ai/att-ericsson-network-sensing">Inside AT&amp;T and Ericsson's network sensing demo</a>, RCR Wireless, July 24, 2026.</li>
+    <li id="ref-3"><a href="https://wirelessestimator.com/articles/2026/att-ericsson-show-cell-towers-can-spot-drones-interception-is-still-somebody-elses-job/">AT&amp;T, Ericsson show cell towers can spot drones; interception is still somebody else's job</a>, Wireless Estimator, July 14, 2026.</li>
+    <li id="ref-4"><a href="https://www.etsi.org/deliver/etsi_ts/122100_122199/122137/19.01.00_60/ts_122137v190100p.pdf">3GPP TS 22.137: Service requirements for Integrated Sensing and Communication</a> (Release 19).</li>
+    <li id="ref-5"><a href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/19.04.00_60/tr_138901v190400p.pdf">3GPP TR 38.901 V19.4.0</a>, clause 7.9: ISAC channel model.</li>
+    <li id="ref-6"><a href="https://www.3gpp.org/specifications-technologies/releases/release-20">3GPP: Release 20</a>.</li>
+    <li id="ref-7"><a href="https://www.etsi.org/technical-groups/isac">ETSI ISG ISAC</a>.</li>
+    <li id="ref-8"><a href="https://www.engineering.org.cn/engi/EN/10.1016/j.eng.2025.08.033">Cooperative ISAC field trials at 4.9 GHz</a>, China Mobile Research Institute, Engineering, 2025.</li>
+    <li id="ref-9"><a href="https://arxiv.org/abs/2603.29187">Needle in a Haystack: Tracking UAVs from Massive Noise in Real-World 5G-A Base Station Data</a>, 2026.</li>
+    <li id="ref-10"><a href="https://arxiv.org/abs/2605.23561">Reliable UAV Detection with ISAC</a>, Nokia Bell Labs, 2026, and <a href="https://arxiv.org/pdf/2604.02680">the 2026 ISAC field-trial survey</a>.</li>
+    <li id="ref-11"><a href="https://arxiv.org/pdf/2505.10933">Cross-layer ISAC: A Joint Industrial and Academic Perspective</a>, 2025.</li>
+    <li id="ref-12"><a href="https://www.ti.com/lit/wp/spry312/spry312.pdf">Texas Instruments: mmWave automotive radar white paper</a> (vendor).</li>
+    <li id="ref-13"><a href="https://arxiv.org/abs/2411.08872">LWM: Large Wireless Model</a>, 2024, and the <a href="https://huggingface.co/wi-lab/lwm">released model files</a>.</li>
+    <li id="ref-14"><a href="https://arxiv.org/abs/2412.08908">WiFo: Wireless Foundation Model for Channel Prediction</a>, 2024.</li>
+    <li id="ref-15"><a href="https://arxiv.org/abs/2502.06877">WirelessGPT</a>, 2025.</li>
+    <li id="ref-16"><a href="https://arxiv.org/abs/2504.14100">6G WavesFM: A Foundation Model for Sensing, Communication, and Localization</a>, 2025.</li>
+    <li id="ref-17"><a href="https://arxiv.org/abs/2602.14833">RF-GPT</a>, Khalifa University, 2026.</li>
+    <li id="ref-18"><a href="https://newsroom.adt.com/corporate-news/adt-acquires-origin-ai-to-power-ai-sensing-and-ambient-intelligence-for-the-home">ADT acquires Origin AI</a>, February 24, 2026, and ADT's Q1 2026 10-Q filing (SEC).</li>
+    <li id="ref-19"><a href="https://wifinowglobal.com/news-and-blog/breakthrough-in-wi-fi-sensing-37-service-providers-deploy-cognitives-wi-fi-motion/">Wi-Fi NOW: 37 service providers deploy Cognitive's WiFi Motion</a>, February 2021 (vendor counts).</li>
+    <li id="ref-20"><a href="https://www.5gamericas.org/5g-americas-highlights-the-strategic-role-of-integrated-sensing-and-communication-for-6g/">5G Americas: Transforming Industries with Integrated Sensing and Communication</a>, 2025.</li>
+    <li id="ref-21"><a href="https://www.abiresearch.com/press/6g-integrated-sensing-and-communications-offers-mobile-operators-a-unique-chance-to-redefine-networks">ABI Research on 6G ISAC</a>, September 2025.</li>
+    <li id="ref-22"><a href="https://dl.acm.org/doi/10.1145/3719027.3765062">BFId: Identity Inference Attacks Utilizing Beamforming Feedback Information</a>, ACM CCS 2025 (KIT), and the <a href="https://www.eurekalert.org/news-releases/1101595">KIT announcement</a>.</li>
+    <li id="ref-23"><a href="https://arxiv.org/abs/2507.12869">WhoFi: Deep Person Re-Identification via Wi-Fi Channel Signal Encoding</a>, 2025.</li>
+    <li id="ref-24"><a href="https://www.etsi.org/deliver/etsi_gr/ISC/001_099/004/01.01.01_60/gr_ISC004v010101p.pdf">ETSI GR ISC 004: ISAC Security, Privacy, Trustworthiness and Sustainability</a>, 2026.</li>
+    <li id="ref-25"><a href="https://bebeez.eu/2026/06/09/finlands-skyfora-turns-cell-towers-into-weather-sensors-with-e6-5m-funding-round/">Skyfora raises 6.5 million euros to turn cell towers into weather sensors</a>, June 2026.</li>
+    <li id="ref-26"><a href="https://www.ericsson.com/en/6g/isac">Ericsson: Integrated Sensing and Communication explained</a> (vendor).</li>
+    <li id="ref-27"><a href="https://arxiv.org/abs/2403.02028">Target Localization in Cooperative ISAC Systems: A Scheme Based on 5G NR OFDM Signals</a>, 2024.</li>
+    <li id="ref-28"><a href="https://www.echodyne.com/radar-systems/echoguard">Echodyne EchoGuard and EchoShield radar specifications</a> (vendor).</li>
+    <li id="ref-29"><a href="https://secnora.com/blog/wi-fi-sensing-and-the-ieee-802-11bf-privacy-gap/">Wi-Fi sensing and the IEEE 802.11bf privacy gap</a>, SecNora, July 2026.</li>
+    <li id="ref-30"><a href="https://www.theweek.com/tech/wifi-signals-now-tracking-users-at-home">The Week: WiFi signals now tracking users at home</a>, August 2025.</li>
+    <li id="ref-31">Wild et al. (Nokia Bell Labs): <a href="https://arxiv.org/abs/2305.01978">6G Integrated Sensing and Communication: From Vision to Realization</a>, 2023.</li>
+    <li id="ref-32"><a href="https://arxiv.org/abs/2508.18785">EMind: A Foundation Model for Multi-task Electromagnetic Signals Understanding</a>, 2025.</li>
+  </ol>
+
+  <p style="font-size:13.5px;color:var(--dim)">عن هذا المقال: كتبه محمد قدري. روجع كل رقم مقابل المصدر الأولي المذكور - الورقة التي أجرت القياس، أو ملفات النموذج المنشورة، أو وثيقة المعايير، أو الملف المقدم إلى هيئة SEC - بتاريخ 3 أغسطس 2026. ادعاءات الموردين التي تعذر تأكيدها باستقلالية معلمة في النص بوصفها كذلك. وحيث تعارضت الروايات (اختلف مصدران صحفيان في مسافات المواقع عن الهدف في عرض أرلينغتون)، حذف التفصيل المتعارض. ورقم التتبع البالغ 6 كيلومترات ورد في تقرير مستقل واحد ونسب في النص إلى ناقله. آخر تحديث: 3 أغسطس 2026. النسخة الإنجليزية هي المرجع عند أي اختلاف.</p>
+
+  <hr>
+
+  <p>مقالات ذات صلة: <a href="/blog/agent-noc/ar/">وكلاء الذكاء الاصطناعي يحتاجون إلى مركز عمليات</a> عن تشغيل الأنظمة المستقلة بانضباط الشبكات، و<a href="/blog/agentic-ai-microwave-backhaul/ar/">الذكاء الاصطناعي الوكيلي وشبكة الميكروويف الناقلة</a> عن الذكاء الاصطناعي في طبقة النقل.</p>
+
+</article>
+
+
+<style>
+
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:760px;margin:38px auto 8px;box-sizing:border-box;
+  padding:16px 18px;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);border-radius:12px}
+.share b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent,#4f8fc9);font-weight:600;margin-inline-end:4px}
+.share a{display:inline-block;padding:7px 13px;border:1px solid var(--line,#243044);
+  border-radius:999px;font-size:14px;color:var(--ink,#e6edf6);
+  background:rgba(255,255,255,.02);transition:border-color .15s,color .15s}
+.share a:hover{border-color:var(--accent,#4f8fc9);color:var(--accent,#4f8fc9)}
+@media(max-width:520px){.share{gap:8px;padding:14px}
+  .share a{font-size:13px;padding:6px 11px}}
+</style>
+
+<style>
+.share-rail{position:fixed;top:50%;transform:translateY(-50%);
+  inset-inline-start:calc((100vw - 760px)/2 - 76px);
+  display:none;flex-direction:column;gap:10px;z-index:30}
+@media(min-width:1080px){.share-rail{display:flex}}
+.share-rail a{display:grid;place-items:center;width:42px;height:42px;
+  border-radius:50%;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);color:var(--dim,#8b9bb4);
+  transition:color .15s,border-color .15s,transform .15s}
+.share-rail a:hover{color:var(--accent,#4f8fc9);
+  border-color:var(--accent,#4f8fc9);transform:translateY(-1px)}
+.share-rail svg{width:17px;height:17px;fill:currentColor;display:block}
+</style>
+<nav class="share-rail" aria-label="شارك هذا المقال">
+  <a data-n="li" target="_blank" rel="noopener" title="شارك على LinkedIn" aria-label="شارك على LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+  <a data-n="x" target="_blank" rel="noopener" title="شارك على X" aria-label="شارك على X"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+  <a data-n="rd" target="_blank" rel="noopener" title="شارك على Reddit" aria-label="شارك على Reddit"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.738 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0Zm4.388 3.199c1.104 0 1.999.895 1.999 1.999 0 1.105-.895 2-1.999 2-.946 0-1.739-.657-1.947-1.539v.002c-1.147.162-2.032 1.15-2.032 2.341v.007c1.776.067 3.4.567 4.686 1.363.473-.363 1.064-.58 1.707-.58 1.547 0 2.802 1.254 2.802 2.802 0 1.117-.655 2.081-1.601 2.531-.088 3.256-3.637 5.876-7.997 5.876-4.361 0-7.905-2.617-7.998-5.87-.954-.447-1.614-1.415-1.614-2.538 0-1.548 1.255-2.802 2.803-2.802.645 0 1.239.218 1.712.585 1.275-.79 2.881-1.291 4.64-1.365v-.01c0-1.663 1.263-3.034 2.88-3.207.188-.911.993-1.595 1.959-1.595Zm-8.085 8.376c-.784 0-1.459.78-1.506 1.797-.047 1.016.64 1.429 1.426 1.429.786 0 1.371-.369 1.418-1.385.047-1.017-.553-1.841-1.338-1.841Zm7.406 0c-.786 0-1.385.824-1.338 1.841.047 1.017.634 1.385 1.418 1.385.785 0 1.473-.413 1.426-1.429-.046-1.017-.721-1.797-1.506-1.797Zm-3.703 4.013c-.974 0-1.907.048-2.77.135-.147.015-.241.168-.183.305.483 1.154 1.622 1.964 2.953 1.964 1.33 0 2.47-.81 2.953-1.964.057-.137-.037-.29-.184-.305-.863-.087-1.795-.135-2.769-.135Z"/></svg></a>
+  <a data-n="fb" target="_blank" rel="noopener" title="شارك على Facebook" aria-label="شارك على Facebook"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
+  <a data-n="th" target="_blank" rel="noopener" title="شارك على Threads" aria-label="شارك على Threads"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z"/></svg></a>
+</nav>
+
+<nav class="share" aria-label="شارك هذا المقال">
+  <b>شارك</b>
+  <a data-n="li" target="_blank" rel="noopener">LinkedIn</a>
+  <a data-n="x" target="_blank" rel="noopener">X</a>
+  <a data-n="rd" target="_blank" rel="noopener">Reddit</a>
+  <a data-n="fb" target="_blank" rel="noopener">Facebook</a>
+  <a data-n="th" target="_blank" rel="noopener">Threads</a>
+</nav>
+<script>
+(function(){
+  var c=document.querySelector('link[rel="canonical"]');
+  var u=(c&&c.href)?c.href:location.href.split('#')[0];
+  var m=document.querySelector('meta[property="og:title"]');
+  var t=(m&&m.content)?m.content:document.title;
+  var U=encodeURIComponent(u),T=encodeURIComponent(t);
+  var map={
+    li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,
+    x:'https://x.com/intent/post?url='+U+'&text='+T,
+    rd:'https://www.reddit.com/submit?url='+U+'&title='+T,
+    fb:'https://www.facebook.com/sharer/sharer.php?u='+U,
+    th:'https://www.threads.com/intent/post?text='+T+'%20'+U
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-n]'),
+    function(a){a.href=map[a.getAttribute('data-n')];});
+})();
+</script>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>
