@@ -327,27 +327,56 @@ for (let i=0;i<26;i++){
   scene.add(m);
 }
 
-/* ---------- towers ---------- */
+/* ---------- towers: red-white banded masts, white sector panels ---------- */
+const stripeTex = (() => {
+  const c = document.createElement('canvas'); c.width = 8; c.height = 160;
+  const x = c.getContext('2d');
+  for (let i=0; i<8; i++){
+    x.fillStyle = i%2 ? '#e9eaee' : '#d8493c';
+    x.fillRect(0, i*20, 8, 20);
+  }
+  return new THREE.CanvasTexture(c);
+})();
+const avLights = [];
 function tower(x, z, isTX){
   const grp = new THREE.Group();
-  const pole = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.9, 1.4, 46, 8),
-    new THREE.MeshStandardMaterial({color:0x1a2333, roughness:0.7})
+  const mast = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.15, 1.7, 46, 12),
+    new THREE.MeshStandardMaterial({map:stripeTex, roughness:0.65})
   );
-  pole.position.y = 23; grp.add(pole);
-  const headMat = new THREE.MeshStandardMaterial({
-    color: isTX ? C.amber : C.accent, emissive: isTX ? C.amber : C.accent,
-    emissiveIntensity: 0.55, roughness:0.5
-  });
+  mast.position.y = 23; grp.add(mast);
+  /* platform ring */
+  const ring = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 3.4, 0.7, 12),
+    new THREE.MeshStandardMaterial({color:0x3a4356, roughness:0.7}));
+  ring.position.y = 41.5; grp.add(ring);
+  /* three white sector panels, color-coded rim glow */
+  const glowCol = isTX ? C.amber : C.accent;
   for (let k=0;k<3;k++){
-    const p = new THREE.Mesh(new THREE.BoxGeometry(1.6, 7, 4), headMat);
+    const p = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 1.0),
+      new THREE.MeshStandardMaterial({color:0xdfe5ee, roughness:0.5,
+        emissive:glowCol, emissiveIntensity:0.28}));
     const a = k * Math.PI*2/3;
-    p.position.set(Math.cos(a)*2.6, 44, Math.sin(a)*2.6);
+    p.position.set(Math.cos(a)*3.4, 44.5, Math.sin(a)*3.4);
     p.rotation.y = -a + Math.PI/2;
     grp.add(p);
   }
-  const beacon = new THREE.PointLight(isTX ? C.amber : C.accent, 12, 90);
-  beacon.position.y = 47; grp.add(beacon);
+  /* spike + blinking aviation light */
+  const spike = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.3, 6, 6),
+    new THREE.MeshStandardMaterial({color:0x9aa2b4, roughness:0.6}));
+  spike.position.y = 52; grp.add(spike);
+  const av = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 8),
+    new THREE.MeshBasicMaterial({color:0xff3b30}));
+  av.position.y = 55.4; grp.add(av);
+  const avGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true,
+    opacity:0.9, color:0xff5044, depthWrite:false, blending:THREE.AdditiveBlending}));
+  avGlow.scale.set(8,8,1); avGlow.position.y = 55.4; grp.add(avGlow);
+  avLights.push({av, avGlow});
+  /* role beacon glow at the panels */
+  const beacon = new THREE.PointLight(glowCol, 10, 80);
+  beacon.position.y = 46; grp.add(beacon);
+  const roleGlow = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, transparent:true,
+    opacity:0.5, color:glowCol, depthWrite:false, blending:THREE.AdditiveBlending}));
+  roleGlow.scale.set(16,16,1); roleGlow.position.y = 44.5; grp.add(roleGlow);
   grp.position.set(x, 0, z);
   scene.add(grp);
   return grp;
@@ -746,6 +775,8 @@ function animate(){
   for (const r of rotors) r.rotation.y += dt*45;
   const blink = (t % 1) < 0.5;
   ledL.visible = blink; ledR.visible = !blink;
+  const avOn = (t % 1.4) < 0.8;
+  for (const l of avLights){ l.av.visible = avOn; l.avGlow.visible = avOn; }
   const cx = ((t*14) % 480) - 240;
   car.position.set(cx, 0, -8);
   ped.position.set(30 + Math.sin(t*0.12)*40, 2.1, 20);
