@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Cell Network Is Learning to See: ISAC Explained | Mohamed Kadri</title>
+<meta name="description" content="Cell towers as sensors: what 5G ISAC really does today, how big the wireless foundation models actually are, and the sensing business nobody has built. With verified field numbers.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/">
+<meta property="og:title" content="Your Cell Network Is Learning to See: ISAC Explained">
+<meta property="og:description" content="The same towers that carry your calls can track a drone. What is real, what is lab, and the business nobody has built.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/isac-og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A city at dusk where radio waves ripple out from cell towers and outline a drone, a car and a pedestrian in light: the network sensing the physical world">
+<meta property="article:published_time" content="2026-08-03">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="Telecom">
+<meta property="article:tag" content="ISAC">
+<meta property="article:tag" content="integrated sensing and communication">
+<meta property="article:tag" content="6G">
+<meta property="article:tag" content="wireless foundation models">
+<meta property="article:tag" content="network sensing">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Your Cell Network Is Learning to See: ISAC Explained">
+<meta name="twitter:description" content="The same towers that carry your calls can track a drone. What is real, what is lab, and the business nobody has built.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
+<meta name="twitter:image:alt" content="Radio waves from cell towers outlining a drone over a city at dusk">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Your Cell Network Is Learning to See: ISAC, Explained by a Telecom Engineer",
+  "description": "Cell towers as sensors: what 5G ISAC really does today, how big the wireless foundation models actually are, and the sensing business nobody has built.",
+  "image": "https://mkadri85.github.io/assets/isac-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-08-03",
+  "dateModified": "2026-08-03",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/isac-cell-towers-as-sensors/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is ISAC (Integrated Sensing and Communication) in simple words?","acceptedAnswer":{"@type":"Answer","text":"ISAC means the same radio signals that carry your calls and data are also analyzed for reflections. When a radio wave bounces off a drone, a car or a person, the reflection comes back changed. Process those changes across a few tower sites and the network can estimate where the object is and how fast it moves, like a radar, using equipment that is already deployed. The object needs no SIM, no device, nothing."}},
+{"@type":"Question","name":"Can 5G towers really detect drones today?","acceptedAnswer":{"@type":"Answer","text":"Yes, in trials. In July 2026 AT&T and Ericsson tracked drones flying at 300 to 400 feet using three ordinary commercial 5G sites near a stadium in Texas, with no radar hardware added. Chinese operators have published peer-reviewed field numbers: roughly 700 to 1,000 meters of sensing range in field trials, localization errors of 6 to 20 meters, and false-alarm rates around 3 percent. Detection works; published accuracy at scale is still far from dedicated radar."}},
+{"@type":"Question","name":"What is a wireless foundation model?","acceptedAnswer":{"@type":"Answer","text":"A model pretrained on large amounts of radio channel data so it can be adapted to many wireless tasks, the way language models are pretrained on text. As of mid-2026 the published from-scratch models are small - all smaller than even the smallest 2019 version of GPT-2 - and most of the models discussed in this article are pretrained on simulated channels rather than real over-the-air data. The direction is real; the scale is not there yet."}},
+{"@type":"Question","name":"Is network sensing a privacy risk?","acceptedAnswer":{"@type":"Answer","text":"It is an open question that no regulator has answered. Peer-reviewed research showed 99.5 percent accurate re-identification of individuals from WiFi beamforming signals, with no device carried. Industry argues cellular sensing lacks the resolution to identify who a person is. As of August 2026, no binding rule on RF sensing privacy exists from the FCC, the EU data protection bodies, or the UK ICO."}},
+{"@type":"Question","name":"When will mobile networks sell sensing as a service?","acceptedAnswer":{"@type":"Answer","text":"Standards land first: 3GPP put the ISAC channel model into Release 19, studies base-station sensing in Release 20, and plans the first normative 6G specifications including ISAC in Release 21, targeting the ITU IMT-2030 timeline around 2030. AT&T frames commercialization as phased, with early customers in public safety and critical infrastructure. Today, no carrier-neutral company sells cellular RF sensing data as a product."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  .callout ul{margin:8px 0 0}
+  .demo-card{display:block;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(79,143,201,.12),rgba(18,26,41,.9));
+    border-radius:14px;padding:20px 24px;margin:26px 0;transition:transform .15s,box-shadow .15s}
+  .demo-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 8px 30px rgba(79,143,201,.15)}
+  .demo-card b{display:block;font-family:'Space Grotesk',Inter,sans-serif;font-size:18px;color:var(--ink);margin-bottom:6px}
+  .demo-card span{color:var(--mut);font-size:14.5px;line-height:1.5;display:block}
+  .demo-card .go{color:var(--accent);font-size:14px;font-weight:600;margin-top:10px;display:inline-block}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/blog/isac-cell-towers-as-sensors/ar/">العربية</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">Telecom / Network sensing</div>
+  <h1>Your Cell Network Is Learning to See</h1>
+  <p class="subtitle">Cell towers as sensors: what is real, what is still in the lab, and the business nobody has built. Explained by someone who runs networks for a living.</p>
+  <div class="meta">Mohamed Kadri &middot; August 3, 2026 &middot; 13 min read &middot; <a href="/blog/isac-cell-towers-as-sensors/ar/">اقرأ بالعربية</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">Interactive 3D demo</a></div>
+
+  <figure class="hero">
+    <img src="/assets/isac-hero.jpg" alt="A city at dusk where soft radio wavefronts ripple out from three cell towers and faintly outline a drone, a car and a pedestrian in light, while everything else stays dark" width="1376" height="768">
+    <figcaption>The same waves that carry your calls come back carrying the shape of the street.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#demo">The stadium demo</a></li>
+      <li><a href="#how">How a tower becomes a radar</a></li>
+      <li><a href="#see-it">See it in 3D</a></li>
+      <li><a href="#boundary">What a tower can and cannot see</a></li>
+      <li><a href="#models">The "foundation models" are smaller than you think</a></li>
+      <li><a href="#business">The business that exists, and the one that does not</a></li>
+      <li><a href="#privacy">The privacy question nobody has answered</a></li>
+      <li><a href="#ops">What this means if you run networks</a></li>
+      <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">On July 10, 2026, a drone flew toward a stadium in Arlington, Texas. No radar was watching it. No camera picked it up.</p>
+
+  <p class="lead">Three ordinary 5G towers saw it anyway.</p>
+
+  <h2 id="demo">The stadium demo</h2>
+
+  <p>The demonstration came from AT&amp;T and Ericsson, timed around the World Cup matches at AT&amp;T Stadium <a href="#ref-1">[1]</a>. Three commercial 5G sites near the stadium were synchronized into a sensing grid. Drones flying at 300 to 400 feet were detected, localized and continuously tracked - including a drone that was never connected to the network <a href="#ref-2">[2]</a>. Ericsson says the demo needed no standalone sensing technology <a href="#ref-1">[1]</a>; the independent report describes existing Massive MIMO radios - the multi-antenna panels on modern towers - repurposed to run sensing as software <a href="#ref-2">[2]</a>.</p>
+
+  <p>One independent report is worth pausing on. RCR Wireless, present at the demo, wrote that drones were tracked at ranges reported up to 6 kilometers, and that the network-derived track was overlaid on the drone's own telemetry and nearly matched <a href="#ref-2">[2]</a>. The same report noted what was missing: no false-alarm rates, no detection probabilities, no bad-weather numbers - and when asked how the AI decided the object was a drone and not something else, neither company had a convincing answer <a href="#ref-2">[2]</a>.</p>
+
+  <p>Also worth knowing: the demo detects. It does not intercept. Turning a detected drone into a grounded one is legally somebody else's job <a href="#ref-3">[3]</a>.</p>
+
+  <p>That is the state of the art in one paragraph: the physics works, on hardware that is already deployed, and the operational numbers that would make it a product are not public yet. The rest of this article unpacks how it works, what the measured limits are, and why the most interesting layer of this story - who sells the data - is still empty.</p>
+
+  <h2 id="how">How a tower becomes a radar</h2>
+
+  <p>Every radio transmission reflects off the physical world. Walls, cars, rain, drones, people - each reflection comes back changed: delayed by distance, shifted in frequency by motion, bent by shape. Your network has always produced these reflections. It simply threw them away.</p>
+
+  <p><strong>ISAC</strong> - Integrated Sensing and Communication - is the decision to stop throwing them away. The same signal that carries data doubles as a probe. The standards define it plainly: the network estimates delay, Doppler and angle from its own reflected signals, and from those extracts the location, velocity and shape of objects - with no requirement that the object carries a device <a href="#ref-4">[4]</a>.</p>
+
+  <p>The mechanics are close to classic pulse-Doppler radar, run on the 5G signal grid. A tower transmits its normal data-carrying signal. A second tower (or the same one) receives the reflections. A two-dimensional transform across the signal's frequency and time axes produces a delay-Doppler map: distance on one axis, speed on the other, and objects appear as peaks <a href="#ref-27">[27]</a>. Use one site as transmitter and others as receivers and you get multistatic sensing - several perspectives on the same object, which is exactly what the Arlington demo did with three sites <a href="#ref-2">[2]</a>.</p>
+
+  <p>This is not a fringe idea. 3GPP finished the ISAC channel model in Release 19 and published normative service requirements for 5G wireless sensing <a href="#ref-4">[4]</a><a href="#ref-5">[5]</a>. Release 20 is studying base-station sensing of drones, and Release 21 is planned to carry the first normative 6G specifications, including ISAC, on the ITU's IMT-2030 timeline toward 2030 <a href="#ref-6">[6]</a>. ETSI runs a dedicated industry group that has published four reports on it, from use cases to privacy <a href="#ref-7">[7]</a>. The people who write mobile standards have already decided the network will sense. What remains open is how well, and for whom.</p>
+
+  <h2 id="see-it">See it in 3D</h2>
+
+  <p>Reading about multistatic sensing is one thing. Watching it is another. I built an interactive 3D scene of a small city block: three towers, a drone, moving cars, a pedestrian. Waves ripple out, reflections light up, and a live delay-Doppler panel shows what the network sees. Drag the bandwidth slider and watch how much finer the network can separate objects; switch on clutter and watch false detections flood the panel.</p>
+
+  <a class="demo-card" href="/blog/isac-cell-towers-as-sensors/demo/">
+    <b>ISAC City: interactive 3D demo</b>
+    <span>Three towers, one drone, live delay-Doppler view. Play with bandwidth and clutter and see why the field numbers below look the way they do. Runs in your browser, no install.</span>
+    <span class="go">Open the demo &rarr;</span>
+  </a>
+
+  <h2 id="boundary">What a tower can and cannot see</h2>
+
+  <p>Vendor pages will tell you what ISAC will do someday. Field trials tell you what it does now. The most honest numbers come from peer-reviewed operator trials, mostly in China, because they publish the metrics Western demos so far have not.</p>
+
+  <p>What the measured record says:</p>
+
+  <ul>
+    <li><strong>Range:</strong> China Mobile's cooperative trials at 4.9 GHz detected drones at 700 to 900 meters in two- and three-site setups, with positioning errors of 6 to 20 meters <a href="#ref-8">[8]</a>. A live commercial 5G-Advanced base station in Shanghai held a sensing envelope of about 1,000 meters <a href="#ref-9">[9]</a>. ZTE has reported tracking a drone out to 1.43 kilometers <a href="#ref-10">[10]</a>. Nokia Bell Labs, on unmodified commercial millimeter-wave hardware, kept sub-meter ranging accuracy beyond 500 meters <a href="#ref-10">[10]</a>.</li>
+    <li><strong>False alarms:</strong> the same China Mobile trials measured false-alarm and missed-detection rates of roughly 3 to 3.6 percent <a href="#ref-8">[8]</a>. The simulation-era target was a false-alarm probability of one in a million <a href="#ref-8">[8]</a>. Measured reality is about four and a half orders of magnitude away from the target.</li>
+    <li><strong>Noise:</strong> on the live Shanghai base station, raw processing produced over 100 candidate detections for every real drone - an average of 168 detections per frame for a single aircraft - before filtering brought it down <a href="#ref-9">[9]</a>. The Nokia trial had to relax its false-alarm threshold by two orders of magnitude to keep range, and lost detections whenever the drone flew over buildings <a href="#ref-10">[10]</a>.</li>
+  </ul>
+
+  <p>Now the physics that explains those numbers. Range resolution - how far apart two objects must be before radar can tell them apart - is inversely proportional to bandwidth <a href="#ref-12">[12]</a>; the classic radar rule is the speed of light divided by twice the swept bandwidth, the same relation behind the 4-centimeter automotive figure below. A typical 100 MHz mid-band 5G carrier works out to about 1.5 meters. Sideways is worse: how finely a panel can separate directions is set by its antenna size <a href="#ref-11">[11]</a>, and at a kilometer the sideways uncertainty smears across tens to hundreds of meters. That is why trials report sub-meter range accuracy but positioning errors of 6 to 20 meters: the tower knows how far the drone is much better than it knows where.</p>
+
+  <p>For calibration: a dedicated automotive radar chip, the kind that costs tens of dollars, sweeps 4 GHz of bandwidth and resolves 4 centimeters <a href="#ref-12">[12]</a> - roughly forty times finer than a 5G macro site. A dedicated counter-drone radar tracks a small quadcopter at a vendor-specified 1 to 3 kilometers <a href="#ref-28">[28]</a>. The network will not win on precision. Its advantage is that the towers are already deployed, powered and everywhere.</p>
+
+  <div class="callout warn">
+    <p><strong>What has no measured evidence at all (as of August 2026)</strong></p>
+    <ul>
+      <li>Monitoring the structural health of bridges via ISAC: no published base-station experiment exists. It lives on roadmap slides.</li>
+      <li>Sensing performance in rain, fog or snow: every published trial ran in good weather.</li>
+      <li>Detecting pedestrians at hundreds of meters: the only hard human-sensing numbers are short-range; one widely cited 60-meter figure is a link-budget extrapolation from a 3-meter lab measurement <a href="#ref-31">[31]</a>.</li>
+      <li>Telling a drone from a bird reliably in the field: trials detect and track; classification validation remains thin - as the Arlington Q&amp;A showed.</li>
+    </ul>
+  </div>
+
+  <h2 id="models">The "foundation models" are smaller than you think</h2>
+
+  <p>Where does AI enter? The dream is a <strong>wireless foundation model</strong>: pretrain one model on oceans of radio data, the way GPT was pretrained on text, then adapt it to any sensing or communication task. The research wave is real - and its actual scale is the most under-reported fact in this field.</p>
+
+  <p>I checked every major published model against its own paper and its released files, not the press coverage:</p>
+
+  <ul>
+    <li><strong>LWM</strong> (Arizona State, 2024), billed as the first foundation model for wireless channels: 600 thousand parameters. The released model file is 2.5 megabytes <a href="#ref-13">[13]</a>. Pretrained entirely on simulated, ray-traced channels.</li>
+    <li><strong>WiFo</strong> (Peking University, 2024): a family of models from 0.3 to 86 million parameters, pretrained on 160 thousand simulated channel samples. Its own paper reports that scaling further plateaus, limited by pretraining data <a href="#ref-14">[14]</a>.</li>
+    <li><strong>WirelessGPT</strong> (Pengcheng Laboratory, 2025): about 80 million parameters. The paper calls its 300 GB training dataset publicly available; as of this writing I could not find the dataset, the code or the weights anywhere <a href="#ref-15">[15]</a>.</li>
+    <li><strong>WavesFM</strong> (University of Calgary, 2025): 38 million parameters, and the only one of the five pretrained on real over-the-air captures - 4,648 samples of them <a href="#ref-16">[16]</a>.</li>
+    <li><strong>RF-GPT</strong> (Khalifa University, 2026): not a from-scratch model at all, but a fine-tune of an existing vision-language model (Qwen2.5-VL) on fully synthetic radio scenes. Strong results on its own synthetic benchmarks; no code or weights released <a href="#ref-17">[17]</a>.</li>
+  </ul>
+
+  <p>Put plainly: every from-scratch "wireless foundation model" published so far is smaller than even the smallest version of GPT-2 from 2019 - the largest, an electromagnetic-signal model called EMind, reaches 110 million parameters <a href="#ref-32">[32]</a> - and four of the five above never saw a real radio wave during pretraining. This is not a criticism of the researchers - labeled over-the-air data at scale barely exists, and simulation is the rational starting point. But it matters for the timeline. The GPT moment for radio has not happened. What exists is the equivalent of language modeling around 2018: promising architectures, small models, and everyone waiting for someone to bring the data.</p>
+
+  <p>And the entity best positioned to bring the data is not a lab. It is whoever operates a national fleet of base stations.</p>
+
+  <h2 id="business">The business that exists, and the one that does not</h2>
+
+  <p>RF sensing as a business is not hypothetical. It already happened once, one network down the stack.</p>
+
+  <p>WiFi sensing - detecting motion in a home from how bodies disturb WiFi between a router and its devices - quietly became an ISP product line. Cognitive Systems, which supplies the technology, counted 37 service providers offering its WiFi Motion feature back in 2021, and claims over 100 providers and 20 million homes since <a href="#ref-19">[19]</a> (vendor counts, never independently audited). Comcast ships it on Xfinity routers today. And in February 2026 the sector produced its first major exit: ADT acquired Origin AI, a WiFi-sensing pioneer, in a deal announced at 170 million dollars - SEC filings record 164 million transferred <a href="#ref-18">[18]</a>. Camera-free presence detection was worth nine figures to a home-security company.</p>
+
+  <p>Cellular operators, meanwhile, already run a data-products business: mobility and crowd analytics derived from network signaling - Telefonica's Smart Steps, Vodafone Analytics, BT's Active Intelligence. Anonymized footfall and movement patterns, sold to cities and retailers. RF sensing would not create that business from nothing; it would be the next, far richer SKU on a shelf that already exists.</p>
+
+  <p>The industry has even named it: 5G Americas calls the model Sensing as a Service, operators selling location, movement and object-recognition data through APIs <a href="#ref-20">[20]</a>. Analyst firm ABI estimates upgrading a cell site for sensing at 50 to 100 thousand dollars and frames ISAC as the operators' chance to become brokers of physical-world data - while pointedly declining to size the revenue <a href="#ref-21">[21]</a>. Every dollar figure you may have seen for the "ISAC market" traces to content-mill research firms; no serious analyst has published one.</p>
+
+  <p>Here is the gap I could not fill, after searching hard for it: <strong>nobody sells cellular RF sensing data as a carrier-neutral product today.</strong> Not one company. The demos are operator-owned (AT&amp;T and Ericsson keeping their sensing pilot in-house). The prototypes are defense-funded (Lockheed Martin's NetSense drone-detection concept; Cohere's 28 million dollar DoD contract to turn commercial networks into covert drone sensors). China's first claimed commercial ISAC deployment, announced by ZTE and China Unicom, is a vendor-operator private network guarding a drone delivery corridor. The closest living thing to a neutral player is a Finnish startup, Skyfora, which raised 6.5 million euros in June 2026 to turn base-station GNSS receivers into weather sensors <a href="#ref-25">[25]</a> - atmospheric sensing from tower infrastructure, but not RF-reflection sensing.</p>
+
+  <p>Why the gap? Three honest reasons. The data belongs to operators, who move slowly and prefer to keep new revenue in-house. The standards that make sensing a portable capability across vendors land with 6G, around 2030. And the measured performance you saw above is not yet a product a security buyer would sign for - nobody publishes false-alarms-per-day, and false alarms are what kill sensing contracts. Whoever solves those three - data access, timing, and the boring reliability engineering - gets a layer of the physical world that cameras cannot cover and satellites cannot see under roofs of cloud. The WiFi exit suggests what that is eventually worth.</p>
+
+  <h2 id="privacy">The privacy question nobody has answered</h2>
+
+  <p>Every sensing pitch includes the word "privacy-compliant", on the logic that a radar sees blobs, not faces. Ericsson's version is representative: sensing reveals that a human-size object is here, not that a specific person is - facial recognition is simply not possible at cellular frequencies <a href="#ref-26">[26]</a>. That physics is true. It is also not the whole story.</p>
+
+  <p>In October 2025, researchers at Karlsruhe Institute of Technology showed something uncomfortable: individuals could be re-identified from WiFi beamforming signals with 99.5 percent accuracy across 197 people, using commodity hardware, with the target carrying no device at all <a href="#ref-22">[22]</a>. An earlier system, WhoFi, hit 95.5 percent re-identification from WiFi channel state information <a href="#ref-23">[23]</a>. You do not need a face if the way a body disturbs radio waves is itself a fingerprint. The researchers asked for privacy safeguards in the WiFi sensing standard <a href="#ref-22">[22]</a>; the standard shipped in 2025 without making signal confidentiality mandatory <a href="#ref-29">[29]</a>.</p>
+
+  <p>The regulatory scoreboard, as of August 2026, is short. 3GPP's requirements make sensing conditional on user consent and regulatory requirements - and no regulator has written those requirements <a href="#ref-4">[4]</a>. ETSI published the one dedicated study of ISAC privacy, including the hardest case: people who are sensed without being subscribers of anything - and it is informative, not binding <a href="#ref-24">[24]</a>. The FCC has flagged sensing as raising new policy questions and issued no rule. I found no binding guidance from the EU data protection bodies or the UK ICO, and the loudest digital-rights organizations have not yet engaged. Meanwhile the fine print is already live: as reported by several outlets, Comcast's WiFi Motion policy states motion data may be disclosed to law enforcement without further notice to the customer <a href="#ref-30">[30]</a>.</p>
+
+  <p>I run networks, and I want this technology to exist - it is the most interesting thing to happen to telecom infrastructure in a decade. Which is exactly why I would not let the industry mark privacy as solved. A question this size deserves an answer written by someone other than the people selling the answer being yes.</p>
+
+  <h2 id="ops">What this means if you run networks</h2>
+
+  <p>This last section is opinion, from the operations side of the fence.</p>
+
+  <p>Everything above describes a new telemetry class arriving at the towers. If sensing becomes a service, someone has to operate it - and the trials already show what that job looks like. A hundred false candidates per real target is a filtering pipeline someone must own. Clutter maps going stale within minutes is a calibration schedule someone must run. Detection dropping when a drone crosses a building is a coverage-planning problem someone must model. A sensing SLA - we will detect an intruding drone within so many seconds, with so many false alarms per week - is an availability commitment someone must sit on call for.</p>
+
+  <p>That someone is the NOC, the network operations center. The skills are the ones network operations already has - baselining, thresholding, correlating alarms across sites, chasing intermittent faults - pointed at a radar screen instead of a KPI dashboard. If you operate networks today, sensing is not a threat to your job. It is the first genuinely new thing your towers have learned to do in a long time, and the operational discipline it needs is the discipline you already practice. I wrote about running AI agent fleets with NOC discipline <a href="/blog/agent-noc/">here</a>; sensing will need the same treatment, and sooner than the 6G date suggests.</p>
+
+  <p>The lab has the models but not the data. Operators have the data and no product built on it yet, and regulators have not answered the question that product will raise. Gaps like that do not stay open for a decade.</p>
+
+  <p class="closing">The towers were always transmitting. <span class="grad">Someone finally started listening to the echoes.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> operates and transforms Tier-1 telecom networks, and led a
+      NOC's L2-to-L3 autonomy transition that automated 75 percent of Level-1 incidents.
+      He now builds AI and cloud products, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>What is ISAC (Integrated Sensing and Communication) in simple words?</h3>
+  <p>ISAC means the same radio signals that carry your calls and data are also analyzed for reflections. When a radio wave bounces off a drone, a car or a person, the reflection comes back changed. Process those changes across a few tower sites and the network can estimate where the object is and how fast it moves, like a radar, using equipment that is already deployed. The object needs no SIM, no device, nothing.</p>
+
+  <h3>Can 5G towers really detect drones today?</h3>
+  <p>Yes, in trials. In July 2026 AT&amp;T and Ericsson tracked drones flying at 300 to 400 feet using three ordinary commercial 5G sites near a stadium in Texas, with no radar hardware added. Chinese operators have published peer-reviewed field numbers: roughly 700 to 1,000 meters of sensing range in field trials, localization errors of 6 to 20 meters, and false-alarm rates around 3 percent. Detection works; published accuracy at scale is still far from dedicated radar.</p>
+
+  <h3>What is a wireless foundation model?</h3>
+  <p>A model pretrained on large amounts of radio channel data so it can be adapted to many wireless tasks, the way language models are pretrained on text. As of mid-2026 the published from-scratch models are small - all smaller than even the smallest 2019 version of GPT-2 - and most of the models discussed in this article are pretrained on simulated channels rather than real over-the-air data. The direction is real; the scale is not there yet.</p>
+
+  <h3>Is network sensing a privacy risk?</h3>
+  <p>It is an open question that no regulator has answered. Peer-reviewed research showed 99.5 percent accurate re-identification of individuals from WiFi beamforming signals, with no device carried. Industry argues cellular sensing lacks the resolution to identify who a person is. As of August 2026, no binding rule on RF sensing privacy exists from the FCC, the EU data protection bodies, or the UK ICO.</p>
+
+  <h3>When will mobile networks sell sensing as a service?</h3>
+  <p>Standards land first: 3GPP put the ISAC channel model into Release 19, studies base-station sensing in Release 20, and plans the first normative 6G specifications including ISAC in Release 21, targeting the ITU IMT-2030 timeline around 2030. AT&amp;T frames commercialization as phased, with early customers in public safety and critical infrastructure. Today, no carrier-neutral company sells cellular RF sensing data as a product.</p>
+
+  <hr>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Numbered by where they support this article. Vendor sources are labeled where their claims are not independently confirmed.</p>
+  <ol class="refs">
+    <li id="ref-1"><a href="https://www.ericsson.com/en/press-releases/6/2026/ericsson-att-drone-detection">Ericsson press release: AT&amp;T and Ericsson demonstrate drone detection</a>, July 10, 2026. Vendor source. Supports: demo setup, 300-400 ft altitudes, Massive MIMO multistatic configuration (section: The stadium demo).</li>
+    <li id="ref-2">Christian de Looper: <a href="https://www.rcrwireless.com/20260724/ai/att-ericsson-network-sensing">Inside AT&amp;T and Ericsson's network sensing demo</a>, RCR Wireless, July 24, 2026. Independent. Supports: commercial network slice, reported 6 km tracking, telemetry cross-check, absence of published accuracy statistics, classification weakness (section: The stadium demo).</li>
+    <li id="ref-3"><a href="https://wirelessestimator.com/articles/2026/att-ericsson-show-cell-towers-can-spot-drones-interception-is-still-somebody-elses-job/">AT&amp;T, Ericsson show cell towers can spot drones; interception is still somebody else's job</a>, Wireless Estimator, July 14, 2026. Supports: detection-versus-mitigation gap (section: The stadium demo).</li>
+    <li id="ref-4"><a href="https://www.etsi.org/deliver/etsi_ts/122100_122199/122137/19.01.00_60/ts_122137v190100p.pdf">3GPP TS 22.137: Service requirements for Integrated Sensing and Communication</a> (Release 19). Supports: sensing definition, delay/Doppler/angle estimation, device-free localization, consent-conditional requirements (sections: How a tower becomes a radar; Privacy).</li>
+    <li id="ref-5"><a href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/19.04.00_60/tr_138901v190400p.pdf">3GPP TR 38.901 V19.4.0</a>, clause 7.9: ISAC channel model. Supports: Release 19 channel model status and the five sensing scenario families (section: How a tower becomes a radar).</li>
+    <li id="ref-6"><a href="https://www.3gpp.org/specifications-technologies/releases/release-20">3GPP: Release 20</a>. Supports: the two-release 6G plan, Release 20 sensing studies, Release 21 as first normative 6G, ITU IMT-2030 dates (sections: How a tower becomes a radar; FAQ).</li>
+    <li id="ref-7"><a href="https://www.etsi.org/technical-groups/isac">ETSI ISG ISAC</a>. Supports: the industry group and its four published Group Reports (section: How a tower becomes a radar).</li>
+    <li id="ref-8"><a href="https://www.engineering.org.cn/engi/EN/10.1016/j.eng.2025.08.033">Cooperative ISAC field trials at 4.9 GHz</a>, China Mobile Research Institute, Engineering, 2025. Peer-reviewed field trial. Supports: 700-900 m range, 6-20 m positioning, 3-3.6 percent false-alarm and miss rates, the one-in-a-million simulated target (section: What a tower can and cannot see).</li>
+    <li id="ref-9"><a href="https://arxiv.org/abs/2603.29187">Needle in a Haystack: Tracking UAVs from Massive Noise in Real-World 5G-A Base Station Data</a>, 2026. Field study on a live commercial base station. Supports: 1,000 m envelope, over 100:1 noise-to-target ratio, 168 detections per frame (section: What a tower can and cannot see).</li>
+    <li id="ref-10"><a href="https://arxiv.org/abs/2605.23561">Reliable UAV Detection with ISAC</a>, Nokia Bell Labs, 2026, and trial summaries in <a href="https://arxiv.org/pdf/2604.02680">the 2026 ISAC field-trial survey</a> (ZTE 1.43 km tracking). Supports: mmWave sub-meter accuracy past 500 m, relaxed false-alarm thresholds, building clutter losses, reported maximum tracking range (section: What a tower can and cannot see).</li>
+    <li id="ref-11"><a href="https://arxiv.org/pdf/2505.10933">Cross-layer ISAC: A Joint Industrial and Academic Perspective</a>, 2025. Supports: the definition of sensing resolution and its dependence on signal bandwidth and antenna properties, and the band-by-band resolution trade-offs (section: What a tower can and cannot see). The 1.5 m at 100 MHz and the cross-range spread at 1 km are computed by the author from the standard radar relations.</li>
+    <li id="ref-12"><a href="https://www.ti.com/lit/wp/spry312/spry312.pdf">Texas Instruments: mmWave automotive radar white paper</a>. Vendor physics reference. Supports: range resolution inversely proportional to sweep bandwidth, and the 4 GHz sweep / 4 cm range resolution of dedicated automotive radar (section: What a tower can and cannot see).</li>
+    <li id="ref-13"><a href="https://arxiv.org/abs/2411.08872">LWM: Large Wireless Model</a>, 2024, and the <a href="https://huggingface.co/wi-lab/lwm">released model files</a>. Supports: 600K parameters, 2.5 MB checkpoint, simulated DeepMIMO pretraining corpus (section: The foundation models).</li>
+    <li id="ref-14"><a href="https://arxiv.org/abs/2412.08908">WiFo: Wireless Foundation Model for Channel Prediction</a>, 2024. Supports: model family sizes 0.3M-86.1M, 160K simulated pretraining samples, the scaling plateau finding (section: The foundation models).</li>
+    <li id="ref-15"><a href="https://arxiv.org/abs/2502.06877">WirelessGPT</a>, 2025. Supports: about 80M parameters, the Traciverse dataset description; the absence of released code, weights or dataset was checked by the author on August 3, 2026 (section: The foundation models).</li>
+    <li id="ref-16"><a href="https://arxiv.org/abs/2504.14100">6G WavesFM: A Foundation Model for Sensing, Communication, and Localization</a>, 2025. Supports: 38M parameters, 4,648 real pretraining samples (section: The foundation models).</li>
+    <li id="ref-17"><a href="https://arxiv.org/abs/2602.14833">RF-GPT</a>, Khalifa University, 2026. Supports: Qwen2.5-VL fine-tune, fully synthetic training corpus, synthetic-benchmark evaluation, no released artifacts (section: The foundation models).</li>
+    <li id="ref-18"><a href="https://newsroom.adt.com/corporate-news/adt-acquires-origin-ai-to-power-ai-sensing-and-ambient-intelligence-for-the-home">ADT acquires Origin AI</a>, February 24, 2026, and ADT's Q1 2026 10-Q filing (SEC): closed February 20, 2026, 164 million dollars total consideration. Supports: the WiFi-sensing exit (section: The business).</li>
+    <li id="ref-19"><a href="https://wifinowglobal.com/news-and-blog/breakthrough-in-wi-fi-sensing-37-service-providers-deploy-cognitives-wi-fi-motion/">Wi-Fi NOW: 37 service providers deploy Cognitive's WiFi Motion</a>, February 2021, and Cognitive Systems' current claims of 100+ providers and 20M+ homes. Vendor counts, not independently audited (section: The business).</li>
+    <li id="ref-20"><a href="https://www.5gamericas.org/5g-americas-highlights-the-strategic-role-of-integrated-sensing-and-communication-for-6g/">5G Americas: Transforming Industries with Integrated Sensing and Communication</a>, 2025. Supports: Sensing as a Service as a named operator revenue model (section: The business).</li>
+    <li id="ref-21"><a href="https://www.abiresearch.com/press/6g-integrated-sensing-and-communications-offers-mobile-operators-a-unique-chance-to-redefine-networks">ABI Research on 6G ISAC</a>, September 2025. Supports: 50-100 thousand dollar per-site upgrade estimate, brokers-of-data framing, absence of credible revenue sizing (section: The business).</li>
+    <li id="ref-22"><a href="https://dl.acm.org/doi/10.1145/3719027.3765062">BFId: Identity Inference Attacks Utilizing Beamforming Feedback Information</a>, ACM CCS 2025 (KIT), and the <a href="https://www.eurekalert.org/news-releases/1101595">KIT announcement</a>. Supports: 99.5 percent re-identification of 197 people, the unheeded standards ask (section: Privacy).</li>
+    <li id="ref-23"><a href="https://arxiv.org/abs/2507.12869">WhoFi: Deep Person Re-Identification via Wi-Fi Channel Signal Encoding</a>, 2025. Supports: 95.5 percent re-identification from channel state information (section: Privacy).</li>
+    <li id="ref-24"><a href="https://www.etsi.org/deliver/etsi_gr/ISC/001_099/004/01.01.01_60/gr_ISC004v010101p.pdf">ETSI GR ISC 004: ISAC Security, Privacy, Trustworthiness and Sustainability</a>, 2026. Supports: the only dedicated ISAC privacy study, including sensing of non-connected people; informative status (section: Privacy).</li>
+    <li id="ref-25"><a href="https://bebeez.eu/2026/06/09/finlands-skyfora-turns-cell-towers-into-weather-sensors-with-e6-5m-funding-round/">Skyfora raises 6.5 million euros to turn cell towers into weather sensors</a>, June 2026. Supports: the closest carrier-neutral tower-sensing business (section: The business).</li>
+    <li id="ref-26"><a href="https://www.ericsson.com/en/6g/isac">Ericsson: Integrated Sensing and Communication explained</a>. Vendor source. Supports: the industry privacy framing and the facial-recognition concession (section: Privacy).</li>
+    <li id="ref-27"><a href="https://arxiv.org/abs/2403.02028">Target Localization in Cooperative ISAC Systems: A Scheme Based on 5G NR OFDM Signals</a>, 2024. Supports: the two-dimensional transform that turns reflected communication signals into a delay-Doppler map (section: How a tower becomes a radar).</li>
+    <li id="ref-28"><a href="https://www.echodyne.com/radar-systems/echoguard">Echodyne EchoGuard and EchoShield radar specifications</a>. Vendor specification. Supports: the dedicated counter-drone radar range anchor (section: What a tower can and cannot see).</li>
+    <li id="ref-29"><a href="https://secnora.com/blog/wi-fi-sensing-and-the-ieee-802-11bf-privacy-gap/">Wi-Fi sensing and the IEEE 802.11bf privacy gap</a>, SecNora, July 2026. Independent analysis of the ratified standard. Supports: 802.11bf-2025 leaving sensing-signal confidentiality to vendor implementation (section: Privacy).</li>
+    <li id="ref-30"><a href="https://www.theweek.com/tech/wifi-signals-now-tracking-users-at-home">The Week: WiFi signals now tracking users at home</a>, August 2025, with the policy language also quoted by Tom's Hardware and Boing Boing. Supports: the Comcast WiFi Motion law-enforcement disclosure clause, as reported; the clause was not verified against Comcast's own policy page directly (section: Privacy).</li>
+    <li id="ref-31">Wild et al. (Nokia Bell Labs): <a href="https://arxiv.org/abs/2305.01978">6G Integrated Sensing and Communication: From Vision to Realization</a>, 2023. Supports: millimeter-level range jitter measured at 3 meters in the 27.6 GHz proof of concept, and the ~60 meter human-sensing range derived as a link-budget calculation rather than measured (section: What a tower can and cannot see).</li>
+    <li id="ref-32"><a href="https://arxiv.org/abs/2508.18785">EMind: A Foundation Model for Multi-task Electromagnetic Signals Understanding</a>, 2025. Supports: the 110 million parameter ceiling for from-scratch wireless and electromagnetic foundation models as of mid-2026 (section: The foundation models).</li>
+  </ol>
+
+  <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri. Every number was checked against the primary source listed - the paper that ran the measurement, the released model files, the standards PDF, or the SEC filing - on August 3, 2026. Vendor claims that could not be independently confirmed are labeled as vendor claims in the text. Where accounts conflict (site-to-target distances in the Arlington demo were reported differently by two outlets), the conflicting detail was left out. The reported 6 km tracking range appears in a single independent report and is attributed as reported. Last updated: August 3, 2026.</p>
+
+  <hr>
+
+  <p>Related: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a> on operating autonomous systems with network discipline, and <a href="/blog/agentic-ai-microwave-backhaul/">Agentic AI for Microwave Backhaul</a> on AI in the transport layer.</p>
+
+</article>
+
+
+<style>
+
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:760px;margin:38px auto 8px;box-sizing:border-box;
+  padding:16px 18px;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);border-radius:12px}
+.share b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent,#4f8fc9);font-weight:600;margin-inline-end:4px}
+.share a{display:inline-block;padding:7px 13px;border:1px solid var(--line,#243044);
+  border-radius:999px;font-size:14px;color:var(--ink,#e6edf6);
+  background:rgba(255,255,255,.02);transition:border-color .15s,color .15s}
+.share a:hover{border-color:var(--accent,#4f8fc9);color:var(--accent,#4f8fc9)}
+@media(max-width:520px){.share{gap:8px;padding:14px}
+  .share a{font-size:13px;padding:6px 11px}}
+</style>
+
+<style>
+.share-rail{position:fixed;top:50%;transform:translateY(-50%);
+  inset-inline-start:calc((100vw - 760px)/2 - 76px);
+  display:none;flex-direction:column;gap:10px;z-index:30}
+@media(min-width:1080px){.share-rail{display:flex}}
+.share-rail a{display:grid;place-items:center;width:42px;height:42px;
+  border-radius:50%;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);color:var(--dim,#8b9bb4);
+  transition:color .15s,border-color .15s,transform .15s}
+.share-rail a:hover{color:var(--accent,#4f8fc9);
+  border-color:var(--accent,#4f8fc9);transform:translateY(-1px)}
+.share-rail svg{width:17px;height:17px;fill:currentColor;display:block}
+</style>
+<nav class="share-rail" aria-label="Share this article">
+  <a data-n="li" target="_blank" rel="noopener" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+  <a data-n="x" target="_blank" rel="noopener" title="Share on X" aria-label="Share on X"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+  <a data-n="rd" target="_blank" rel="noopener" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.738 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0Zm4.388 3.199c1.104 0 1.999.895 1.999 1.999 0 1.105-.895 2-1.999 2-.946 0-1.739-.657-1.947-1.539v.002c-1.147.162-2.032 1.15-2.032 2.341v.007c1.776.067 3.4.567 4.686 1.363.473-.363 1.064-.58 1.707-.58 1.547 0 2.802 1.254 2.802 2.802 0 1.117-.655 2.081-1.601 2.531-.088 3.256-3.637 5.876-7.997 5.876-4.361 0-7.905-2.617-7.998-5.87-.954-.447-1.614-1.415-1.614-2.538 0-1.548 1.255-2.802 2.803-2.802.645 0 1.239.218 1.712.585 1.275-.79 2.881-1.291 4.64-1.365v-.01c0-1.663 1.263-3.034 2.88-3.207.188-.911.993-1.595 1.959-1.595Zm-8.085 8.376c-.784 0-1.459.78-1.506 1.797-.047 1.016.64 1.429 1.426 1.429.786 0 1.371-.369 1.418-1.385.047-1.017-.553-1.841-1.338-1.841Zm7.406 0c-.786 0-1.385.824-1.338 1.841.047 1.017.634 1.385 1.418 1.385.785 0 1.473-.413 1.426-1.429-.046-1.017-.721-1.797-1.506-1.797Zm-3.703 4.013c-.974 0-1.907.048-2.77.135-.147.015-.241.168-.183.305.483 1.154 1.622 1.964 2.953 1.964 1.33 0 2.47-.81 2.953-1.964.057-.137-.037-.29-.184-.305-.863-.087-1.795-.135-2.769-.135Z"/></svg></a>
+  <a data-n="fb" target="_blank" rel="noopener" title="Share on Facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
+  <a data-n="th" target="_blank" rel="noopener" title="Share on Threads" aria-label="Share on Threads"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z"/></svg></a>
+</nav>
+
+<nav class="share" aria-label="Share this article">
+  <b>Share</b>
+  <a data-n="li" target="_blank" rel="noopener">LinkedIn</a>
+  <a data-n="x" target="_blank" rel="noopener">X</a>
+  <a data-n="rd" target="_blank" rel="noopener">Reddit</a>
+  <a data-n="fb" target="_blank" rel="noopener">Facebook</a>
+  <a data-n="th" target="_blank" rel="noopener">Threads</a>
+</nav>
+<script>
+(function(){
+  var c=document.querySelector('link[rel="canonical"]');
+  var u=(c&&c.href)?c.href:location.href.split('#')[0];
+  var m=document.querySelector('meta[property="og:title"]');
+  var t=(m&&m.content)?m.content:document.title;
+  var U=encodeURIComponent(u),T=encodeURIComponent(t);
+  var map={
+    li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,
+    x:'https://x.com/intent/post?url='+U+'&text='+T,
+    rd:'https://www.reddit.com/submit?url='+U+'&title='+T,
+    fb:'https://www.facebook.com/sharer/sharer.php?u='+U,
+    th:'https://www.threads.com/intent/post?text='+T+'%20'+U
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-n]'),
+    function(a){a.href=map[a.getAttribute('data-n')];});
+})();
+</script>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+</body>
+</html>
