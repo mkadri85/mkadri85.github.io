@@ -205,7 +205,7 @@
         <span class="ltime" id="ltime">0:00 / 11:24</span>
       </div>
     </div>
-    <button class="lspeed" id="lspeed" aria-label="Playback speed">1x</button>
+    <button class="lspeed" id="lspeed" aria-label="Playback speed" title="Change playback speed">Speed 1x</button>
   </div>
   <audio id="laudio" preload="none" src="/assets/isac-article-en.mp3"></audio>
   <script>
@@ -229,7 +229,7 @@
     a.addEventListener('loadedmetadata', refresh);
     seek.addEventListener('input', function(){ a.currentTime = seek.value/100 * (a.duration || total); });
     spd.addEventListener('click', function(){
-      si = (si+1) % speeds.length; a.playbackRate = speeds[si]; spd.textContent = speeds[si] + 'x';
+      si = (si+1) % speeds.length; a.playbackRate = speeds[si]; spd.textContent = 'Speed ' + speeds[si] + 'x';
     });
   })();
   </script>
