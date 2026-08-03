@@ -755,13 +755,13 @@ zoneRing.rotation.x = -Math.PI/2; zoneRing.position.y = 0.3; scene.add(zoneRing)
 const MODES = {
   stadium: {label:'STADIUM PERIMETER', center:new THREE.Vector3(110,0,150), r:58,
     orbit:new THREE.Vector3(55,0,80), rx:110, rz:120, alt:30,
-    cam:[[240,150,300],[60,15,60]]},
+    cam:[[160,100,235],[60,15,70]]},
   port:    {label:'PORT / LNG TERMINAL', center:new THREE.Vector3(235,0,-50), r:70,
     orbit:new THREE.Vector3(140,0,-30), rx:150, rz:90, alt:34,
-    cam:[[340,160,160],[180,10,-40]]},
+    cam:[[150,110,90],[240,10,-55]]},
   airport: {label:'RUNWAY CORRIDOR', center:new THREE.Vector3(-185,0,150), r:75,
     orbit:new THREE.Vector3(-100,0,90), rx:140, rz:110, alt:32,
-    cam:[[-320,170,300],[-150,10,120]]}
+    cam:[[-40,110,240],[-175,8,148]]}
 };
 let mode = MODES.stadium, modeName = 'stadium';
 function setZone(){
