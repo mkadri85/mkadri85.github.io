@@ -143,6 +143,24 @@
   .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
   .author .who{font-size:14.5px;color:var(--mut);line-height:1.7}
   .author .who b{color:var(--ink);font-size:15.5px}
+  .listen{display:flex;align-items:center;gap:16px;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:14px 18px;margin:0 0 28px}
+  .listen .lplay{flex:none;width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--accent);color:#0a0e16;display:grid;place-items:center;
+    transition:background .15s,transform .15s}
+  .listen .lplay:hover{background:var(--accent2);transform:scale(1.05)}
+  .listen .lplay svg{width:18px;height:18px;fill:currentColor}
+  .listen .linfo{flex:1;min-width:0}
+  .listen .linfo b{display:block;font-size:14.5px;color:var(--ink);margin-bottom:2px}
+  .listen .linfo .lmeta{font-size:12px;color:var(--dim)}
+  .listen .lrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .listen input[type=range]{flex:1;accent-color:var(--accent);height:16px;margin:0}
+  .listen .ltime{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap;direction:ltr}
+  .listen .lspeed{flex:none;font:600 12px 'IBM Plex Sans Arabic',Inter,sans-serif;color:var(--mut);
+    background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;cursor:pointer}
+  .listen .lspeed:hover{border-color:var(--accent);color:var(--accent2)}
+  @media(max-width:520px){.listen{flex-wrap:wrap}.listen .linfo{min-width:100%;order:3}}
 </style>
   <!-- Microsoft Clarity -->
   <script>
@@ -167,6 +185,58 @@
   <h1>شبكتك الخلوية تتعلم أن ترى</h1>
   <p class="subtitle">أبراج الاتصالات كمستشعرات: ما الحقيقي منها، وما الذي ما زال في المختبر، وما العمل التجاري الذي لم يبنه أحد - شرح من مهندس يعمل في تشغيل الشبكات.</p>
   <div class="meta">محمد قدري &middot; 3 أغسطس 2026 &middot; 15 دقيقة قراءة &middot; <a href="/blog/isac-cell-towers-as-sensors/">Read in English</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">العرض التفاعلي ثلاثي الأبعاد</a></div>
+
+  <div class="listen" id="listenbox">
+    <button class="lplay" id="lplay" aria-label="تشغيل القراءة الصوتية">
+      <svg id="lico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="lico-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+    </button>
+    <div class="linfo">
+      <b>اسمع المقال</b>
+      <span class="lmeta" id="lmeta">قراءة صوتية بالذكاء الاصطناعي &middot; 11 دقيقة &middot; بالمصرية</span>
+      <div class="lrow">
+        <input type="range" id="lseek" value="0" min="0" max="100" step="0.1" aria-label="التقديم في التسجيل">
+        <span class="ltime" id="ltime">0:00 / 10:52</span>
+      </div>
+    </div>
+    <button class="lspeed" id="lspeed" aria-label="سرعة التشغيل" title="تغيير سرعة التشغيل">السرعة 1x</button>
+  </div>
+  <audio id="laudio" preload="none" src="/assets/isac-article-ar.mp3"></audio>
+  <script>
+  (function(){
+    var a = document.getElementById('laudio'),
+        play = document.getElementById('lplay'),
+        ip = document.getElementById('lico-play'), iz = document.getElementById('lico-pause'),
+        seek = document.getElementById('lseek'), time = document.getElementById('ltime'),
+        spd = document.getElementById('lspeed'),
+        speeds = [1, 1.25, 1.5], si = 0, total = 652;
+    function fmt(s){ s = Math.max(0, Math.round(s)); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+    function refresh(){
+      var d = a.duration || total;
+      seek.value = a.currentTime / d * 100 || 0;
+      time.textContent = fmt(a.currentTime) + ' / ' + fmt(d);
+    }
+    play.addEventListener('click', function(){ a.paused ? a.play() : a.pause(); });
+    var LAPI = 'https://abacus.jasoncameron.dev/', LNS = 'mkadri85-blog/isac-cell-towers-as-sensors-listen-ar';
+    fetch(LAPI + 'get/' + LNS).then(function(r){ return r.ok ? r.json() : {value:0}; })
+      .then(function(d){
+        var n = (d && typeof d.value === 'number' ? d.value : 0) + 10;
+        document.getElementById('lmeta').textContent += ' · ' + n.toLocaleString() + ' استماع';
+      }).catch(function(){});
+    var counted = false;
+    a.addEventListener('play', function(){
+      ip.style.display='none'; iz.style.display='block';
+      if (!counted){ counted = true; fetch(LAPI + 'hit/' + LNS).catch(function(){}); }
+    });
+    a.addEventListener('pause', function(){ ip.style.display='block'; iz.style.display='none'; });
+    a.addEventListener('timeupdate', refresh);
+    a.addEventListener('loadedmetadata', refresh);
+    seek.addEventListener('input', function(){ a.currentTime = seek.value/100 * (a.duration || total); });
+    spd.addEventListener('click', function(){
+      si = (si+1) % speeds.length; a.playbackRate = speeds[si]; spd.textContent = 'السرعة ' + speeds[si] + 'x';
+    });
+  })();
+  </script>
 
   <figure class="hero">
     <img src="/assets/isac-hero.jpg" alt="أبراج اتصالات شبكية فوق مدينة عند الغسق، موجات راديو تنتشر من هوائياتها وخطوط اكتشاف متقطعة من ثلاثة أبراج تلتقي عند طائرة مسيرة واحدة في السماء" width="1536" height="1024">
