@@ -148,6 +148,25 @@
   .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
   .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
   .author .who b{color:var(--ink);font-size:15.5px}
+  .listen{display:flex;align-items:center;gap:16px;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:14px 18px;margin:0 0 28px}
+  .listen .lplay{flex:none;width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--accent);color:#0a0e16;display:grid;place-items:center;
+    transition:background .15s,transform .15s}
+  .listen .lplay:hover{background:var(--accent2);transform:scale(1.05)}
+  .listen .lplay svg{width:18px;height:18px;fill:currentColor}
+  .listen .linfo{flex:1;min-width:0}
+  .listen .linfo b{display:block;font-family:'Space Grotesk',Inter,sans-serif;
+    font-size:14.5px;color:var(--ink);margin-bottom:2px}
+  .listen .linfo .lmeta{font-size:12px;color:var(--dim)}
+  .listen .lrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .listen input[type=range]{flex:1;accent-color:var(--accent);height:16px;margin:0}
+  .listen .ltime{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .listen .lspeed{flex:none;font:600 12px Inter,sans-serif;color:var(--mut);
+    background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;cursor:pointer}
+  .listen .lspeed:hover{border-color:var(--accent);color:var(--accent2)}
+  @media(max-width:520px){.listen{flex-wrap:wrap}.listen .linfo{min-width:100%;order:3}}
 </style>
   <!-- Microsoft Clarity -->
   <script>
@@ -172,6 +191,48 @@
   <h1>Your Cell Network Is Learning to See</h1>
   <p class="subtitle">Cell towers as sensors: what is real, what is still in the lab, and the business nobody has built. Explained by someone who runs networks for a living.</p>
   <div class="meta">Mohamed Kadri &middot; August 3, 2026 &middot; 15 min read &middot; <a href="/blog/isac-cell-towers-as-sensors/ar/">اقرأ بالعربية</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">Interactive 3D demo</a></div>
+
+  <div class="listen" id="listenbox">
+    <button class="lplay" id="lplay" aria-label="Play audio narration">
+      <svg id="lico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+      <svg id="lico-pause" viewBox="0 0 24 24" aria-hidden="true" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+    </button>
+    <div class="linfo">
+      <b>Listen to this article</b>
+      <span class="lmeta">AI narration &middot; 11 min &middot; English</span>
+      <div class="lrow">
+        <input type="range" id="lseek" value="0" min="0" max="100" step="0.1" aria-label="Seek narration">
+        <span class="ltime" id="ltime">0:00 / 11:24</span>
+      </div>
+    </div>
+    <button class="lspeed" id="lspeed" aria-label="Playback speed">1x</button>
+  </div>
+  <audio id="laudio" preload="none" src="/assets/isac-article-en.mp3"></audio>
+  <script>
+  (function(){
+    var a = document.getElementById('laudio'),
+        play = document.getElementById('lplay'),
+        ip = document.getElementById('lico-play'), iz = document.getElementById('lico-pause'),
+        seek = document.getElementById('lseek'), time = document.getElementById('ltime'),
+        spd = document.getElementById('lspeed'),
+        speeds = [1, 1.25, 1.5], si = 0, total = 684;
+    function fmt(s){ s = Math.max(0, Math.round(s)); return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0'); }
+    function refresh(){
+      var d = a.duration || total;
+      seek.value = a.currentTime / d * 100 || 0;
+      time.textContent = fmt(a.currentTime) + ' / ' + fmt(d);
+    }
+    play.addEventListener('click', function(){ a.paused ? a.play() : a.pause(); });
+    a.addEventListener('play', function(){ ip.style.display='none'; iz.style.display='block'; });
+    a.addEventListener('pause', function(){ ip.style.display='block'; iz.style.display='none'; });
+    a.addEventListener('timeupdate', refresh);
+    a.addEventListener('loadedmetadata', refresh);
+    seek.addEventListener('input', function(){ a.currentTime = seek.value/100 * (a.duration || total); });
+    spd.addEventListener('click', function(){
+      si = (si+1) % speeds.length; a.playbackRate = speeds[si]; spd.textContent = speeds[si] + 'x';
+    });
+  })();
+  </script>
 
   <figure class="hero">
     <img src="/assets/isac-hero.jpg" alt="A city at dusk where soft radio wavefronts ripple out from three cell towers and faintly outline a drone, a car and a pedestrian in light, while everything else stays dark" width="1376" height="768">
