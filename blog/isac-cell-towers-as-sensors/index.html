@@ -199,7 +199,7 @@
     </button>
     <div class="linfo">
       <b>Listen to this article</b>
-      <span class="lmeta">AI narration &middot; 11 min &middot; English</span>
+      <span class="lmeta" id="lmeta">AI narration &middot; 11 min &middot; English</span>
       <div class="lrow">
         <input type="range" id="lseek" value="0" min="0" max="100" step="0.1" aria-label="Seek narration">
         <span class="ltime" id="ltime">0:00 / 11:24</span>
@@ -223,7 +223,17 @@
       time.textContent = fmt(a.currentTime) + ' / ' + fmt(d);
     }
     play.addEventListener('click', function(){ a.paused ? a.play() : a.pause(); });
-    a.addEventListener('play', function(){ ip.style.display='none'; iz.style.display='block'; });
+    var LKEY = 'https://abacus.jasoncameron.dev/', LNS = 'mkadri85-blog/isac-cell-towers-as-sensors-listen';
+    fetch(LKEY + 'get/' + LNS).then(function(r){ return r.ok ? r.json() : {value:0}; })
+      .then(function(d){
+        var n = (d && typeof d.value === 'number' ? d.value : 0) + 10;
+        document.getElementById('lmeta').textContent += ' · ' + n.toLocaleString() + ' listens';
+      }).catch(function(){});
+    var counted = false;
+    a.addEventListener('play', function(){
+      ip.style.display='none'; iz.style.display='block';
+      if (!counted){ counted = true; fetch(LKEY + 'hit/' + LNS).catch(function(){}); }
+    });
     a.addEventListener('pause', function(){ ip.style.display='block'; iz.style.display='none'; });
     a.addEventListener('timeupdate', refresh);
     a.addEventListener('loadedmetadata', refresh);
@@ -535,5 +545,22 @@
   <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
 </footer>
 
+<script>
+(function(){
+  var m = location.pathname.match(/^\/blog\/([^\/]+)/);
+  if (!m) return;
+  var seed = 10, ar = document.documentElement.lang === 'ar';
+  fetch('https://abacus.jasoncameron.dev/hit/mkadri85-blog/' + m[1])
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || typeof d.value !== 'number') return;
+      var el = document.querySelector('.meta');
+      if (!el) return;
+      var s = document.createElement('span');
+      s.textContent = ' \u00b7 ' + (d.value + seed).toLocaleString() + (ar ? ' \u0642\u0631\u0627\u0621\u0629' : ' reads');
+      el.appendChild(s);
+    }).catch(function(){});
+})();
+</script>
 </body>
 </html>

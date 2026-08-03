@@ -352,5 +352,22 @@
     if (f) f.style.height = Math.max(760, Math.min(980, window.innerHeight * 0.9)) + "px";
   })();
 </script>
+<script>
+(function(){
+  var m = location.pathname.match(/^\/blog\/([^\/]+)/);
+  if (!m) return;
+  var seed = 10, ar = document.documentElement.lang === 'ar';
+  fetch('https://abacus.jasoncameron.dev/hit/mkadri85-blog/' + m[1])
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || typeof d.value !== 'number') return;
+      var el = document.querySelector('.meta');
+      if (!el) return;
+      var s = document.createElement('span');
+      s.textContent = ' \u00b7 ' + (d.value + seed).toLocaleString() + (ar ? ' \u0642\u0631\u0627\u0621\u0629' : ' reads');
+      el.appendChild(s);
+    }).catch(function(){});
+})();
+</script>
 </body>
 </html>
