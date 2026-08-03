@@ -23,7 +23,7 @@
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A city at dusk where radio waves ripple out from cell towers and outline a drone, a car and a pedestrian in light: the network sensing the physical world">
+<meta property="og:image:alt" content="Lattice cell towers above a city at dusk, detection lines from three towers converging on a drone: the network sensing the physical world">
 <meta property="article:published_time" content="2026-08-03">
 <meta property="article:author" content="Mohamed Kadri">
 <meta property="article:section" content="Telecom">
@@ -38,7 +38,7 @@
 <meta name="twitter:title" content="Your Cell Network Is Learning to See: ISAC Explained">
 <meta name="twitter:description" content="The same towers that carry your calls can track a drone. What is real, what is lab, and the business nobody has built.">
 <meta name="twitter:image" content="https://mkadri85.github.io/assets/isac-og.jpg">
-<meta name="twitter:image:alt" content="Radio waves from cell towers outlining a drone over a city at dusk">
+<meta name="twitter:image:alt" content="Cell towers with detection lines converging on a drone over a city at dusk">
 
 <script type="application/ld+json">
 {
@@ -235,8 +235,8 @@
   </script>
 
   <figure class="hero">
-    <img src="/assets/isac-hero.jpg" alt="A city at dusk where soft radio wavefronts ripple out from three cell towers and faintly outline a drone, a car and a pedestrian in light, while everything else stays dark" width="1376" height="768">
-    <figcaption>The same waves that carry your calls come back carrying the shape of the street.</figcaption>
+    <img src="/assets/isac-hero.jpg" alt="Lattice cell towers above a city at dusk, radio waves rippling from their antennas and dashed detection lines from three towers converging on a single quadcopter drone in the sky" width="1536" height="1024">
+    <figcaption>The same waves that carry your calls come back carrying the shape of the sky.</figcaption>
   </figure>
 
   <div class="toc">
@@ -277,6 +277,11 @@
   <p>Every radio transmission reflects off the physical world. Walls, cars, rain, drones, people - each reflection comes back changed: delayed by distance, shifted in frequency by motion, bent by shape. Your network has always produced these reflections. It simply threw them away.</p>
 
   <p><strong>ISAC</strong> - Integrated Sensing and Communication - is the decision to stop throwing them away. The same signal that carries data doubles as a probe. The standards define it plainly: the network estimates delay, Doppler and angle from its own reflected signals, and from those extracts the location, velocity and shape of objects - with no requirement that the object carries a device <a href="#ref-4">[4]</a>.</p>
+
+  <figure>
+    <img src="/assets/isac-waves.jpg" alt="A city at dusk where soft radio wavefronts ripple out from three cell towers and faintly outline a drone, a car and a pedestrian in light, while everything else stays dark" width="1376" height="768" loading="lazy">
+    <figcaption>Reflections sketch the street out of the dark: a drone, a car, a pedestrian - no camera involved.</figcaption>
+  </figure>
 
   <p>The mechanics are close to classic pulse-Doppler radar, run on the 5G signal grid. A tower transmits its normal data-carrying signal. A second tower (or the same one) receives the reflections. A two-dimensional transform across the signal's frequency and time axes produces a delay-Doppler map: distance on one axis, speed on the other, and objects appear as peaks <a href="#ref-27">[27]</a>. Use one site as transmitter and others as receivers and you get multistatic sensing - several perspectives on the same object, which is exactly what the Arlington demo did with three sites <a href="#ref-2">[2]</a>.</p>
 
@@ -323,11 +328,6 @@
   <p>A radar blob has no name. Sensing alone can tell you something is flying; it cannot tell you whether that something is allowed to. The answer is not better radar - it is fusion with identity, and the identity layer already exists.</p>
 
   <p>Regulators built the first half. The FAA's Remote ID rule requires registered drones to broadcast their identity, position and control-station location while flying - a digital license plate in the air <a href="#ref-34">[34]</a>. The mobile network builds the second half: 3GPP wrote requirements for identifying and tracking uncrewed aircraft that carry a SIM, remote identification of drones "linked to a 3GPP subscription" in the standard's own words <a href="#ref-35">[35]</a>. A licensed delivery drone on a planned corridor is a cooperative target: connected, broadcasting, on a filed route. China's first claimed commercial ISAC deployment guards exactly that - a sanctioned drone delivery corridor, where the network's job is to watch licensed traffic fly its lane <a href="#ref-36">[36]</a>.</p>
-
-  <figure>
-    <img src="/assets/isac-identify.jpg" alt="Lattice cell towers above a city at dusk, radio waves rippling from their antennas and dashed detection lines from three towers converging on a single quadcopter drone in the sky" width="1536" height="1024" loading="lazy">
-    <figcaption>Three towers, one track. Whether that track is traffic or a threat depends on whether it matches an identity.</figcaption>
-  </figure>
 
   <p>So the operational logic is a join, the kind every operations engineer knows: fuse the sensed track against the roster of cooperative identities. A track that matches a Remote ID broadcast, a connected SIM or a filed flight plan is traffic. A track that matches nothing is the alert. The Arlington demo gestured at exactly this when it overlaid the network-derived track on the drone's own telemetry <a href="#ref-2">[2]</a>. Detection is the physics; identification is a database join; the product is the two together.</p>
 
