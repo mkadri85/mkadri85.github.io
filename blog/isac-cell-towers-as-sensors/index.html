@@ -62,7 +62,8 @@
 {"@type":"Question","name":"Can 5G towers really detect drones today?","acceptedAnswer":{"@type":"Answer","text":"Yes, in trials. In July 2026 AT&T and Ericsson tracked drones flying at 300 to 400 feet using three ordinary commercial 5G sites near a stadium in Texas, with no radar hardware added. Chinese operators have published peer-reviewed field numbers: roughly 700 to 1,000 meters of sensing range in field trials, localization errors of 6 to 20 meters, and false-alarm rates around 3 percent. Detection works; published accuracy at scale is still far from dedicated radar."}},
 {"@type":"Question","name":"What is a wireless foundation model?","acceptedAnswer":{"@type":"Answer","text":"A model pretrained on large amounts of radio channel data so it can be adapted to many wireless tasks, the way language models are pretrained on text. As of mid-2026 the published from-scratch models are small - all smaller than even the smallest 2019 version of GPT-2 - and most of the models discussed in this article are pretrained on simulated channels rather than real over-the-air data. The direction is real; the scale is not there yet."}},
 {"@type":"Question","name":"Is network sensing a privacy risk?","acceptedAnswer":{"@type":"Answer","text":"It is an open question that no regulator has answered. Peer-reviewed research showed 99.5 percent accurate re-identification of individuals from WiFi beamforming signals, with no device carried. Industry argues cellular sensing lacks the resolution to identify who a person is. As of August 2026, no binding rule on RF sensing privacy exists from the FCC, the EU data protection bodies, or the UK ICO."}},
-{"@type":"Question","name":"When will mobile networks sell sensing as a service?","acceptedAnswer":{"@type":"Answer","text":"Standards land first: 3GPP put the ISAC channel model into Release 19, studies base-station sensing in Release 20, and plans the first normative 6G specifications including ISAC in Release 21, targeting the ITU IMT-2030 timeline around 2030. AT&T frames commercialization as phased, with early customers in public safety and critical infrastructure. Today, no carrier-neutral company sells cellular RF sensing data as a product."}}
+{"@type":"Question","name":"When will mobile networks sell sensing as a service?","acceptedAnswer":{"@type":"Answer","text":"Standards land first: 3GPP put the ISAC channel model into Release 19, studies base-station sensing in Release 20, and plans the first normative 6G specifications including ISAC in Release 21, targeting the ITU IMT-2030 timeline around 2030. AT&T frames commercialization as phased, with early customers in public safety and critical infrastructure. Today, no carrier-neutral company sells cellular RF sensing data as a product."}},
+{"@type":"Question","name":"How would the network know a drone is licensed?","acceptedAnswer":{"@type":"Answer","text":"By fusing the sensed track with identity sources that already exist: the FAA's Remote ID rule makes registered drones broadcast their identity and position in flight, and 3GPP standards define remote identification and tracking of drones that carry a SIM. A track that matches a broadcast, a connected SIM or a filed flight plan is traffic; a track that matches nothing is the alert."}}
 ]}
 </script>
 
@@ -170,7 +171,7 @@
   <div class="eyebrow">Telecom / Network sensing</div>
   <h1>Your Cell Network Is Learning to See</h1>
   <p class="subtitle">Cell towers as sensors: what is real, what is still in the lab, and the business nobody has built. Explained by someone who runs networks for a living.</p>
-  <div class="meta">Mohamed Kadri &middot; August 3, 2026 &middot; 13 min read &middot; <a href="/blog/isac-cell-towers-as-sensors/ar/">اقرأ بالعربية</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">Interactive 3D demo</a></div>
+  <div class="meta">Mohamed Kadri &middot; August 3, 2026 &middot; 15 min read &middot; <a href="/blog/isac-cell-towers-as-sensors/ar/">اقرأ بالعربية</a> &middot; <a href="/blog/isac-cell-towers-as-sensors/demo/">Interactive 3D demo</a></div>
 
   <figure class="hero">
     <img src="/assets/isac-hero.jpg" alt="A city at dusk where soft radio wavefronts ripple out from three cell towers and faintly outline a drone, a car and a pedestrian in light, while everything else stays dark" width="1376" height="768">
@@ -184,6 +185,7 @@
       <li><a href="#how">How a tower becomes a radar</a></li>
       <li><a href="#see-it">See it in 3D</a></li>
       <li><a href="#boundary">What a tower can and cannot see</a></li>
+      <li><a href="#identify">Which drone is allowed here?</a></li>
       <li><a href="#models">The "foundation models" are smaller than you think</a></li>
       <li><a href="#business">The business that exists, and the one that does not</a></li>
       <li><a href="#privacy">The privacy question nobody has answered</a></li>
@@ -205,7 +207,7 @@
 
   <p>Also worth knowing: the demo detects. It does not intercept. Turning a detected drone into a grounded one is legally somebody else's job <a href="#ref-3">[3]</a>.</p>
 
-  <p>And the stakes are current. On July 30, 2026, a drone attack set two liquefied natural gas vessels on fire at Egypt's Damietta port; Egypt's government confirmed the strike, and no one has claimed it <a href="#ref-33">[33]</a>. Ports, refineries, stadiums and airports are exactly the places where a sensing layer built from towers that already exist would matter first.</p>
+  <p>And the stakes are current. Cheap drones have become weapons of consequence, and this decade keeps proving it. On July 30, 2026, a drone attack set two liquefied natural gas vessels on fire at Egypt's Damietta port; Egypt's government confirmed the strike, and no one has claimed it <a href="#ref-33">[33]</a>. Ports, refineries, stadiums and airports are exactly the places where a sensing layer built from towers that already exist would matter first.</p>
 
   <p>That is the state of the art in one paragraph: the physics works, on hardware that is already deployed, and the operational numbers that would make it a product are not public yet. The rest of this article unpacks how it works, what the measured limits are, and why the most interesting layer of this story - who sells the data - is still empty.</p>
 
@@ -255,6 +257,19 @@
     </ul>
   </div>
 
+  <h2 id="identify">Which drone is allowed here?</h2>
+
+  <p>A radar blob has no name. Sensing alone can tell you something is flying; it cannot tell you whether that something is allowed to. The answer is not better radar - it is fusion with identity, and the identity layer already exists.</p>
+
+  <p>Regulators built the first half. The FAA's Remote ID rule requires registered drones to broadcast their identity, position and control-station location while flying - a digital license plate in the air <a href="#ref-34">[34]</a>. The mobile network builds the second half: 3GPP wrote requirements for identifying and tracking uncrewed aircraft that carry a SIM, remote identification of drones "linked to a 3GPP subscription" in the standard's own words <a href="#ref-35">[35]</a>. A licensed delivery drone on a planned corridor is a cooperative target: connected, broadcasting, on a filed route. China's first claimed commercial ISAC deployment guards exactly that - a sanctioned drone delivery corridor, where the network's job is to watch licensed traffic fly its lane <a href="#ref-36">[36]</a>.</p>
+
+  <figure>
+    <img src="/assets/isac-identify.jpg" alt="Lattice cell towers above a city at dusk, radio waves rippling from their antennas and dashed detection lines from three towers converging on a single quadcopter drone in the sky" width="1536" height="1024" loading="lazy">
+    <figcaption>Three towers, one track. Whether that track is traffic or a threat depends on whether it matches an identity.</figcaption>
+  </figure>
+
+  <p>So the operational logic is a join, the kind every operations engineer knows: fuse the sensed track against the roster of cooperative identities. A track that matches a Remote ID broadcast, a connected SIM or a filed flight plan is traffic. A track that matches nothing is the alert. The Arlington demo gestured at exactly this when it overlaid the network-derived track on the drone's own telemetry <a href="#ref-2">[2]</a>. Detection is the physics; identification is a database join; the product is the two together.</p>
+
   <h2 id="models">The "foundation models" are smaller than you think</h2>
 
   <p>Where does AI enter? The dream is a <strong>wireless foundation model</strong>: pretrain one model on oceans of radio data, the way GPT was pretrained on text, then adapt it to any sensing or communication task. The research wave is real - and its actual scale is the most under-reported fact in this field.</p>
@@ -283,7 +298,7 @@
 
   <p>The industry has even named it: 5G Americas calls the model Sensing as a Service, operators selling location, movement and object-recognition data through APIs <a href="#ref-20">[20]</a>. Analyst firm ABI estimates upgrading a cell site for sensing at 50 to 100 thousand dollars and frames ISAC as the operators' chance to become brokers of physical-world data - while pointedly declining to size the revenue <a href="#ref-21">[21]</a>. Every dollar figure you may have seen for the "ISAC market" traces to content-mill research firms; no serious analyst has published one.</p>
 
-  <p>Here is the gap I could not fill, after searching hard for it: <strong>nobody sells cellular RF sensing data as a carrier-neutral product today.</strong> Not one company. The demos are operator-owned (AT&amp;T and Ericsson keeping their sensing pilot in-house). The prototypes are defense-funded (Lockheed Martin's NetSense drone-detection concept; Cohere's 28 million dollar DoD contract to turn commercial networks into covert drone sensors). China's first claimed commercial ISAC deployment, announced by ZTE and China Unicom, is a vendor-operator private network guarding a drone delivery corridor. The closest living thing to a neutral player is a Finnish startup, Skyfora, which raised 6.5 million euros in June 2026 to turn base-station GNSS receivers into weather sensors <a href="#ref-25">[25]</a> - atmospheric sensing from tower infrastructure, but not RF-reflection sensing.</p>
+  <p>Here is the gap I could not fill, after searching hard for it: <strong>nobody sells cellular RF sensing data as a carrier-neutral product today.</strong> Not one company. The demos are operator-owned (AT&amp;T and Ericsson keeping their sensing pilot in-house). The prototypes are defense-funded (Lockheed Martin's NetSense drone-detection concept; Cohere's 28 million dollar DoD contract to turn commercial networks into covert drone sensors). China's first claimed commercial ISAC deployment, announced by ZTE and China Unicom, is a vendor-operator private network guarding a drone delivery corridor <a href="#ref-36">[36]</a>. The closest living thing to a neutral player is a Finnish startup, Skyfora, which raised 6.5 million euros in June 2026 to turn base-station GNSS receivers into weather sensors <a href="#ref-25">[25]</a> - atmospheric sensing from tower infrastructure, but not RF-reflection sensing.</p>
 
   <p>Why the gap? Three honest reasons. The data belongs to operators, who move slowly and prefer to keep new revenue in-house. The standards that make sensing a portable capability across vendors land with 6G, around 2030. And the measured performance you saw above is not yet a product a security buyer would sign for - nobody publishes false-alarms-per-day, and false alarms are what kill sensing contracts. Whoever solves those three - data access, timing, and the boring reliability engineering - gets a layer of the physical world that cameras cannot cover and satellites cannot see under roofs of cloud. The WiFi exit suggests what that is eventually worth.</p>
 
@@ -337,6 +352,9 @@
   <h3>When will mobile networks sell sensing as a service?</h3>
   <p>Standards land first: 3GPP put the ISAC channel model into Release 19, studies base-station sensing in Release 20, and plans the first normative 6G specifications including ISAC in Release 21, targeting the ITU IMT-2030 timeline around 2030. AT&amp;T frames commercialization as phased, with early customers in public safety and critical infrastructure. Today, no carrier-neutral company sells cellular RF sensing data as a product.</p>
 
+  <h3>How would the network know a drone is licensed?</h3>
+  <p>By fusing the sensed track with identity sources that already exist: the FAA's Remote ID rule makes registered drones broadcast their identity and position in flight, and 3GPP standards define remote identification and tracking of drones that carry a SIM. A track that matches a broadcast, a connected SIM or a filed flight plan is traffic; a track that matches nothing is the alert.</p>
+
   <hr>
 
   <h2 id="refs">Sources and references</h2>
@@ -375,6 +393,9 @@
     <li id="ref-31">Wild et al. (Nokia Bell Labs): <a href="https://arxiv.org/abs/2305.01978">6G Integrated Sensing and Communication: From Vision to Realization</a>, 2023. Supports: millimeter-level range jitter measured at 3 meters in the 27.6 GHz proof of concept, and the ~60 meter human-sensing range derived as a link-budget calculation rather than measured (section: What a tower can and cannot see).</li>
     <li id="ref-32"><a href="https://arxiv.org/abs/2508.18785">EMind: A Foundation Model for Multi-task Electromagnetic Signals Understanding</a>, 2025. Supports: the 110 million parameter ceiling for from-scratch wireless and electromagnetic foundation models as of mid-2026 (section: The foundation models).</li>
     <li id="ref-33"><a href="https://www.euronews.com/2026/07/30/drone-hits-us-lng-vessel-at-damietta-in-first-attack-on-egyptian-soil">Euronews: Drone hits US LNG vessel at Damietta in first attack on Egyptian soil</a>, July 30, 2026, with confirming coverage from <a href="https://www.cnbc.com/2026/07/30/egypt-drone-gas-ship-damietta-port-iran-war.html">CNBC</a> and <a href="https://www.thenationalnews.com/news/2026/07/30/egypt-says-damietta-port-ship-fire-caused-by-drone/">The National</a>. Supports: the Damietta port drone strike (section: The stadium demo).</li>
+    <li id="ref-34"><a href="https://www.faa.gov/uas/getting_started/remote_id">FAA: Remote Identification of Drones</a> (14 CFR Part 89). Supports: the broadcast identity requirement for registered drones (section: Which drone is allowed here).</li>
+    <li id="ref-35"><a href="https://www.etsi.org/deliver/etsi_ts/122100_122199/122125/17.06.00_60/ts_122125v170600p.pdf">3GPP TS 22.125: Uncrewed Aerial System support in 3GPP</a> (ETSI TS 122 125). Supports: remote identification and tracking of UAS linked to a 3GPP subscription (section: Which drone is allowed here).</li>
+    <li id="ref-36"><a href="https://www.zte.com.cn/global/about/news/china-unicom-henan-yunhuan-connected-drone-technology-co-ltd-and-zte-complete-5g-a-low-altitude-isac-commercial-deployment-for-blood-delivery-services.html">ZTE and China Unicom: 5G-A low-altitude ISAC commercial deployment for blood delivery services</a>, November 2024. Vendor source. Supports: the claimed first commercial ISAC deployment guarding a licensed drone corridor (sections: Which drone is allowed here; The business).</li>
   </ol>
 
   <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri. Every number was checked against the primary source listed - the paper that ran the measurement, the released model files, the standards PDF, or the SEC filing - on August 3, 2026. Vendor claims that could not be independently confirmed are labeled as vendor claims in the text. Where accounts conflict (site-to-target distances in the Arlington demo were reported differently by two outlets), the conflicting detail was left out. The reported 6 km tracking range appears in a single independent report and is attributed as reported. Last updated: August 3, 2026.</p>

@@ -254,7 +254,7 @@
   <div class="scopehead"><b>What the network sees</b><span>distance vs speed</span></div>
   <canvas id="scope" width="576" height="324"></canvas>
   <div id="counters">
-    <span>Real targets: <b id="realct">3</b></span>
+    <span>Real targets: <b id="realct">4</b></span>
     <span class="flood">Raw detections: <b id="rawct">3</b></span>
   </div>
 </div>
@@ -666,6 +666,28 @@ ledR.position.set(1.75, .5, 1.75); drone.add(ledR);
 drone.scale.setScalar(1.25);
 scene.add(drone);
 
+/* licensed drone: cooperative target, crosses the zone without alarms */
+const friendly = drone.clone();
+const friendlyRotors = [];
+{
+  const rmSprites = [];
+  friendly.traverse(o => {
+    if (o.isSprite) rmSprites.push(o);
+    if (o.material) o.material = o.material.clone();
+    if (o.isMesh && o.material.transparent && Math.abs(o.material.opacity - 0.26) < 0.01) friendlyRotors.push(o);
+  });
+  rmSprites.forEach(s => s.parent.remove(s));
+  friendly.traverse(o => {
+    if (o.isMesh && o.material.type === 'MeshBasicMaterial' && !o.material.transparent){
+      const h = o.material.color.getHex();
+      if (h === 0xff4d4d || h === 0x59ff8a) o.material.color.setHex(0x59ff8a);
+    }
+  });
+}
+const lblFriendly = textLabel('Licensed - flight plan', '#59ff8a');
+lblFriendly.position.set(0, 8.5, 0); friendly.add(lblFriendly);
+scene.add(friendly);
+
 /* car + pedestrian */
 const car = new THREE.Group();
 const cb = new THREE.Mesh(new THREE.BoxGeometry(7.4, 2.4, 3.6), dmat(0x33405c)); cb.position.y=1.5; car.add(cb);
@@ -836,7 +858,7 @@ function spawnWave(){
   waves.push({ring, sphere, r:1, hit:new Set()});
 }
 const echoes = [], paths = [];
-function echoAt(obj, radialSpeed, rangeFromTX, strong){
+function echoAt(obj, radialSpeed, rangeFromTX, strong, hot){
   const p = obj.position ? obj.position : obj;
   const em = new THREE.MeshBasicMaterial({color:C.accent2, transparent:true, opacity:0.75, side:THREE.DoubleSide});
   const ring = new THREE.Mesh(ringGeo, em);
@@ -850,7 +872,7 @@ function echoAt(obj, radialSpeed, rangeFromTX, strong){
     scene.add(l);
     paths.push({line:l, life:1});
   }
-  addBlip(rangeFromTX, radialSpeed, strong);
+  addBlip(rangeFromTX, radialSpeed, strong, hot);
 }
 
 const scope = document.getElementById('scope');
@@ -858,13 +880,13 @@ const sctx = scope.getContext('2d');
 const SW = scope.width, SH = scope.height;
 const RANGE_MAX = 400, V_MAX = 22;
 const blips = [];
-let speckleCount = 0, rawShown = 3, counterTimer = 0;
-function addBlip(range, v, strong){
+let speckleCount = 0, rawShown = 4, counterTimer = 0;
+function addBlip(range, v, strong, hot){
   blips.push({
     x: Math.min(range, RANGE_MAX)/RANGE_MAX * SW,
     y: SH/2 - (Math.max(-V_MAX, Math.min(V_MAX, v))/V_MAX) * (SH/2 - 14),
     w: Math.max(3, dR() / RANGE_MAX * SW * 10),
-    life: 1, strong, hot: strong && alarm
+    life: 1, strong, hot: !!hot
   });
 }
 function drawScope(dt){
@@ -962,6 +984,14 @@ const FACTS = {
           ['Weak spot','Drops out over building clutter']],
     dyk:'Live trials measured about 3 percent false alarms - the simulation-era target was one in a million.',
     cam:()=>{const p=drone.position;return [[p.x+34, p.y+20, p.z+40],[p.x, p.y, p.z]]}},
+  licensed: {kicker:'The cooperative target', title:'Licensed drone', tag:'Announces itself, so it never alarms',
+    desc:'The green drone is registered and cooperative: it broadcasts its identity (Remote ID), can carry a SIM the network recognizes, and flies a filed route. The sensing layer still tracks it - but its track matches an identity, so it is traffic, not a threat.',
+    rows:[['Broadcasts','Remote ID: identity + position in flight'],
+          ['Network','3GPP defines SIM-linked drone identification'],
+          ['Route','Filed flight plan through the zone'],
+          ['Alarm','None - matched tracks are traffic']],
+    dyk:'China\'s first claimed commercial ISAC deployment guards a licensed drone delivery corridor - watching sanctioned drones fly their lane.',
+    cam:()=>{const p=friendly.position;return [[p.x+34, p.y+20, p.z+40],[p.x, p.y, p.z]]}},
   zone: {kicker:'The security layer', title:'Protected zone', tag:'A geofence made of radio coverage',
     desc:'The glowing cylinder is a restricted zone around the protected site. When the network tracks an unidentified object crossing the boundary, it raises a threat alert: banner, target lock, log entry. Switch sites at the top - stadium, port, airport.',
     rows:[['Trigger','Track crosses the zone boundary'],
@@ -1021,6 +1051,7 @@ marker(new THREE.Vector3(0, 56, 0), 'tx', txTower, '#ffb454');
 marker(new THREE.Vector3(0, 56, 0), 'rx', rxTowerA, '#77aede');
 marker(new THREE.Vector3(0, 56, 0), 'rx', rxTowerB, '#77aede');
 marker(new THREE.Vector3(0, 4.5, 0), 'drone', drone, '#eef1f6');
+marker(new THREE.Vector3(0, 4.5, 0), 'licensed', friendly, '#59ff8a');
 const zoneMarker = new THREE.Sprite(new THREE.SpriteMaterial({map:dotTexture('#ffb454'), transparent:true, depthTest:false}));
 zoneMarker.scale.set(9,9,1); zoneMarker.userData.key = 'zone'; zoneMarker.userData.baseScale = 9;
 scene.add(zoneMarker); markers.push(zoneMarker);
@@ -1051,7 +1082,7 @@ const STEPS = [
    go(){ flyTo([180, 95, 40],[30, 25, 0]); }},
   {t:'Every echo becomes a dot on this panel: distance across, speed up and down. No shapes, no faces. This chart is everything the network "sees".',
    go(){ document.getElementById('scopebox').classList.add('hl'); }},
-  {t:'Now the security layer. The moment the drone crosses into the protected zone, the system raises a threat alert: red banner, target lock, event log. Watch - it happens on its own as the drone circles.',
+  {t:'Now the security layer. The GREEN drone is licensed: it announces its identity and flies a filed route, so it crosses the zone as normal traffic. The unidentified drone gets no such pass - the moment it enters, the system raises a threat alert: red banner, target lock, event log.',
    go(){ document.getElementById('scopebox').classList.remove('hl');
         flyTo([mode.center.x+90, 120, mode.center.z+130],[mode.center.x, 14, mode.center.z]); }},
   {t:'Why it matters: this exact idea detected drones over a World Cup stadium in July 2026, and days-old attacks like the Damietta port strike show what undefended sites face. Switch the protected site up top: Stadium, Port, Airport.',
@@ -1101,11 +1132,12 @@ setStep(0);
 /* ---------- animation ---------- */
 const clock = new THREE.Clock();
 let waveTimer = 1.2;
-const prevPos = {drone:new THREE.Vector3(), car:new THREE.Vector3(), ped:new THREE.Vector3()};
+const prevPos = {drone:new THREE.Vector3(), friendly:new THREE.Vector3(), car:new THREE.Vector3(), ped:new THREE.Vector3()};
 const targets = [
-  {obj:drone, name:'drone'},
-  {obj:car,   name:'car'},
-  {obj:ped,   name:'ped'}
+  {obj:drone,    name:'drone'},
+  {obj:friendly, name:'friendly'},
+  {obj:car,      name:'car'},
+  {obj:ped,      name:'ped'}
 ];
 function radialSpeed(obj, prev, dt){
   const v = obj.position.clone().sub(prev).divideScalar(Math.max(dt,1e-4));
@@ -1148,6 +1180,7 @@ function frame(){
 
   /* motion: drone orbits near the protected zone and periodically breaches it */
   prevPos.drone.copy(drone.position);
+  prevPos.friendly.copy(friendly.position);
   prevPos.car.copy(car.position);
   prevPos.ped.copy(ped.position);
   const o = mode.orbit;
@@ -1157,7 +1190,14 @@ function frame(){
     o.z + mode.rz*Math.sin(t*0.16)
   );
   drone.rotation.y = -t*0.16 + Math.PI/2;
+  friendly.position.set(
+    mode.center.x + 150*Math.cos(t*0.11 + 2),
+    24 + Math.sin(t*0.9)*3,
+    mode.center.z + 55*Math.sin(t*0.11 + 2)
+  );
+  friendly.rotation.y = -t*0.11;
   for (const r of rotors) r.rotation.y += dt*45;
+  for (const r of friendlyRotors) r.rotation.y += dt*45;
   const blink = (t % 1) < 0.5;
   ledL.visible = blink; ledR.visible = !blink;
   const avOn = (t % 1.4) < 0.8;
@@ -1225,7 +1265,7 @@ function frame(){
         w.hit.add(tg.name);
         const vr = radialSpeed(tg.obj, prevPos[tg.name], dt);
         const range = tg.obj.position.distanceTo(TX);
-        echoAt(tg.obj, vr, range, true);
+        echoAt(tg.obj, vr, range, true, alarm && tg.name === 'drone');
         flash(tg.obj);
       }
     }
@@ -1289,13 +1329,13 @@ function frame(){
 
   counterTimer += dt;
   if (counterTimer >= 1){
-    rawShown = 3 + speckleCount;
+    rawShown = 4 + speckleCount;
     speckleCount = 0; counterTimer = 0;
     document.getElementById('rawct').textContent = rawShown;
   }
-  if (!clutter && rawShown !== 3){
-    rawShown = 3;
-    document.getElementById('rawct').textContent = 3;
+  if (!clutter && rawShown !== 4){
+    rawShown = 4;
+    document.getElementById('rawct').textContent = 4;
   }
 
   if (storyMode && !reduceMotion){
