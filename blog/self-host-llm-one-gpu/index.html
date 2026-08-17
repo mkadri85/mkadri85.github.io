@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Self-Hosting AI: The Model Was the Easy Part - Mohamed Kadri</title>
+<meta name="description" content="One week, one cloud GPU, a shelf of open models - and the discovery that the model is only one layer of an engineered system. Quantization, the 32B wall, the harness lesson, guardrails, and real GCP prices.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/self-host-llm-one-gpu/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/self-host-llm-one-gpu/">
+<link rel="alternate" hreflang="ar" href="https://mkadri85.github.io/blog/self-host-llm-one-gpu/ar/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/self-host-llm-one-gpu/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/self-host-llm-one-gpu/">
+<meta property="og:title" content="I Self-Hosted AI for a Week. The Model Was the Easy Part.">
+<meta property="og:description" content="One week, one cloud GPU, a shelf of open models - and the discovery that the model is only one layer of an engineered system. Quantization, the 32B wall, the harness lesson, guardrails, and real GCP prices.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/self-host-llm-og.jpg">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/self-host-llm-og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A single GPU card on a desk with open model names orbiting it">
+<meta property="article:published_time" content="2026-08-17">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="AI engineering">
+<meta property="article:tag" content="self-hosting">
+<meta property="article:tag" content="open models">
+<meta property="article:tag" content="LLM infrastructure">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="I Self-Hosted AI for a Week. The Model Was the Easy Part.">
+<meta name="twitter:description" content="One week, one cloud GPU, a shelf of open models - and the discovery that the model is only one layer of an engineered system. Quantization, the 32B wall, the harness lesson, guardrails, and real GCP prices.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/self-host-llm-og.jpg">
+<meta name="twitter:image:alt" content="A single GPU card on a desk with open model names orbiting it">
+
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "TechArticle",
+ "headline": "I Self-Hosted AI for a Week. The Model Was the Easy Part.",
+ "description": "One week, one cloud GPU, a shelf of open models - and the discovery that the model is only one layer of an engineered system. Quantization, the 32B wall, the harness lesson, guardrails, and real GCP prices.",
+ "image": "https://mkadri85.github.io/assets/self-host-llm-og.jpg",
+ "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+ "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+ "datePublished": "2026-08-17",
+ "dateModified": "2026-08-17",
+ "mainEntityOfPage": "https://mkadri85.github.io/blog/self-host-llm-one-gpu/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is the cheapest way to try self-hosting an LLM?","acceptedAnswer":{"@type":"Answer","text":"Rent a spot GPU instead of buying hardware. On Google Cloud, an NVIDIA L4 bills about 0.34 US dollars per hour as spot capacity in us-central1 for the GPU component, so an evening of experiments can cost only a few dollars."}},
+{"@type":"Question","name":"What does quantization do to a model?","acceptedAnswer":{"@type":"Answer","text":"It stores weights in fewer bits. Roughly: each billion parameters costs about 2 GB at FP16, 1 GB at 8-bit and 0.5 GB at 4-bit, usually with some quality tradeoff that depends on the quantization method and model. It is the single setting that most decides whether a model fits your GPU."}},
+{"@type":"Question","name":"Ollama or vLLM for a first self-hosted model?","acceptedAnswer":{"@type":"Answer","text":"Ollama to learn and for single-user use; it is one command and manages quantized models for you. vLLM when you need concurrency and fast time to first token, at the cost of more setup."}},
+{"@type":"Question","name":"Why test less-constrained open models?","acceptedAnswer":{"@type":"Answer","text":"To design guardrails from observed behavior instead of imagination. Seeing what a raw model produces helps reveal what your filters, policies and confidence gates need to handle before you put an agent in front of users."}},
+{"@type":"Question","name":"Is self-hosting cheaper than using APIs?","acceptedAnswer":{"@type":"Answer","text":"Not usually for bursty personal use, where an idle GPU still bills. Self-hosting wins when workloads are always-on and high-volume, when data cannot leave your infrastructure, or when you need raw model access that APIs do not offer."}}
+]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+ :root{
+  --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+  --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+  --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+ }
+ *{box-sizing:border-box}
+ html{scroll-behavior:smooth}
+ body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  line-height:1.75;-webkit-font-smoothing:antialiased}
+ h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+ a{color:var(--accent);text-decoration:none}
+ a:hover{text-decoration:underline}
+ .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+ header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+  background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+ header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+  max-width:1240px;margin:0 auto;padding:0 24px}
+ .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+ .brand:hover{text-decoration:none}
+ .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+ .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+ .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;margin:56px 0 14px}
+ h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+ .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+ .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+ .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+  color:var(--ink);margin:34px 0 0;text-align:center}
+ .closing .grad{font-weight:600}
+ h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+ h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+ .hero{margin:0 0 34px}
+ .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+ .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+  padding:18px 22px;margin:0 0 38px}
+ .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+  text-transform:uppercase;margin-bottom:10px}
+ .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+  columns:2;column-gap:34px}
+ @media(max-width:640px){.toc ol{columns:1}}
+ .toc li{margin-bottom:6px;break-inside:avoid}
+ .toc a{color:var(--mut)}
+ .toc a:hover{color:var(--ink);text-decoration:none}
+ p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+ li{margin-bottom:8px}
+ strong{color:var(--ink)}
+ .lead{font-size:19px;color:#d7deea}
+ .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+ pre{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:18px 20px;overflow-x:auto;font-size:13px;line-height:1.55;margin:0 0 20px}
+ code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+ p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;
+  padding:1px 6px;font-size:14px;color:#dfe5ee}
+ .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+  background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+ .callout.warn{border-left-color:var(--warn)}
+ .callout p{margin:0;color:#c6cedb}
+ .callout p+p{margin-top:10px}
+ table{border-collapse:collapse;width:100%;font-size:14.5px;margin:0 0 20px}
+ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line)}
+ td{padding:9px 12px;border-bottom:1px solid var(--line);color:#c6cedb;vertical-align:top}
+ .tblwrap{overflow-x:auto}
+ hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+ footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+  color:var(--dim);font-size:13px;text-align:center}
+ figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+ .demo-frame{width:100%;height:1250px;border:1px solid var(--line);border-radius:14px;margin:0 0 8px;background:var(--panel)}
+ .refs{font-size:13.5px;color:var(--mut)}
+ .refs li{margin-bottom:7px}
+ .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+  background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+ .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+ .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+ .author .who b{color:var(--ink);font-size:15.5px}
+</style>
+
+
+ <!-- Microsoft Clarity -->
+ <script>
+  (function(c,l,a,r,i,t,y){
+    c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+    t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+    y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+  })(window, document, "clarity", "script", "xlw4u8ulx2");
+ </script>
+</head>
+<body>
+
+<header><nav>
+ <a class="brand" href="/">Mohamed Kadri</a>
+ <div class="navlinks">
+  <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a><a href="/blog/self-host-llm-one-gpu/ar/">العربية</a>
+ </div>
+</nav></header>
+
+<article class="wrap">
+
+ <h1>I Self-Hosted AI for a Week. The Model Was the Easy Part.</h1>
+ <div class="meta">Mohamed Kadri &middot; August 17, 2026 &middot; prices checked August 17, 2026 &middot; <a href="/blog/self-host-llm-one-gpu/ar/">اقرأ بالعربية</a></div>
+
+ <p class="lead">I asked a local model a question on my MacBook and went to make coffee. Two minutes later it was still typing. So I rented one GPU in the cloud, loaded several open model families onto it, and spent a week doing what I thought was model testing. It was not. What the week actually taught me is that the thing we casually call "the model" is an entire engineered system, and the model is the easy part. This is that story, told so a reader with no AI background can follow every step, and it ends where my day job lives: what running raw, less-constrained models taught me about designing guardrails for AI agents.</p>
+
+ <figure>
+    <img src="/assets/self-host-llm-hero.png" alt="A GPU on a workbench with a translucent stack floating above it labelled harness, model, inference engine, quantization and GPU memory, and the names Gemma 4, gpt-oss, Qwen and DeepHat orbiting around it" width="1731" height="909" loading="eager">
+    <figcaption>One GPU, a shelf of open models, and the layers a managed product keeps out of sight.</figcaption>
+  </figure>
+
+  <h2 id="testing">I thought I was testing models</h2>
+ <p>The plan was simple. My MacBook was too slow for serious local models, so I rented a g2-standard-8 machine on Google Cloud: 8 virtual CPUs, 32 GB of ordinary RAM, and one NVIDIA L4 GPU with 24 GB of its own memory, called VRAM. Keep those two memories separate in your head: the RAM is the storeroom where you stage deliveries; the VRAM is the workshop itself, where the model actually works. For fast GPU-only inference, you want the model and its working context to fit inside the workshop, and 24 GB is the realistic mid-range rental.</p>
+ <p>The models came fast: Gemma 4, OpenAI's gpt-oss, several Qwen builds including an abliterated coder, and a security specialist called DeepHat. The same questions that took a two-minute coffee break per answer on my MacBook came back in seconds on the L4. Day one felt like victory. The rest of the week dismantled my mental model of what I was even renting the GPU for.</p>
+
+ <h2 id="vocab">24 GB changes how you think</h2>
+ <p>On an API you never think about memory. On your own GPU, four terms stop being trivia and become daily decisions. Picture what you are doing as renting a fully equipped workshop by the hour, instead of buying machines you will use for one project. That rental is the whole cloud GPU decision, and the four terms are just facts about the workshop.</p>
+ <p><strong>Parameters are the tools on the wall.</strong> A "12B model" is a workshop hung with twelve billion tools. More tools handle more jobs, but every tool needs wall space, and that space is VRAM. The working rule: every billion tools needs about 2 GB at full size (FP16), about 1 GB at 8-bit, about 0.5 GB at 4-bit <a href="#ref-8">[8]</a>.</p>
+ <p><strong>Quantization is the compact travel version of each tool.</strong> Same job, slightly less finesse, a quarter of the space. One honesty note: 4-bit is not one thing; GGUF Q4, AWQ, GPTQ and MXFP4 are different schemes with different quality costs, which is why gpt-oss ships its own MXFP4 rather than a generic quant.</p>
+ <p><strong>The context window is the blueprint on the bench.</strong> The longer the drawing the model keeps unrolled, the more bench it covers, space stolen from the tools. Technically that bench space is the KV cache: a few thousand words cost 1 to 2 GB, book-length can pass 8 GB <a href="#ref-8">[8]</a>. A card advertising a 262,000-token window will load on a 24 GB GPU, but you will not unroll a blueprint that size next to the tools. Specs are ceilings, not promises.</p>
+ <p><strong>Tokens per second is finished pieces per hour.</strong> Published figures for 7 to 9B-tool workshops at 4-bit on 24 GB-class cards cluster around 40+ tokens per second <a href="#ref-9">[9]</a>. I did not log throughput rigorously and will not invent numbers; what I observed is the coffee-break-to-seconds gap above, on every model I ran.</p>
+
+ <h2 id="wall">32B is where quantization stopped being vocabulary</h2>
+ <p>Up to about 12B parameters, the workshop feels roomy and the rules above are trivia. Then I pushed toward a 32B-class model, and quantization became capacity planning instead of vocabulary.</p>
+ <p>The model I wanted was <code>qwen2.5-coder:32b</code>, the 32B coder I hoped to drive a real coding session with. The arithmetic ruled it out before I burned a session on it: thirty-two billion parameters at 4-bit is roughly 18 GB of weights, and once I wanted a working context and the runtime took its share of 24 GB, there was no bench left for the blueprint. The fallback would have been partial CPU offloading, at the cost of much slower generation; rather than spend the evening on that, I did what the numbers told me and dropped to a 14B coder. That trade, giving up parameters to buy back context and headroom, is the whole lesson of this section: on one 24 GB GPU, model size is not a preference, it is a budget.</p>
+ <p>The arithmetic explains the wall. Thirty-two billion tools at 4-bit is roughly 18 GB of weights before the blueprint and the runtime take their share of a 24 GB workshop; leave less than 2 to 4 GB of margin and you are quickly into OOMs, reduced context, or CPU offloading, depending on the runtime. This is the moment capacity planning stops being vocabulary.</p>
+  <figure>
+    <img src="/assets/self-host-llm-vram.png" alt="A 24 GB GPU workbench filled by 32B Q4 weights at about 18 GB, context and KV cache about 4 GB, runtime overhead about 1.5 GB, leaving under 0.5 GB of headroom" width="1672" height="941" loading="lazy">
+    <figcaption>On a 24 GB card, 32B weights alone take three quarters of the bench. Context and runtime claim the rest.</figcaption>
+  </figure>
+
+ <h2 id="harness">The model was only half the product</h2>
+ <p>Here is the discovery that reorganized this whole article. Chatting with a local model works on day one. Then I pointed opencode, an open-source coding harness, at my own endpoint instead of a paid API, and tried to work the way I work with Claude Code. The difference was immediate, and it was not the model's intelligence. It was everything wrapped around the model that a polished product never shows you: the system prompt, context allocation, tool descriptions, tool-call syntax, parsing, retries, the planning loop, state across turns.</p>
+ <p>The first wall was not intelligence, it was refusal. Plain <code>qwen2.5-coder</code> declined offensive-security tasks outright, which for the security work I was testing was a dealbreaker, so I switched to an abliterated build (<code>huihui_ai/qwen2.5-coder-abliterate:14b</code>) where much of that refusal behavior had been removed. Lesson one, before any tool call: refusal behavior is part of model behavior, not a security boundary, which is exactly why a modified version of the same base model can give a different answer.</p>
+ <p>The second wall was behavior. Pointed through a harness at real files, the small model flailed on multi-step tasks, wandered off format, and produced structured, JSON-shaped fragments where I wanted plain edits. My fix was not a better prompt to the model; it was an output contract in the harness profile, a block of custom instructions constraining how it was allowed to respond. Note the word I am not using: that is a behavioral constraint, not a guardrail. A guardrail, later in this article, means an enforceable control, authorization, policy, validation, a kill switch. Conflating the two is an easy architectural mistake. What the fix taught me is that what looks like "the model misbehaving" is usually the model plus its chat template plus the runtime plus the harness, and for this kind of interface failure the durable fix belonged in the harness layer I controlled, not in changing the weights.</p>
+ <p>That JSON incident taught the deepest lesson of the week: what looks like model behavior is often model plus chat template plus runtime plus harness behavior. Four layers can each bend the output, and from the outside you cannot tell which one did. The stack you are actually operating looks like this:</p>
+ <figure>
+    <img src="/assets/self-host-llm-stack.png" alt="The hidden AI stack, top to bottom: harness (system prompt, context, tools, retries), model (the weights), inference engine (Ollama or vLLM, template, batching), quantization (Q4, Q8, MXFP4), and GPU memory (24 GB VRAM budget). APIs hide the stack; self-hosting makes you operate it." width="1672" height="941" loading="lazy">
+    <figcaption>The stack you are actually operating. When people say the model did X, any layer may be the real author.</figcaption>
+  </figure>
+ <p>When people say "the model did X," any layer of that stack may be the real author. APIs hide the stack. Self-hosting makes you operate it, and that is the education.</p>
+
+ <h2 id="friction">Capability was not the biggest difference. Friction was.</h2>
+ <p>The honest comparison with frontier products is not a benchmark score. With Claude or GPT, I could usually describe an intention, even sloppily phrased, and the system worked out what I meant. With several local setups, I found myself describing the interface contract instead: exactly how to behave, exactly what format to answer in, exactly which tool to call. </p>
+ <p>The clearest example was the coding work above. With Claude Code I interacted with a product: I handed over a loosely phrased goal, and something else had already decided the model, the context budget, the tool wiring and the retries. Locally I was operating the product and using it at the same time, assembling model plus runtime plus harness myself before the same intention survived the round trip. That is not Claude versus Qwen; it is a managed, vertically integrated product versus a stack you wire together. For the tasks I tried, raw model capability was not what surprised me. Integration friction was, and the friction is the product.</p>
+  <figure>
+    <img src="/assets/self-host-llm-product.png" alt="Managed product versus self-hosted stack: on the managed side you interact only with the product and the stack is hidden; on the self-hosted side you drive harness, runtime, model and GPU yourself. Locally you are both the user and the operator." width="1672" height="941" loading="lazy">
+    <figcaption>Using AI is not the same as operating AI. Locally you are both.</figcaption>
+  </figure>
+
+ <h2 id="models">What each model taught me</h2>
+ <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:14px;margin:14px 0">
+<tr style="border-bottom:1px solid var(--line);color:var(--mut);text-align:left"><th style="padding:8px 6px">What I ran</th><th style="padding:8px 6px">Why I tried it</th><th style="padding:8px 6px">What happened</th></tr>
+<tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 6px">Gemma 4 12B</td><td style="padding:8px 6px">general daily driver, images</td><td style="padding:8px 6px">fit an L4 comfortably at 4-bit; my default</td></tr>
+<tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 6px">gpt-oss-20b</td><td style="padding:8px 6px">reasoning and tool use</td><td style="padding:8px 6px">MoE, ships MXFP4; felt unusually capable for how comfortably it ran on the L4</td></tr>
+<tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 6px">Qwen3.5-9B</td><td style="padding:8px 6px">small all-rounder</td><td style="padding:8px 6px">my favorite small all-rounder in this experiment</td></tr>
+<tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 6px">qwen2.5-coder:32b</td><td style="padding:8px 6px">wanted to test a larger coding model</td><td style="padding:8px 6px">did not fit a working context on 24 GB; dropped to 14B</td></tr>
+<tr style="border-bottom:1px solid var(--line)"><td style="padding:8px 6px">qwen2.5-coder-abliterate:14b</td><td style="padding:8px 6px">the standard build refused the security tasks I tried</td><td style="padding:8px 6px">the tested refusals no longer appeared; needed a harness output contract to stay on format</td></tr>
+<tr><td style="padding:8px 6px">DeepHat-V1-7B</td><td style="padding:8px 6px">security / guardrail lab (in LM Studio)</td><td style="padding:8px 6px">the failure-surface map for the guardrail section</td></tr>
+</table></div>
+<p style="font-size:14px;color:var(--dim)">This is the experiment, not a spec sheet. Parameter counts and context ceilings are on each model card <a href="#ref-1">[1]</a><a href="#ref-2">[2]</a><a href="#ref-3">[3]</a><a href="#ref-4">[4]</a>; I did not benchmark tokens per second and will not invent numbers.</p>
+
+ <p><strong>Gemma 4 12B</strong> (Google) is multimodal with a 256K context <a href="#ref-2">[2]</a>, fits an L4 comfortably at 4-bit, and became my daily driver for general work and anything involving images.</p>
+ <p><strong>gpt-oss-20b</strong> (OpenAI) is 21B parameters with only 3.6B active per token, shipped already quantized to MXFP4 so it runs within 16 GB <a href="#ref-1">[1]</a>. This is mixture-of-experts working exactly as our <a href="/blog/mixture-of-experts-explained/">MoE explainer</a> promised: all twenty-one billion tools hang on the wall and bill for the space, but only the few billion relevant to the job get picked up, which means less computation per token than a dense model of the same size, so it can feel fast; that is not why it is small.</p>
+ <p><strong>Qwen3.5-9B</strong> (Alibaba) packs a 262K native window into 9B parameters <a href="#ref-3">[3]</a>, my favorite small all-rounder in this experiment, with the blueprint caveat from above.</p>
+ <p><strong>Abliterated and uncensored builds</strong> were the ones that taught me the most, not because I wanted their output but because I needed to see it. Running <code>huihui_ai/qwen2.5-coder-abliterate:14b</code> next to its governed sibling is what turned "guardrails matter" from a slogan into a checklist.</p>
+ <p><strong>DeepHat-V1-7B</strong> is the specialist: a cybersecurity fine-tune of Qwen2.5-Coder-7B, built for offensive and defensive security work, 131K context <a href="#ref-4">[4]</a>. I ran it for exactly the purpose the next section describes.</p>
+
+ <h2 id="stack">Ollama optimizes convenience. vLLM optimizes serving.</h2>
+ <p><strong>Ollama</strong> is one install and one command per model, quantized variants managed for you; it is built around developer convenience, and for learning it is hard to beat. <strong>vLLM</strong> is designed around serving efficiency: PagedAttention manages the blueprint memory in pages instead of one contiguous slab, continuous batching keeps the GPU full across many requests, and prefix caching plus structured-output support are why it behaves differently under load, not just faster <a href="#ref-11">[11]</a>. The benchmark I cite shows the expected tradeoff: vLLM ahead on time-to-first-token and multi-user throughput, Ollama favouring single-user simplicity <a href="#ref-11">[11]</a>. Others exist for later, SGLang and TGI are the names you will meet when concurrency gets serious. I ran both on the L4 and the split held: Ollama for daily driving, vLLM when I wanted several requests served at once rather than one at a time.</p>
+
+ <h2 id="guardrails">Raw behavior changed how I think about guardrails</h2>
+ <p>I run AI agents in production, and everything I publish comes back to one thesis: autonomy must be earned, governed, and revocable. Governance tested only against a heavily mediated API model may never meet some failure modes that your surrounding architecture should still be prepared to contain; the failure surface is wider than that model will ever show you. So I ran adversarial evaluation against less-constrained variants, the abliterated coder above and DeepHat included, and treated their output as a map of the failure surface my guardrails have to control. This is the discipline OWASP's agentic-security work prescribes, adversarial testing plus continuous defensive validation, done by people who ship governed systems. To be explicit: diagnostic work, not a recommendation to put unguarded models near users.</p>
+ <p>Three lessons. First, <strong>model refusal is only one layer of a safety system, and it must never be the layer your architecture depends on</strong>; open weights can be post-trained or wrapped very differently from what any API shows you. Second, <strong>critical guardrails must exist outside the model, because controls that live only inside the model disappear when the model changes.</strong> The open ecosystem ships the parts: Llama Guard, NVIDIA NeMo Guardrails, and OpenAI's gpt-oss-safeguard classifier <a href="#ref-5">[5]</a>; projects like Forge <a href="#ref-7">[7]</a> report large gains from wrapping small models in strict tool-calling guardrails, self-measured, so I cite the direction and not the digits. Third, the control plane runs BESIDE the stack diagram above, not inside it: identity, authorization, input policy, tool policy, output validation, observability, and a kill switch.</p>
+  <figure>
+    <img src="/assets/self-host-llm-controlplane.png" alt="The model stack ringed by an external control plane: identity and authentication, authorization, policy and governance, input validation, output validation, observability and audit, and a kill switch. Model refusal is not a security boundary; the real controls live outside the model." width="1672" height="638" loading="lazy">
+    <figcaption>The control plane runs beside the stack, not inside it. Model refusal is not a security boundary.</figcaption>
+  </figure>
+  <p>That architecture is its own article, our <a href="/blog/agent-noc/">Agent NOC piece</a>, and this week of raw-model reading was calibrating it. Discipline around a small, governed model beats hope around a big unconstrained one.</p>
+
+ <h2 id="cost">The economics, without the romance</h2>
+ <p>Budget for the whole machine, not the GPU line item. The L4 GPU component alone bills <strong>$0.56 per hour on-demand</strong> and <strong>$0.34 per hour spot</strong> in us-central1, read from Google's billing catalog on August 17, 2026 <a href="#ref-6">[6]</a>; with the g2-standard-8's vCPU, RAM and a boot disk, plan for roughly <strong>$0.85 to $0.90 per hour on-demand</strong> all-in, about half that on spot. Planning estimates, not catalog quotes: check the <a href="https://cloud.google.com/compute/gpus-pricing">live page</a>. For Gulf readers, the same catalog read puts a Dammam spot L4 near $0.54 per hour and a Doha three-year commitment near $0.31 <a href="#ref-6">[6]</a>.</p>
+ <p>My week of evenings plus a long weekend on spot came to under twenty dollars all in. The real equation is cost per useful token: infrastructure cost divided by the tokens you actually push through it. An always-on GPU at ten percent utilization is expensive nostalgia; for most bursty, low-volume workloads, APIs are hard to beat. Self-hosting earns its keep with sustained utilization, data that cannot leave, and the raw-model control above, which mainstream managed APIs generally do not expose in the same way.</p>
+
+ <h2 id="calc">A back-of-the-envelope VRAM check</h2>
+ <p>For real planning, use the full community calculators first: the VRAM calculator on Hugging Face and the open-source llm-calc <a href="#ref-10">[10]</a> model the details this page cannot. The version below is a teaching toy that implements only the rules of thumb above, so you can sanity-check while you read. Trust its verdicts to one significant figure, never to the decimal.</p>
+ <div style="background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;margin:18px 0">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px">
+   <label style="display:block;font-size:14px;color:var(--mut)">Model size (B params)
+    <input id="c-params" type="number" value="9" min="0.5" step="0.5" style="width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:8px">
+   </label>
+   <label style="display:block;font-size:14px;color:var(--mut)">Quantization
+    <select id="c-quant" style="width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:8px">
+     <option value="2.0">FP16 (2 GB/B)</option>
+     <option value="1.0">8-bit (1 GB/B)</option>
+     <option value="0.55" selected>4-bit (0.55 GB/B)</option>
+    </select>
+   </label>
+   <label style="display:block;font-size:14px;color:var(--mut)">Context you will use (K tokens)
+    <input id="c-ctx" type="number" value="8" min="1" max="256" style="width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:8px">
+   </label>
+   <label style="display:block;font-size:14px;color:var(--mut)">Your GPU
+    <select id="c-gpu" style="width:100%;margin-top:4px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;color:var(--ink);padding:8px">
+     <option value="16">T4 / 16 GB</option>
+     <option value="24" selected>L4 / RTX 4090 - 24 GB</option>
+     <option value="40">A100 - 40 GB</option>
+     <option value="80">H100 / A100 - 80 GB</option>
+    </select>
+   </label>
+  </div>
+  <div id="c-out" style="margin-top:14px;font-size:16px;padding:12px;border-radius:8px;background:var(--bg2)"></div>
+ </div>
+ <script>
+ (function(){
+  const $ = id => document.getElementById(id);
+  function calc(){
+   const p = parseFloat($('c-params').value)||0;
+   const q = parseFloat($('c-quant').value);
+   const ctx = parseFloat($('c-ctx').value)||0;
+   const gpu = parseFloat($('c-gpu').value);
+   const weights = p*q;
+   const kv = Math.max(0.5, ctx*0.11*Math.min(p/7,2.5)); // rough: ~1-2GB per 8-16K, scaled by model size
+   const overhead = 1.5;
+   const need = weights+kv+overhead;
+   const fits = need <= gpu;
+   const margin = (gpu-need).toFixed(1);
+   $('c-out').innerHTML = (need <= gpu-2) 
+    ? '<span style="color:#7fd487">Likely fits by this rough estimate.</span> Need ~'+Math.round(need)+' GB on '+gpu+' GB.' : (need <= gpu ? '<span style="color:var(--amber)">Borderline.</span> Rough need ~'+Math.round(need)+' GB on '+gpu+' GB - expect trouble at longer contexts.'
+    : '<span style="color:var(--warn)">Unlikely to fit.</span> Rough need ~'+Math.round(need)+' GB vs '+gpu+' GB. Stronger quantization, smaller model, or less context.');
+  }
+  ['c-params','c-quant','c-ctx','c-gpu'].forEach(id=>$(id).addEventListener('input',calc));
+  calc();
+ })();
+ </script>
+ <p style="font-size:14px;color:var(--dim)">Estimates only: real usage varies by architecture, KV-cache precision and serving stack. For exact numbers per model and quant, use the full calculators <a href="#ref-10">[10]</a>.</p>
+
+ <h2 id="start">Build your own version of the lab</h2>
+ <p>Create the machine (spot, and accept that Google may reclaim it):</p>
+ <pre style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;font-size:13px"><code>gcloud compute instances create llm-lab \
+ --zone=us-central1-a --machine-type=g2-standard-8 \
+ --provisioning-model=SPOT --instance-termination-action=STOP \
+ --image-family=debian-12 --image-project=debian-cloud \
+ --boot-disk-size=100GB --maintenance-policy=TERMINATE</code></pre>
+ <p>SSH in and install the NVIDIA driver with Google's own installer:</p>
+ <pre style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;font-size:13px"><code>curl -O https://raw.githubusercontent.com/GoogleCloudPlatform/compute-gpu-installation/main/linux/install_gpu_driver.py
+sudo python3 install_gpu_driver.py</code></pre>
+ <p>If <code>nvidia-smi</code> shows nothing after the installer finishes, reboot once before debugging anything else. Then Ollama, and a model that fits with room to spare:</p>
+ <pre style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;font-size:13px"><code>curl -fsSL https://ollama.com/install.sh | sh
+ollama pull gemma4:12b   # or: ollama pull qwen3.5:9b
+ollama run gemma4:12b</code></pre>
+ <p>Do not open firewall ports; tunnel instead: <code>gcloud compute ssh llm-lab --zone=us-central1-a -- -L 11434:localhost:11434</code>, then point opencode or your browser at localhost:11434. When spot is reclaimed, the flag above stops the machine instead of deleting it; <code>instances start</code> boots it again from the same persistent disk, with your downloaded models and files intact. And the command that protects your wallet:</p>
+ <pre style="background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;overflow-x:auto;font-size:13px"><code>gcloud compute instances stop llm-lab --zone=us-central1-a</code></pre>
+ <p>Stopping ends compute billing; retained disks and static resources keep billing until deleted, so when the lab is finished, delete the instance AND its disk and any reserved IP.</p>
+
+ <h2 id="faq">Questions this article answers</h2>
+ <div class="faq">
+  <p><strong>What is the cheapest way to try self-hosting?</strong> A spot cloud GPU. The L4's GPU component is about $0.34 per hour spot in us-central1 <a href="#ref-6">[6]</a>; an evening of experiments can cost only a few dollars.</p>
+  <p><strong>What does quantization actually do?</strong> Stores weights in fewer bits: roughly 2 GB per billion parameters at FP16, 1 GB at 8-bit, 0.5 GB at 4-bit <a href="#ref-8">[8]</a>, and 4-bit itself comes in non-interchangeable schemes.</p>
+  <p><strong>Why did my local model disappoint next to Claude or GPT?</strong> Often it is not only the weights. The harness, chat template, runtime and post-training shape the experience alongside the model, and a managed product decides many of those for you; self-hosting makes you operate all of them.</p>
+  <p><strong>Ollama or vLLM?</strong> Ollama optimizes developer convenience; vLLM optimizes serving efficiency and concurrency <a href="#ref-11">[11]</a>.</p>
+  <p><strong>Why test less-constrained open models?</strong> Adversarial evaluation: mapping the failure surface your external guardrails must control, then keeping those guardrails outside the model where they survive a model swap.</p>
+ </div>
+
+ <h2 id="refs">References</h2>
+ <ol class="refs">
+  <li id="ref-1">OpenAI: <a href="https://huggingface.co/openai/gpt-oss-20b">gpt-oss-20b model card</a> - 21B parameters, 3.6B active, MXFP4, runs within 16 GB.</li>
+  <li id="ref-2">Google: <a href="https://huggingface.co/google/gemma-4-12b-it">Gemma 4 12B model card</a> - sizes E2B to 31B, 128K/256K context, multimodal.</li>
+  <li id="ref-3">Alibaba: <a href="https://huggingface.co/Qwen/Qwen3.5-9B">Qwen3.5-9B model card</a> - 9B parameters, 262,144-token native context.</li>
+  <li id="ref-4">DeepHat: <a href="https://huggingface.co/DeepHat/DeepHat-V1-7B">DeepHat-V1-7B model card</a> - cybersecurity fine-tune of Qwen2.5-Coder-7B, 131K context.</li>
+  <li id="ref-5">OpenAI: <a href="https://huggingface.co/openai/gpt-oss-safeguard-20b">gpt-oss-safeguard-20b</a> - open safety-classifier variant of gpt-oss.</li>
+  <li id="ref-6">Google Cloud: <a href="https://cloud.google.com/compute/gpus-pricing">GPU pricing</a> - L4 figures read from the live Cloud Billing catalog, 2026-08-17 (us-central1 on-demand $0.56/h, spot $0.3359/h; me-central2 spot $0.5376/h; me-central1 3-yr commitment $0.3062/h).</li>
+  <li id="ref-7">Forge: <a href="https://github.com/antoinezambelli/forge">repository and eval results</a> - guardrail layer for tool-calling; numbers are the project's own 26-scenario suite.</li>
+  <li id="ref-8">SitePoint: <a href="https://www.sitepoint.com/run-local-llms-2026-complete-developer-guide/">Run Local LLMs in 2026</a>; DataNorth: <a href="https://datanorth.ai/blog/self-hosted-llms-guide">Self-hosted LLMs guide</a> - memory-per-parameter and KV-cache rules of thumb.</li>
+  <li id="ref-9">LocalLLM.in: <a href="https://localllm.in/blog/ollama-vram-requirements-for-local-llms">Ollama VRAM requirements</a>; MarkTechPost: <a href="https://www.marktechpost.com/2026/07/19/best-local-llms-you-can-run-on-a-single-24gb-gpu-in-2026-qwen-gemma-mistral-deepseek-compared/">Best local LLMs on a single 24 GB GPU</a> - throughput ballparks for 24 GB-class cards.</li>
+  <li id="ref-10">Community calculators: <a href="https://huggingface.co/spaces/NyxKrage/LLM-Model-VRAM-Calculator">LLM VRAM Calculator (Hugging Face Space)</a>; <a href="https://github.com/JimJafar/llm-calc">llm-calc</a>.</li>
+  <li id="ref-11">Allen Kuo: <a href="https://allenkuo.medium.com/gemma-4-on-vllm-vs-ollama-benchmarks-on-a-96-gb-blackwell-gpu-804ca4845a21">Gemma 4 on vLLM vs Ollama benchmarks</a> - TTFT/concurrency vs single-user decode split.</li>
+ </ol>
+
+</article>
+<nav class="share-rail" aria-label="Share this article">
+ <a data-n="li" target="_blank" rel="noopener" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+ <a data-n="x" target="_blank" rel="noopener" title="Share on X" aria-label="Share on X"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+ <a data-n="rd" target="_blank" rel="noopener" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.738 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0Zm4.388 3.199c1.104 0 1.999.895 1.999 1.999 0 1.105-.895 2-1.999 2-.946 0-1.739-.657-1.947-1.539v.002c-1.147.162-2.032 1.15-2.032 2.341v.007c1.776.067 3.4.567 4.686 1.363.473-.363 1.064-.58 1.707-.58 1.547 0 2.802 1.254 2.802 2.802 0 1.117-.655 2.081-1.601 2.531-.088 3.256-3.637 5.876-7.997 5.876-4.361 0-7.905-2.617-7.998-5.87-.954-.447-1.614-1.415-1.614-2.538 0-1.548 1.255-2.802 2.803-2.802.645 0 1.239.218 1.712.585 1.275-.79 2.881-1.291 4.64-1.365v-.01c0-1.663 1.263-3.034 2.88-3.207.188-.911.993-1.595 1.959-1.595Zm-8.085 8.376c-.784 0-1.459.78-1.506 1.797-.047 1.016.64 1.429 1.426 1.429.786 0 1.371-.369 1.418-1.385.047-1.017-.553-1.841-1.338-1.841Zm7.406 0c-.786 0-1.385.824-1.338 1.841.047 1.017.634 1.385 1.418 1.385.785 0 1.473-.413 1.426-1.429-.046-1.017-.721-1.797-1.506-1.797Zm-3.703 4.013c-.974 0-1.907.048-2.77.135-.147.015-.241.168-.183.305.483 1.154 1.622 1.964 2.953 1.964 1.33 0 2.47-.81 2.953-1.964.057-.137-.037-.29-.184-.305-.863-.087-1.795-.135-2.769-.135Z"/></svg></a>
+ <a data-n="fb" target="_blank" rel="noopener" title="Share on Facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
+ <a data-n="th" target="_blank" rel="noopener" title="Share on Threads" aria-label="Share on Threads"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z"/></svg></a>
+</nav>
+
+<nav class="share" aria-label="Share this article">
+ <b>Share</b>
+ <a data-n="li" target="_blank" rel="noopener">LinkedIn</a>
+ <a data-n="x" target="_blank" rel="noopener">X</a>
+ <a data-n="rd" target="_blank" rel="noopener">Reddit</a>
+ <a data-n="fb" target="_blank" rel="noopener">Facebook</a>
+ <a data-n="th" target="_blank" rel="noopener">Threads</a>
+</nav>
+<script>
+(function(){
+ var c=document.querySelector('link[rel="canonical"]');
+ var u=(c&&c.href)?c.href:location.href.split('#')[0];
+ var m=document.querySelector('meta[property="og:title"]');
+ var t=(m&&m.content)?m.content:document.title;
+ var U=encodeURIComponent(u),T=encodeURIComponent(t);
+ var map={
+  li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,
+  x:'https://x.com/intent/post?url='+U+'&text='+T,
+  rd:'https://www.reddit.com/submit?url='+U+'&title='+T,
+  fb:'https://www.facebook.com/sharer/sharer.php?u='+U,
+  th:'https://www.threads.com/intent/post?text='+T+'%20'+U
+ };
+ Array.prototype.forEach.call(document.querySelectorAll('a[data-n]'),
+  function(a){a.href=map[a.getAttribute('data-n')];});
+})();
+</script>
+
+<footer>
+ <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+<script>
+(function(){
+ var m = location.pathname.match(/^\/blog\/([^\/]+)/);
+ if (!m) return;
+ var seed = 10, ar = document.documentElement.lang === 'ar';
+ fetch('https://abacus.jasoncameron.dev/hit/mkadri85-blog/' + m[1])
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+   if (!d || typeof d.value !== 'number') return;
+   var el = document.querySelector('.meta');
+   if (!el) return;
+   var s = document.createElement('span');
+   s.textContent = ' \u00b7 ' + (d.value + seed).toLocaleString() + (ar ? ' \u0642\u0631\u0627\u0621\u0629' : ' reads');
+   el.appendChild(s);
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>
