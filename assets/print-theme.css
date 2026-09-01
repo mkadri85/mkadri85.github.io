@@ -1,0 +1,59 @@
+/* ============================================================
+   Engineering print - dual theme (follows the system)
+   Spec: /DESIGN-SPEC.md  (tokens verified WCAG + APCA, 2026-09-01)
+   Loaded last: re-points the legacy vars, then component voice.
+   ============================================================ */
+:root{
+  --bg:#f7f9fb; --panel:#e9f1f8; --panel2:#eef4fa; --line:#c8d4de;
+  --ink:#1d2b3f; --head:#14365c; --mut:#3f5166; --dim:#4a5b6d;
+  --accent:#35648f; --violet:#35648f; --glow:rgba(53,100,143,.08);
+  --amber:#9a640b; --amber-big:#b97a10; --warn:#b3261e; --maxw:1200px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#111926; --panel:#1a2534; --panel2:#16202e; --line:#2b394c;
+    --ink:#dbe4ee; --head:#e8eef6; --mut:#aebccd; --dim:#a8b8ca;
+    --accent:#85aed4; --violet:#85aed4; --glow:rgba(133,174,212,.10);
+    --amber:#e2a94e; --amber-big:#e2a94e; --warn:#ff8a80;
+  }
+}
+html{background:var(--bg);}
+body{font-family:'Source Serif 4', Georgia, 'Times New Roman', serif;
+  background:var(--bg); color:var(--ink); line-height:1.68;}
+h1,h2,h3,h4,.brand,nav,.nav,.btn,button,.chip,.pill,.tag
+{font-family:'Space Grotesk',Inter,-apple-system,sans-serif;}
+h1,h2,h3,h4{color:var(--head);}
+a{color:var(--accent);}
+a:hover{color:var(--amber);}
+header,.site-header,.topbar{background:var(--bg)!important;
+  border-bottom:1px solid var(--line); box-shadow:none!important;}
+.sub,.lede,.dek{color:var(--mut)!important;}
+.eyebrow,.kicker,.meta,.byline,time,.readtime,.date,figcaption,.cap,.crumbs
+{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,monospace;
+ font-size:13px; letter-spacing:.04em; color:var(--dim);}
+.toc,.in-this-article,.callout,.note,.panel,.card,.glance,.faq,.box
+{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+ box-shadow:none;}
+article img, .post img, figure img{border:1px solid var(--line); border-radius:10px; background:#fff;}
+blockquote{border-left:3px solid var(--amber-big); background:var(--panel); color:var(--ink);}
+/* the console voice: code stays dark in BOTH themes, by design */
+pre, pre code{background:#101722!important; color:#dbe4ee!important;
+  border:1px solid #2b394c; border-radius:10px;}
+:not(pre)>code{background:var(--panel); color:var(--head);
+  border:1px solid var(--line); border-radius:5px; padding:.08em .35em;
+  font-family:'IBM Plex Mono',monospace; font-size:.85em;}
+hr{border:none; border-top:1px solid var(--line);}
+table{border-color:var(--line);} th,td{border-color:var(--line);}
+::selection{background:#f5a623; color:#14365c;}
+canvas.bg, canvas#bg, .constellation{opacity:.35;}
+button:focus-visible, a:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){*{animation:none!important; transition:none!important;}}
+/* Arabic editions */
+html[lang="ar"] body{font-family:'Noto Naskh Arabic','Source Serif 4',serif; line-height:1.9;}
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3
+{font-family:'Noto Naskh Arabic','Space Grotesk',sans-serif;}
+/* home: glass cards that had hardcoded dark backgrounds */
+.hero-card{background:var(--panel)!important; backdrop-filter:none!important;}
+.hc-row .k{color:var(--dim);} .hc-row .v{color:var(--ink);}
+.hc-chips .chip, .chip{background:var(--panel2); border:1px solid var(--line); color:var(--head);}
+.mobile-nav, .mnav, nav.open{background:var(--bg)!important;}
