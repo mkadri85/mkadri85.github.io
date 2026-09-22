@@ -133,6 +133,12 @@ def main():
         for fn in sorted(filenames):
             if not fn.endswith(".html"):
                 continue
+            # Not pages: a Search Console verification file is a bare token, and a
+            # 404 must not carry a canonical pointing at itself.
+            if fn.startswith("google") and len(fn) > 20:
+                continue
+            if fn == "404.html":
+                continue
             path = os.path.relpath(os.path.join(dirpath, fn), root)
             html = open(path, encoding="utf-8", errors="replace").read()
             is_article = path.startswith("blog/") and path != "blog/index.html"
