@@ -189,7 +189,7 @@
 
   <p>الشركة هي PocketOS، وتبني برمجيات لشركات تأجير السيارات. والوكيل هو Cursor يشغل Claude Opus 4.6. كان يعمل داخل بيئة التجهيز، فاصطدم بعدم تطابق في بيانات الاعتماد، فقرر أن الحل هو حذف وحدة تخزين في Railway. وللوصول إلى ذلك بحث عن توكن لواجهة برمجية، فوجد واحدا في ملف لا علاقة له بالمهمة، واستخدمه لإطلاق أمر <code>curl</code> حذف به وحدة تخزين <strong>الإنتاج</strong> بدلا منها. لم تقف في طريقه أي خطوة تأكيد. وذهبت النسخ الاحتياطية معها، لأن Railway يحفظ النسخ الاحتياطية على مستوى وحدة التخزين داخل الوحدة نفسها. وقضى الموظفون عطلة الأسبوع في إعادة بناء حجوزات العملاء من سجلات مدفوعات Stripe ومن سجلات البريد. <a href="#ref-1">[1]</a> <a href="#ref-2">[2]</a></p>
 
-  <p style="font-size:15px;opacity:.72">نقلت الخبر <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startup/" target="_blank" rel="noopener">The Register</a> و<a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> وجهات أخرى.</p>
+  <p style="font-size:15px;opacity:.72">نقلت الخبر <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startups-production-database/5224442" target="_blank" rel="noopener">The Register</a> و<a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> وجهات أخرى.</p>
 
   <p>خلاصة المهندس نفسه بعدها: "خالفت كل مبدأ أعطي لي".</p>
 
@@ -339,7 +339,7 @@
   <h2 id="refs">المصادر والمراجع</h2>
   <p>كل حادثة في هذه المقالة موثقة بتقرير المشغل نفسه أو برواية مباشرة مؤرخة، وكل ادعاء لمورد بصفحة المورد نفسه. أرقام السوق مذكورة مع مصدرها لأنها تتعارض فيما بينها، وهذا جزء من الفكرة.</p>
   <ol class="refs">
-    <li id="ref-1">T. Claburn, <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startup/">Cursor agent snuffs out PocketOS database</a>, The Register, 27 أبريل 2026. يدعم: حذف قاعدة بيانات PocketOS ورواية المهندس نفسه (قسم تسع ثوان).</li>
+    <li id="ref-1">T. Claburn, <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startups-production-database/5224442">Cursor agent snuffs out PocketOS database</a>, The Register, 27 أبريل 2026. يدعم: حذف قاعدة بيانات PocketOS ورواية المهندس نفسه (قسم تسع ثوان).</li>
     <li id="ref-2"><a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane">How an AI coding agent deleted a software company's database</a>, Fast Company, 2026. يدعم: مسار بيانات الاعتماد من مهمة في بيئة التجهيز إلى توكن إنتاج (قسم لماذا يتكرر هذا).</li>
     <li id="ref-3">AI Incident Database, <a href="https://incidentdatabase.ai/cite/1152/">Incident 1152: LLM-driven Replit agent executed unauthorized destructive commands during code freeze</a>, يوليو 2025. يدعم: حذف Replit لقاعدة البيانات أثناء تجميد صريح للشيفرة؛ رقم 1,206 سجلا هو إحصاء المؤسس المتضرر نفسه (قسم لماذا يتكرر هذا).</li>
     <li id="ref-4">Sherlocks AI, <a href="https://www.sherlocks.ai/blog/why-ai-agents-fail-in-production">Why AI Agents Fail in Production: The Agent Failure Stack Explained</a>, 5 يونيو 2026. يدعم: تحليل 73 حادثة إنتاج للوكلاء بين يناير ومايو 2026 (قسم لماذا يتكرر هذا).</li>
