@@ -46,3 +46,51 @@
     });
   });
 })();
+
+/* Section transitions - see the matching block in print-theme.css.
+ * Runs on any page that has <section> elements after a hero; the blog pages
+ * have none and are unaffected. Hidden state goes on <html> from here, never
+ * in the markup, so nothing is blank without JavaScript. */
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) return;
+
+  var secs = [].slice.call(document.querySelectorAll('section'))
+    .filter(function (s) { return !s.classList.contains('hero') && s.querySelector(':scope > .wrap'); });
+  if (!secs.length) return;
+
+  var root = document.documentElement;
+  root.classList.add('sec-js');
+
+  // header height -> snap offset, measured rather than guessed
+  var hdr = document.querySelector('header');
+  if (hdr) root.style.setProperty('--hdr', Math.round(hdr.getBoundingClientRect().height) + 'px');
+  root.classList.add('sec-snap');
+
+  // cascade index for the items inside each section
+  secs.forEach(function (s) {
+    [].forEach.call(s.querySelectorAll('.reveal'), function (el, i) { el.style.setProperty('--i', i); });
+  });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var s = e.target;
+      s.classList.add('sec-in');
+      io.unobserve(s);
+      // drop the compositor hint once the transition has finished
+      setTimeout(function () { s.classList.add('sec-done'); }, 1200);
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+
+  secs.forEach(function (s) { io.observe(s); });
+
+  // anything already on screen at load is revealed immediately - the first
+  // screen must never sit hidden waiting for a scroll that may not come
+  requestAnimationFrame(function () {
+    secs.forEach(function (s) {
+      var b = s.getBoundingClientRect();
+      if (b.top < innerHeight && b.bottom > 0) { s.classList.add('sec-in'); io.unobserve(s); }
+    });
+  });
+})();

@@ -148,3 +148,39 @@ section h2, section .h2{
 }
 /* Sections carry their own band, so give them room to read as separate chapters. */
 section{padding-block:clamp(64px, 7vw, 104px);}
+
+/* ============================================================
+   Section transitions (home page and any page built from <section>s).
+   What the operator asked for: a new section should visibly ARRIVE as you
+   scroll, not just have its items fade in. Three parts:
+     1. the section's content container rises into place with a slight
+        overshoot - the band background stays put, so bands never slide over
+        each other;
+     2. the items inside cascade after it in a short stagger;
+     3. on desktop the page settles on the new section (proximity snap - long
+        sections still scroll freely).
+   The hidden state is only ever applied under html.sec-js, which reveal.js sets
+   at runtime, so a visitor without JavaScript, a crawler, or a reduced-motion
+   user sees every section exactly where it is.
+   ============================================================ */
+html.sec-js section:not(.hero) > .wrap{
+  opacity:0;
+  transform:translateY(56px);
+  /* y2 > 1 on the transform curve is the overshoot: the section rises past its
+     resting point by a few pixels and settles back - the 'bob' the operator
+     described. Measured: y2=1.12 gave 0.1px (invisible), 1.34 gave 2px (felt, not
+     seen), 1.52 gives about 5px on 56px of travel - visible and still restrained. */
+  transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.17,1.52,.32,1);
+  will-change:opacity, transform;
+}
+html.sec-js section.sec-in > .wrap{opacity:1; transform:none;}
+html.sec-js section.sec-done > .wrap{will-change:auto;}
+
+/* cascade: each .reveal inside a section waits a little longer than the last */
+html.sec-js section .reveal{transition-delay:calc(min(var(--i, 0), 8) * 60ms);}
+
+/* settle: desktop only, proximity so it never fights a long section */
+@media (min-width: 900px) and (prefers-reduced-motion: no-preference){
+  html.sec-snap{scroll-snap-type:y proximity; scroll-padding-top:var(--hdr, 64px);}
+  html.sec-snap section{scroll-snap-align:start;}
+}
