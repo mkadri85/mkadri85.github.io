@@ -23,7 +23,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Engineering plate of a mobile backhaul map with one restored service path in amber and a failed microwave link marked in red">
-<meta property="article:published_time" content="2026-09-22">
+<meta property="article:published_time" content="2024-03-12">
+<meta property="article:modified_time" content="2026-09-22">
 <meta property="article:author" content="Mohamed Kadri">
 <meta property="article:section" content="Telecom">
 <meta property="article:tag" content="network topology">
@@ -48,7 +49,7 @@
   "image": "https://mkadri85.github.io/assets/topology-hero.jpg",
   "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/", "sameAs": ["https://www.linkedin.com/in/mohamed-kadri-b3508916"]},
   "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
-  "datePublished": "2026-09-22",
+  "datePublished": "2024-03-12",
   "dateModified": "2026-09-22",
   "inLanguage": "en",
   "mainEntityOfPage": "https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/"
@@ -186,7 +187,7 @@
   <div class="eyebrow">Telecom / Network operations</div>
   <h1>The Map Is the Product</h1>
   <p class="subtitle">How a multi-vendor assurance platform builds its network topology from raw exports, why alarm correlation is only as good as that map, and the five places where the map breaks. Written from the inside of one such build.</p>
-  <div class="meta">Mohamed Kadri &middot; September 22, 2026 &middot; 14 min read &middot; <a href="#video">5-minute video version</a></div>
+  <div class="meta">Mohamed Kadri &middot; March 12, 2024 &middot; updated September 22, 2026 &middot; 14 min read &middot; <a href="#video">6-minute video version</a></div>
 
   <figure class="hero">
     <img src="/assets/topology-hero.jpg" alt="An engineering plate of a mobile backhaul map: six base stations, two microwave hubs, a microwave trunk, access and aggregation routers and a core, with one restored service path in amber, generated links dashed, a failed link marked in red, and six raw table names along the top" width="1536" height="1024">
@@ -519,7 +520,7 @@
     <li id="ref-2">IEEE, <a href="https://standards.ieee.org/ieee/802.1AB/6047/">IEEE 802.1AB-2016: Station and Media Access Control Connectivity Discovery (LLDP)</a>. Supports: LLDP neighbour tables as the preferred link source over description parsing (sections: Restoration; Where the map breaks).</li>
     <li id="ref-3">S. Bryant and P. Pate, <a href="https://www.rfc-editor.org/rfc/rfc3985">RFC 3985: Pseudo Wire Emulation Edge-to-Edge (PWE3) Architecture</a>, IETF, 2005. Supports: pseudowire source and sink and the tunnel that carries it as the exact-path source in restoration step 2 (section: Restoration).</li>
     <li id="ref-4">S. Nadas (ed.), <a href="https://www.rfc-editor.org/rfc/rfc5798">RFC 5798: Virtual Router Redundancy Protocol (VRRP) Version 3</a>, IETF, 2010, section 7.3. Supports: the virtual router MAC address <code>00-00-5E-00-01-{VRID}</code> that defeats OUI-based vendor lookup (section: Where the map breaks, gap 4).</li>
-    <li id="ref-5">TM Forum, <a href="https://www.tmforum.org/resources/suite/gb921-business-process-framework-etom-suite-v25-0/">GB921 Business Process Framework (eTOM) suite, v25.0</a>. Supports: Resource Data Collection and Distribution and Manage Resource Inventory as the processes this pipeline implements (section: What I would build differently).</li>
+    <li id="ref-5">TM Forum, <a href="https://www.tmforum.org/resources/suite/gb921-business-process-framework-etom-suite-v25-0/">GB921 Business Process Framework (eTOM) suite</a>. Supports: Resource Data Collection and Distribution and Manage Resource Inventory as the processes this pipeline implements (section: What I would build differently).</li>
     <li id="ref-6">TM Forum, <a href="https://www.tmforum.org/oda/open-apis/directory/resource-inventory-management-api-TMF639/v4.0">TMF639 Resource Inventory Management API, v4.0</a>, and <a href="https://www.tmforum.org/oda/open-apis/directory/alarm-management-api-TMF642/v5.0">TMF642 Alarm Management API, v5.0</a>. Supports: the standard views that can be generated from the working tables (section: What I would build differently).</li>
     <li id="ref-7">UMBOSS, <a href="https://umboss.com/blog/what-is-network-discovery/">What is network discovery?</a> Independent vendor blog. Supports: the observation that discovery protocols are implemented differently per vendor and that reconciliation against planned inventory is the last step (sections: Where the map breaks; What I would build differently).</li>
     <li id="ref-8">Progress WhatsUp Gold, <a href="https://www.whatsupgold.com/blog/best-practices-series-network-discovery">Best practices series: network discovery</a>. Supports: scheduled rediscovery and credential and protocol coverage as the operational baseline (section: What I would build differently).</li>
