@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Map Is the Product: How Assurance Platforms Build Network Topology</title>
+<meta name="description" content="How a multi-vendor assurance platform reconstructs network topology from raw exports, why alarm correlation depends on that map, and the five places it breaks.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/">
+<link rel="alternate" hreflang="en" href="https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/">
+<link rel="alternate" hreflang="x-default" href="https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/">
+
+<!-- Open Graph -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Mohamed Kadri">
+<meta property="og:locale" content="en_US">
+<meta property="og:url" content="https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/">
+<meta property="og:title" content="The Map Is the Product">
+<meta property="og:description" content="Nobody exports the topology. It is computed nightly from six raw tables. What that means for alarm correlation, and where it breaks.">
+<meta property="og:image" content="https://mkadri85.github.io/assets/topology-og.jpg">
+<meta property="og:image:secure_url" content="https://mkadri85.github.io/assets/topology-og.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Engineering plate of a mobile backhaul map with one restored service path in amber and a failed microwave link marked in red">
+<meta property="article:published_time" content="2026-09-22">
+<meta property="article:author" content="Mohamed Kadri">
+<meta property="article:section" content="Telecom">
+<meta property="article:tag" content="network topology">
+<meta property="article:tag" content="alarm correlation">
+<meta property="article:tag" content="service assurance">
+<meta property="article:tag" content="OSS">
+<meta property="article:tag" content="inventory">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Map Is the Product">
+<meta name="twitter:description" content="Nobody exports the topology. It is computed nightly from six raw tables. What that means for alarm correlation, and where it breaks.">
+<meta name="twitter:image" content="https://mkadri85.github.io/assets/topology-og.jpg">
+<meta name="twitter:image:alt" content="Backhaul map with a restored path in amber and a failed link in red">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "The Map Is the Product: How Assurance Platforms Build Network Topology",
+  "description": "How a multi-vendor assurance platform reconstructs network topology from raw exports, why alarm correlation depends on that map, and the five places it breaks.",
+  "image": "https://mkadri85.github.io/assets/topology-hero.jpg",
+  "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/", "sameAs": ["https://www.linkedin.com/in/mohamed-kadri-b3508916"]},
+  "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
+  "datePublished": "2026-09-22",
+  "dateModified": "2026-09-22",
+  "inLanguage": "en",
+  "mainEntityOfPage": "https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/"
+}
+</script>
+
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does the collector or probe build the network topology?", "acceptedAnswer": {"@type": "Answer", "text": "No. A collector copies raw tables from each element manager (elements, ports, links, ARP, LLDP, MAC tables, services) into the inventory and computes nothing. A separate restoration job reads those tables, matches them, and writes generated links and per-site paths back. Alarm enrichment is a third function that only reads the inventory."}}, {"@type": "Question", "name": "What data do I need from each vendor to restore a service path?", "acceptedAnswer": {"@type": "Answer", "text": "From the radio manager: the base station list with site identifier, and each port's MAC and IP address. From the IP manager: elements, ports, intra-domain links, ARP or LLDP, and if possible pseudowire and tunnel hop lists. From the microwave manager: radios, radio links and the MAC forwarding table. From optical: cross-connections and per-layer signal flows. Plus a site and region table maintained by people."}}, {"@type": "Question", "name": "How does the platform connect a base station to the right router?", "acceptedAnswer": {"@type": "Answer", "text": "It matches the base station port's IP and MAC against the router's ARP table. If ARP is unavailable it uses LLDP neighbours, then same-subnet matching, then the router's MAC forwarding table filtered by VLAN. The resulting link is stored with a flag marking it as generated rather than exported."}}, {"@type": "Question", "name": "Why do microwave links not appear in ARP?", "acceptedAnswer": {"@type": "Answer", "text": "Microwave and legacy transport forward Ethernet frames transparently and do not answer ARP, so the router sees the base station as directly attached. The platform recovers the hidden hops by matching the base station's MAC and VLAN in the microwave node's MAC forwarding table, applying a co-site rule, and walking the microwave manager's own link table."}}, {"@type": "Question", "name": "How do I know the restored topology is correct?", "acceptedAnswer": {"@type": "Answer", "text": "Two rates: restoration rate (base stations with a complete path over all base stations) and coverage rate (nodes on at least one path over all nodes), plus a failure report per base station naming the algorithm and reason. In practice most failures are identifier mismatches between tables, not missing equipment."}}, {"@type": "Question", "name": "Why does alarm correlation depend on topology?", "acceptedAnswer": {"@type": "Answer", "text": "Because the core rule is a walk: an alarm on a node whose upstream path contains a failed link is a child of that link's alarm. Without paths, the engine has only timestamps and names to work with, and one microwave failure becomes six unrelated tickets sent to the wrong team."}}]}
+</script>
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e16; --bg2:#0e121a; --panel:#121a29; --line:#243044;
+    --ink:#eef1f6; --mut:#9aa6b8; --dim:#6a7689;
+    --accent:#4f8fc9; --accent2:#77aede; --warn:#ff6a6a; --amber:#ffb454;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.75;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em;line-height:1.25}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  header nav{display:flex;align-items:center;justify-content:space-between;height:64px;
+    max-width:1240px;margin:0 auto;padding:0 24px}
+  .brand{font-family:'Space Grotesk',Inter,sans-serif;font-size:19px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand:hover{text-decoration:none}
+  .navlinks{display:flex;gap:24px;font-size:14px;color:var(--mut)}
+  .navlinks a{color:var(--mut)}.navlinks a:hover{color:var(--ink);text-decoration:none}
+  .eyebrow{color:var(--accent);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;margin:56px 0 14px}
+  h1{font-size:clamp(28px,5vw,40px);margin:0 0 14px}
+  .subtitle{color:var(--mut);font-size:19px;margin:0 0 14px;line-height:1.5}
+  .meta{color:var(--dim);font-size:14px;margin-bottom:34px}
+  .closing{font-family:'Space Grotesk',Inter,sans-serif;font-size:21px;line-height:1.5;
+    color:var(--ink);margin:34px 0 0;text-align:center}
+  .closing .grad{font-weight:600}
+  h2{font-size:24px;margin:48px 0 12px;scroll-margin-top:84px}
+  h3{font-size:18px;margin:30px 0 10px;color:var(--ink)}
+  .hero{margin:0 0 34px}
+  .hero img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .toc{border:1px solid var(--line);background:var(--panel);border-radius:12px;
+    padding:18px 22px;margin:0 0 38px}
+  .toc-title{color:var(--accent);font-size:12px;font-weight:600;letter-spacing:.12em;
+    text-transform:uppercase;margin-bottom:10px}
+  .toc ol{margin:0;padding-left:20px;color:var(--mut);font-size:14.5px;
+    columns:2;column-gap:34px}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc li{margin-bottom:6px;break-inside:avoid}
+  .toc a{color:var(--mut)}
+  .toc a:hover{color:var(--ink);text-decoration:none}
+  p,ul,ol{color:#c6cedb;font-size:16.5px;margin:0 0 18px}
+  li{margin-bottom:8px}
+  strong{color:var(--ink)}
+  .lead{font-size:19px;color:#d7deea}
+  .grad{background:linear-gradient(110deg,var(--accent),var(--accent2) 60%,var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  figure{margin:26px 0}
+  figure img{width:100%;height:auto;display:block;border-radius:14px;border:1px solid var(--line)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--accent);
+    background:var(--panel);border-radius:10px;padding:16px 20px;margin:0 0 20px}
+  .callout.warn{border-left-color:var(--warn)}
+  .callout p{margin:0;color:#c6cedb}
+  .callout p+p{margin-top:10px}
+  .callout ul{margin:8px 0 0}
+  .demo-card{display:block;border:1px solid var(--accent);background:linear-gradient(135deg,rgba(79,143,201,.12),rgba(18,26,41,.9));
+    border-radius:14px;padding:20px 24px;margin:26px 0;transition:transform .15s,box-shadow .15s}
+  .demo-card:hover{text-decoration:none;transform:translateY(-2px);box-shadow:0 8px 30px rgba(79,143,201,.15)}
+  .demo-card b{display:block;font-family:'Space Grotesk',Inter,sans-serif;font-size:18px;color:var(--ink);margin-bottom:6px}
+  .demo-card span{color:var(--mut);font-size:14.5px;line-height:1.5;display:block}
+  .demo-card .go{color:var(--accent);font-size:14px;font-weight:600;margin-top:10px;display:inline-block}
+  hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
+    color:var(--dim);font-size:13px;text-align:center}
+  figcaption{color:var(--dim);font-size:13px;margin-top:10px;text-align:center}
+  .refs{font-size:13.5px;color:var(--mut)}
+  .refs li{margin-bottom:7px}
+  .author{display:flex;gap:16px;align-items:center;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:18px 20px;margin:34px 0 0}
+  .author img{width:64px;height:64px;border-radius:50%;object-fit:cover;object-position:center 20%;flex:none}
+  .author .who{font-size:14.5px;color:var(--mut);line-height:1.55}
+  .author .who b{color:var(--ink);font-size:15.5px}
+  .listen{display:flex;align-items:center;gap:16px;border:1px solid var(--line);
+    background:var(--panel);border-radius:14px;padding:14px 18px;margin:0 0 28px}
+  .listen .lplay{flex:none;width:46px;height:46px;border-radius:50%;border:0;cursor:pointer;
+    background:var(--accent);color:#0a0e16;display:grid;place-items:center;
+    transition:background .15s,transform .15s}
+  .listen .lplay:hover{background:var(--accent2);transform:scale(1.05)}
+  .listen .lplay svg{width:18px;height:18px;fill:currentColor}
+  .listen .linfo{flex:1;min-width:0}
+  .listen .linfo b{display:block;font-family:'Space Grotesk',Inter,sans-serif;
+    font-size:14.5px;color:var(--ink);margin-bottom:2px}
+  .listen .linfo .lmeta{font-size:12px;color:var(--dim)}
+  .listen .lrow{display:flex;align-items:center;gap:10px;margin-top:8px}
+  .listen input[type=range]{flex:1;accent-color:var(--accent);height:16px;margin:0}
+  .listen .ltime{font-size:11.5px;color:var(--dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .listen .lspeed{flex:none;font:600 12px Inter,sans-serif;color:var(--mut);
+    background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;cursor:pointer}
+  .listen .lspeed:hover{border-color:var(--accent);color:var(--accent2)}
+  @media(max-width:520px){.listen{flex-wrap:wrap}.listen .linfo{min-width:100%;order:3}}
+</style>
+  <!-- Microsoft Clarity -->
+  <script>
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i+"?ref=bwt";
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "xlw4u8ulx2");
+  </script>
+<script type="application/ld+json">
+{"@context": "https://schema.org","@type": "BreadcrumbList","itemListElement": [{"@type": "ListItem","position": 1,"name": "Home","item": "https://mkadri85.github.io/"},{"@type": "ListItem","position": 2,"name": "Writing","item": "https://mkadri85.github.io/blog/"},{"@type": "ListItem","position": 3,"name": "The Map Is the Product","item": "https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/"}]}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header><nav>
+  <a class="brand" href="/">Mohamed Kadri</a>
+  <div class="navlinks">
+    <a href="/">Home</a><a href="/blog/">Writing</a><a href="/#projects">Projects</a><a href="/#contact">Contact</a>
+  </div>
+</nav></header>
+
+<article class="wrap">
+  <div class="eyebrow">Telecom / Network operations</div>
+  <h1>The Map Is the Product</h1>
+  <p class="subtitle">How a multi-vendor assurance platform builds its network topology from raw exports, why alarm correlation is only as good as that map, and the five places where the map breaks. Written from the inside of one such build.</p>
+  <div class="meta">Mohamed Kadri &middot; September 22, 2026 &middot; 14 min read &middot; <a href="#video">5-minute video version</a></div>
+
+  <figure class="hero">
+    <img src="/assets/topology-hero.jpg" alt="An engineering plate of a mobile backhaul map: six base stations, two microwave hubs, a microwave trunk, access and aggregation routers and a core, with one restored service path in amber, generated links dashed, a failed link marked in red, and six raw table names along the top" width="1536" height="1024">
+    <figcaption>Nobody exports this picture. It is computed, every night, from six kinds of raw table.</figcaption>
+  </figure>
+
+  <div class="toc">
+    <div class="toc-title">In this article</div>
+    <ol>
+      <li><a href="#question">The question that stopped the meeting</a></li>
+      <li><a href="#sources">Nobody exports the topology</a></li>
+      <li><a href="#restoration">Restoration is a job, not a feed</a></li>
+      <li><a href="#numbers">Two numbers that tell the truth</a></li>
+      <li><a href="#correlation">What correlation does with the map</a></li>
+      <li><a href="#gaps">Where the map breaks</a></li>
+      <li><a href="#build">What I would build differently</a></li>
+      <li><a href="#video">The five-minute version</a></li>
+      <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+    </ol>
+  </div>
+
+  <p class="lead">Halfway through a design review for a multi-vendor assurance platform, an architect asked a question that sounded simple: "Which layer builds the topology? Is it the probe, or does the probe only enrich the alarms?"</p>
+
+  <p class="lead">The room went quiet. Everyone had drawn the box. Nobody had opened it.</p>
+
+  <h2 id="question">The question that stopped the meeting</h2>
+
+  <p>Every assurance architecture I have seen has a box labelled <em>inventory and topology</em>. Alarms point at it. Performance points at it. The correlation engine, the service-impact calculator and the ticket router all point at it. It is the most-referenced box on the slide and the least-explained one, because the honest explanation is unglamorous: the topology is not collected from anywhere. It is <strong>reconstructed</strong>, table by table, from exports that were never designed to describe a path.</p>
+
+  <p>This article opens the box. I spent the last weeks reading a large vendor's assurance platform documentation end to end, then the hand-built scripts that fed it in a real multi-vendor mobile network in the Gulf region: five vendors across radio, microwave, IP access and optical, a few thousand sites, and a site database maintained by people. What follows is vendor-neutral by design. The mechanics are the same on any platform, because the physics of the problem is the same.</p>
+
+  <h2 id="sources">Nobody exports the topology</h2>
+
+  <p>The first thing to unlearn: the platform never reads the topology from the network. It reads from each vendor's element manager, and each element manager exports what it manages, in its own shape. A radio manager knows base stations, their ports, port MAC addresses and IP addresses. A microwave manager knows radios, radio links and a MAC forwarding table. An IP manager knows routers, interfaces, ARP and LLDP neighbours, tunnels and pseudowires. An optical manager knows cross-connections and signal flows per layer. None of them knows the path from a base station to the core, because that path crosses three of them. This is the opposite of general-purpose network discovery, which probes the live network to learn what is there <a href="#ref-7">[7]</a> <a href="#ref-8">[8]</a>; here the network is never asked anything.</p>
+
+  <p>So the collection layer is deliberately dumb. One collector per element manager, per data type, on a schedule. It parses a file or a REST response, maps the vendor's field names to a common set of tables, and writes rows. It computes nothing. The common tables that come out are boring and they are the whole game:</p>
+
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-labelledby="fig1t" style="width:100%;height:auto;display:block">
+      <title id="fig1t">Collection pipeline: devices to element managers to collectors to raw tables to the restoration job to computed paths</title>
+      <style>
+        .f1b{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+        .f1t{font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--ink)}
+        .f1s{font-family:'IBM Plex Mono',monospace;font-size:9.5px;fill:var(--dim)}
+        .f1l{stroke:var(--accent);stroke-width:1.5;fill:none}
+        .f1a{fill:var(--accent)}
+        .f1o{fill:none;stroke:var(--amber);stroke-width:2}
+        .f1ot{font-family:'IBM Plex Mono',monospace;font-size:11px;fill:var(--amber);font-weight:500}
+      </style>
+      <defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" class="f1a"/></marker></defs>
+      <!-- column 1: devices -->
+      <text x="60" y="22" class="f1s" text-anchor="middle">DEVICES</text>
+      <rect x="15" y="40" width="90" height="26" rx="5" class="f1b"/><text x="60" y="57" class="f1t" text-anchor="middle">Radio</text>
+      <rect x="15" y="80" width="90" height="26" rx="5" class="f1b"/><text x="60" y="97" class="f1t" text-anchor="middle">Microwave</text>
+      <rect x="15" y="120" width="90" height="26" rx="5" class="f1b"/><text x="60" y="137" class="f1t" text-anchor="middle">IP access</text>
+      <rect x="15" y="160" width="90" height="26" rx="5" class="f1b"/><text x="60" y="177" class="f1t" text-anchor="middle">Optical</text>
+      <!-- column 2: EMS -->
+      <text x="190" y="22" class="f1s" text-anchor="middle">ELEMENT MANAGERS</text>
+      <g class="f1l" marker-end="url(#ar1)"><line x1="105" y1="53" x2="143" y2="53"/><line x1="105" y1="93" x2="143" y2="93"/><line x1="105" y1="133" x2="143" y2="133"/><line x1="105" y1="173" x2="143" y2="173"/></g>
+      <rect x="145" y="40" width="90" height="26" rx="5" class="f1b"/><text x="190" y="57" class="f1t" text-anchor="middle">RAN EMS</text>
+      <rect x="145" y="80" width="90" height="26" rx="5" class="f1b"/><text x="190" y="97" class="f1t" text-anchor="middle">MW NMS</text>
+      <rect x="145" y="120" width="90" height="26" rx="5" class="f1b"/><text x="190" y="137" class="f1t" text-anchor="middle">IP NMS</text>
+      <rect x="145" y="160" width="90" height="26" rx="5" class="f1b"/><text x="190" y="177" class="f1t" text-anchor="middle">Optical NMS</text>
+      <!-- column 3: collectors -->
+      <text x="320" y="22" class="f1s" text-anchor="middle">COLLECTORS</text>
+      <g class="f1l" marker-end="url(#ar1)"><line x1="235" y1="53" x2="273" y2="53"/><line x1="235" y1="93" x2="273" y2="93"/><line x1="235" y1="133" x2="273" y2="133"/><line x1="235" y1="173" x2="273" y2="173"/></g>
+      <rect x="275" y="40" width="90" height="146" rx="6" class="f1b"/>
+      <text x="320" y="100" class="f1t" text-anchor="middle">one per EMS</text>
+      <text x="320" y="116" class="f1t" text-anchor="middle">per data type</text>
+      <text x="320" y="138" class="f1s" text-anchor="middle">parse, map,</text>
+      <text x="320" y="151" class="f1s" text-anchor="middle">store. no logic.</text>
+      <!-- column 4: raw tables -->
+      <text x="450" y="22" class="f1s" text-anchor="middle">RAW TABLES</text>
+      <line x1="365" y1="113" x2="403" y2="113" class="f1l" marker-end="url(#ar1)"/>
+      <g class="f1b">
+        <rect x="405" y="34" width="90" height="20" rx="4"/><rect x="405" y="58" width="90" height="20" rx="4"/><rect x="405" y="82" width="90" height="20" rx="4"/><rect x="405" y="106" width="90" height="20" rx="4"/><rect x="405" y="130" width="90" height="20" rx="4"/><rect x="405" y="154" width="90" height="20" rx="4"/>
+      </g>
+      <g class="f1t" text-anchor="middle"><text x="450" y="48">NE</text><text x="450" y="72">PORT</text><text x="450" y="96">LINK</text><text x="450" y="120">ARP / LLDP</text><text x="450" y="144">MAC table</text><text x="450" y="168">SERVICE</text></g>
+      <rect x="405" y="190" width="90" height="44" rx="4" class="f1o"/>
+      <text x="450" y="208" class="f1ot" text-anchor="middle">SITE, REGION</text>
+      <text x="450" y="224" class="f1s" text-anchor="middle">by hand</text>
+      <!-- column 5: restoration -->
+      <text x="590" y="22" class="f1s" text-anchor="middle">RESTORATION JOB</text>
+      <line x1="495" y1="113" x2="533" y2="113" class="f1l" marker-end="url(#ar1)"/>
+      <rect x="535" y="40" width="110" height="146" rx="6" class="f1b"/>
+      <text x="590" y="70" class="f1t" text-anchor="middle">match, walk,</text>
+      <text x="590" y="86" class="f1t" text-anchor="middle">compute</text>
+      <text x="590" y="112" class="f1s" text-anchor="middle">once a day</text>
+      <text x="590" y="125" class="f1s" text-anchor="middle">off peak</text>
+      <text x="590" y="150" class="f1s" text-anchor="middle">writes LINK (generated)</text>
+      <text x="590" y="163" class="f1s" text-anchor="middle">and PATH tables</text>
+      <!-- outputs -->
+      <line x1="590" y1="186" x2="590" y2="224" class="f1l" marker-end="url(#ar1)"/>
+      <rect x="520" y="226" width="140" height="26" rx="5" class="f1b"/><text x="590" y="243" class="f1t" text-anchor="middle">physical topology</text>
+      <rect x="520" y="258" width="140" height="26" rx="5" class="f1b"/><text x="590" y="275" class="f1t" text-anchor="middle">one path per site</text>
+      <text x="20" y="290" class="f1s">FIG. 1 &nbsp;Where the map comes from. The collectors copy; the restoration job computes; two tables come in by hand.</text>
+    </svg>
+  </figure>
+
+  <ul>
+    <li><strong>NE</strong>: every managed element, its type, management IP, which manager owns it, and which site it stands on.</li>
+    <li><strong>PORT</strong>: every port with its MAC address, IP address list, VLANs and up/down state.</li>
+    <li><strong>LINK</strong>: A-end and Z-end of every intra-domain link the manager knows about.</li>
+    <li><strong>ARP and LLDP</strong>: who each interface has recently talked to, by IP and MAC, or by advertised neighbour identity <a href="#ref-1">[1]</a> <a href="#ref-2">[2]</a>.</li>
+    <li><strong>MAC forwarding table</strong>: which MAC addresses a layer-2 node has learned on which port, with the VLAN.</li>
+    <li><strong>SERVICE</strong>: pseudowires, tunnels, VPNs and their hop lists, where the manager can export them <a href="#ref-3">[3]</a>.</li>
+  </ul>
+
+  <p>And then two tables nobody can export: <strong>SITE</strong> and <strong>REGION</strong>. No element manager knows that base station <code>NRE-0412</code> and microwave radio <code>MW-0412-A</code> stand on the same rooftop. That relationship lives in a site database, or in a naming convention, or in a spreadsheet, and someone maintains it by hand. In the network I looked at, the site identifier was parsed out of the equipment name by a rule ("strip the technology letter, replace the fourth character"), and the region came from a dictionary of three-letter prefixes copied into five different scripts. That is not a criticism of the engineers. It is the state of the art everywhere I have looked.</p>
+
+  <div class="callout">
+    <p><strong>The rule that saves you a meeting:</strong> the probe does not build the topology and does not enrich alarms. It fills tables. Alarm enrichment is a separate consumer of those tables. Topology restoration is a separate producer that reads them and writes new ones back. Three functions, one inventory.</p>
+  </div>
+
+  <h2 id="restoration">Restoration is a job, not a feed</h2>
+
+  <p>With the raw tables loaded, a batch job runs, typically once a day at four in the morning, because it locks the topology data while it works. It has one goal: for every base station, produce a hop-by-hop path to the core, and along the way produce the physical links that no manager exported. It does this in three steps, each with a preferred method and a ladder of fallbacks.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 356" role="img" aria-labelledby="fig2t" style="width:100%;height:auto;display:block">
+      <title id="fig2t">Three restoration steps on a sample backhaul: base station to first router by ARP, transport by service data or shortest path, transparent microwave by MAC and VLAN with the co-site rule</title>
+      <style>
+        .f2n{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
+        .f2t{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--dim)}
+        .f2h{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;fill:var(--head)}
+        .f2l{stroke:var(--line);stroke-width:1.5}
+        .f2d{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 4}
+        .f2p{stroke:var(--amber);stroke-width:3.5;fill:none;stroke-linecap:round}
+        .f2s{fill:var(--amber)}
+        .f2st{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--bg);font-weight:500}
+        .f2v{fill:none;stroke:var(--amber);stroke-width:1.5;stroke-dasharray:4 3}
+      </style>
+      <!-- links -->
+      <g class="f2d"><line x1="60" y1="70" x2="180" y2="120"/><line x1="60" y1="120" x2="180" y2="120"/><line x1="60" y1="170" x2="180" y2="120"/><line x1="60" y1="230" x2="180" y2="270"/><line x1="60" y1="270" x2="180" y2="270"/><line x1="60" y1="310" x2="180" y2="270"/><line x1="180" y1="120" x2="290" y2="195"/><line x1="180" y1="270" x2="290" y2="195"/></g>
+      <g class="f2l"><line x1="290" y1="195" x2="400" y2="195"/><line x1="400" y1="195" x2="510" y2="195"/><line x1="510" y1="195" x2="620" y2="195"/><line x1="620" y1="195" x2="690" y2="195"/></g>
+      <!-- amber path for BTS D -->
+      <polyline points="60,230 180,270 290,195 400,195 510,195 620,195" class="f2p" opacity=".9"/>
+      <!-- nodes: BTS -->
+      <g class="f2n"><polygon points="50,80 60,58 70,80"/><polygon points="50,130 60,108 70,130"/><polygon points="50,180 60,158 70,180"/><polygon points="50,240 60,218 70,240"/><polygon points="50,280 60,258 70,280"/><polygon points="50,320 60,298 70,320"/></g>
+      <g class="f2t" text-anchor="end"><text x="42" y="74">BTS A</text><text x="42" y="124">BTS B</text><text x="42" y="174">BTS C</text><text x="42" y="234">BTS D</text><text x="42" y="274">BTS E</text><text x="42" y="314">BTS F</text></g>
+      <!-- MW -->
+      <g class="f2n"><circle cx="180" cy="120" r="11"/><circle cx="180" cy="270" r="11"/><circle cx="290" cy="195" r="11"/></g>
+      <text x="180" y="100" class="f2t" text-anchor="middle">MW hub 1</text><text x="180" y="294" class="f2t" text-anchor="middle">MW hub 2</text><text x="290" y="222" class="f2t" text-anchor="middle">MW trunk</text>
+      <!-- routers -->
+      <g class="f2n"><rect x="386" y="185" width="28" height="20" rx="3"/><rect x="496" y="185" width="28" height="20" rx="3"/><rect x="606" y="185" width="28" height="20" rx="3"/><rect x="676" y="184" width="34" height="22" rx="11"/></g>
+      <text x="400" y="222" class="f2t" text-anchor="middle">CSG</text><text x="510" y="222" class="f2t" text-anchor="middle">ASG</text><text x="620" y="222" class="f2t" text-anchor="middle">gateway</text><text x="693" y="222" class="f2t" text-anchor="middle">core</text>
+      <!-- step badges -->
+      <g><circle cx="230" cy="150" r="11" class="f2s"/><text x="230" y="154" class="f2st" text-anchor="middle">1</text></g>
+      <g><circle cx="455" cy="160" r="11" class="f2s"/><text x="455" y="164" class="f2st" text-anchor="middle">2</text></g>
+      <g><circle cx="120" cy="215" r="11" class="f2s"/><text x="120" y="219" class="f2st" text-anchor="middle">3</text></g>
+      <!-- step notes -->
+      <text x="420" y="40" class="f2h">1  Base station to first router</text>
+      <text x="420" y="56" class="f2t">BTS port MAC + IP  =  router ARP entry.</text>
+      <text x="420" y="69" class="f2t">Fallbacks: LLDP, same subnet, MAC table + VLAN.</text>
+      <text x="420" y="100" class="f2h">2  Through the transport</text>
+      <text x="420" y="116" class="f2t">Pseudowire source/sink + tunnel hop list.</text>
+      <text x="420" y="129" class="f2t">Else: shortest path over LINK, layer to layer.</text>
+      <text x="420" y="142" class="f2t">Else: insert a virtual node, flag it generated.</text>
+      <text x="110" y="40" class="f2h">3  Transparent layers</text>
+      <text x="110" y="56" class="f2t">MW answers no ARP. Match BTS MAC + VLAN</text>
+      <text x="110" y="69" class="f2t">in the MW MAC table; co-site rule; MW LINK table.</text>
+      <text x="20" y="348" class="f2t">FIG. 2 &nbsp;The amber line is the restored path for BTS D. Dashed links were generated, not exported.</text>
+    </svg>
+  </figure>
+
+  <h3>Step 1: base station to first router</h3>
+  <p>A base station port has a MAC address and an IP address. The access router's ARP table lists IP and MAC per interface <a href="#ref-1">[1]</a>. When the two agree, the job creates a <em>cross-domain link</em> from the base station port to the router interface, and writes it into the LINK table with a flag that says <em>generated</em>. If the ARP table is missing, the ladder is: LLDP neighbours <a href="#ref-2">[2]</a>, then "same subnet, same site" as a weak guess, then the router's MAC forwarding table filtered by VLAN. If the base station export has no MAC at all, the platform can even fill it in backwards from the router's ARP, which is a compensation, not a discovery.</p>
+
+  <h3>Step 2: through the transport</h3>
+  <p>The best source for the path across the IP or packet-transport domain is the service itself: the pseudowire has a source and a sink, and the tunnel that carries it has a hop list <a href="#ref-3">[3]</a>. When the manager exports both, the path is exact. When it exports neither, the job falls back to shortest path over the LINK table, from the access layer to the aggregation layer. That fallback has a quiet prerequisite that eats weeks: every node needs a <em>network layer</em> attribute (access, aggregation, core) so the algorithm knows where to start and where to stop. And when even the links are missing, the job inserts a virtual node with a question mark, so the path closes and the report can say "this hop was not observed."</p>
+
+  <h3>Step 3: the transparent layers</h3>
+  <p>Microwave and legacy SDH or MSTP transport are invisible to IP. They forward frames; they never answer ARP. From the router's point of view the base station is directly attached, which is exactly the hole in the map that costs you at three in the morning when a microwave link fails and six base stations alarm at once. The job closes it with the ugliest data on the list: it takes the base station's MAC and VLAN and looks for them in the microwave hub's MAC forwarding table; it applies a co-site rule (the base station and the first radio stand on the same site identifier); and then it walks the microwave manager's own link table between radios. Every one of those inputs is a place where a typo in a site identifier or a wrong VLAN silently deletes a hop.</p>
+
+  <h2 id="numbers">Two numbers that tell the truth</h2>
+
+  <p>The output of the job is two things: a physical topology of links, and one service path per base station, hop by hop, stored back into the inventory. The interesting part is that a good platform also measures itself, and the two numbers it produces are the most useful KPIs in the whole assurance stack:</p>
+
+  <ul>
+    <li><strong>Restoration rate</strong>: base stations with a complete path, over all base stations. Broken down by scenario (radio to IP, radio to microwave to IP, radio to fixed access to IP).</li>
+    <li><strong>Coverage rate</strong>: nodes that sit on at least one path, over all nodes. A router that no path crosses is either idle or missing from the map.</li>
+  </ul>
+
+  <p>Behind the numbers sits a failure report, one row per base station that did not restore, with the algorithm that failed and the reason: "ARP entry does not find the port by identifier", "no shortest path found", "MAC matches multiple ports". Read a few hundred of these and a pattern emerges that is the most important sentence in this article: <strong>most restoration failures are naming mismatches, not missing hardware.</strong> The port exists. The ARP entry exists. They spell the router's name differently.</p>
+
+  <h2 id="correlation">What correlation does with the map</h2>
+
+  <p>Now the alarms arrive. The first thing the alarm pipeline does with each one is enrich it from the inventory: site, region, domain, network layer, and, critically, the alarm's position on a path and the identity of the link upstream of it. That last field is what turns a list into a graph.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 336" role="img" aria-labelledby="fig3t" style="width:100%;height:auto;display:block">
+      <title id="fig3t">Correlation walk: a microwave trunk link fails, six base stations alarm, the engine walks each path upstream to the failed link and groups seven alarms into one event with one root cause</title>
+      <style>
+        .f3n{fill:var(--panel);stroke:var(--ink);stroke-width:1.5}
+        .f3t{font-family:'IBM Plex Mono',monospace;font-size:10px;fill:var(--dim)}
+        .f3h{font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;fill:var(--head)}
+        .f3d{stroke:var(--line);stroke-width:1.5;stroke-dasharray:5 4}
+        .f3l{stroke:var(--line);stroke-width:1.5}
+        .f3w{stroke:var(--accent);stroke-width:3;fill:none;stroke-linecap:round}
+        .f3x{stroke:var(--warn);stroke-width:3;stroke-dasharray:6 4}
+        .f3al{fill:var(--warn)}
+        .f3b{fill:var(--panel);stroke:var(--line);stroke-width:1.5}
+        .f3bt{font-family:'IBM Plex Mono',monospace;font-size:10.5px;fill:var(--ink)}
+      </style>
+      <g class="f3w" opacity=".9">
+        <polyline points="60,60 180,110 290,180"/><polyline points="60,110 180,110"/><polyline points="60,160 180,110"/>
+        <polyline points="60,200 180,250 290,180"/><polyline points="60,250 180,250"/><polyline points="60,290 180,250"/>
+      </g>
+      <line x1="290" y1="180" x2="400" y2="180" class="f3x"/>
+      <g class="f3l"><line x1="400" y1="180" x2="470" y2="180"/></g>
+      <g class="f3n"><polygon points="50,70 60,48 70,70"/><polygon points="50,120 60,98 70,120"/><polygon points="50,170 60,148 70,170"/><polygon points="50,210 60,188 70,210"/><polygon points="50,260 60,238 70,260"/><polygon points="50,300 60,278 70,300"/></g>
+      <g class="f3al"><circle cx="60" cy="42" r="5"/><circle cx="60" cy="92" r="5"/><circle cx="60" cy="142" r="5"/><circle cx="60" cy="182" r="5"/><circle cx="60" cy="232" r="5"/><circle cx="60" cy="272" r="5"/><circle cx="345" cy="168" r="6"/></g>
+      <g class="f3n"><circle cx="180" cy="110" r="11"/><circle cx="180" cy="250" r="11"/><circle cx="290" cy="180" r="11"/><rect x="386" y="170" width="28" height="20" rx="3"/><rect x="456" y="170" width="28" height="20" rx="3"/></g>
+      <text x="345" y="152" class="f3t" text-anchor="middle" style="fill:var(--warn)">link down</text>
+      <text x="400" y="208" class="f3t" text-anchor="middle">CSG</text><text x="470" y="208" class="f3t" text-anchor="middle">ASG</text>
+      <text x="290" y="208" class="f3t" text-anchor="middle">MW trunk</text>
+      <!-- result boxes -->
+      <rect x="520" y="30" width="180" height="60" rx="6" class="f3b"/>
+      <text x="610" y="50" class="f3h" text-anchor="middle">7 alarms in</text>
+      <text x="610" y="66" class="f3t" text-anchor="middle">1 link down</text>
+      <text x="610" y="79" class="f3t" text-anchor="middle">6 transmission lost</text>
+      <rect x="520" y="105" width="180" height="60" rx="6" class="f3b"/>
+      <text x="610" y="125" class="f3h" text-anchor="middle">1 event out</text>
+      <text x="610" y="141" class="f3t" text-anchor="middle">root: MW trunk link</text>
+      <text x="610" y="154" class="f3t" text-anchor="middle">children: 6</text>
+      <rect x="520" y="180" width="180" height="60" rx="6" class="f3b"/>
+      <text x="610" y="200" class="f3h" text-anchor="middle">1 ticket, 1 impact</text>
+      <text x="610" y="216" class="f3t" text-anchor="middle">to the transmission team</text>
+      <text x="610" y="229" class="f3t" text-anchor="middle">6 sites, N cells, M users</text>
+      <text x="20" y="328" class="f3t">FIG. 3 &nbsp;The engine walks each blue path upstream. Every alarm below the failed link becomes a child.</text>
+    </svg>
+  </figure>
+
+  <p>The correlation rule is almost embarrassingly simple once the map exists: an alarm on a node whose upstream path contains a link that failed inside the time window is a child of the link alarm. The link alarm is the root cause. The group becomes one event, the event becomes one ticket, and the ticket goes to the transmission team rather than to six radio engineers. Service impact falls out for free: count the sites, cells and subscribers behind the failed link, using the same paths. The rule generalises: rings, VNF-to-host layers in a cloud core, optical client-to-line layers, all the same walk over a different graph.</p>
+
+  <p>Without the map, the same seven alarms are seven tickets, six of them to the wrong team, and the transmission team learns about its own outage from the radio team's escalation. Every assurance vendor sells "AI correlation." Almost all of the value is in the graph, and the graph is the part nobody wants to talk about because building it is a data-quality project, not a machine-learning one.</p>
+
+  <h2 id="gaps">Where the map breaks</h2>
+
+  <p>Five gaps, and I have seen every one of them in production. They are ordered by how often they caused a restoration failure in the network I studied.</p>
+
+  <div class="toc" style="margin-top:8px">
+    <div class="toc-title">Table 1. Where restoration breaks, and the fix</div>
+    <table style="width:100%;border-collapse:collapse;font-size:14.5px;line-height:1.45">
+      <thead><tr style="text-align:left;color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:12px">
+        <th style="padding:6px 8px 8px 0;border-bottom:1px solid var(--line)">Gap</th><th style="padding:6px 8px 8px 0;border-bottom:1px solid var(--line)">What it looks like</th><th style="padding:6px 0 8px 0;border-bottom:1px solid var(--line)">Fix</th></tr></thead>
+      <tbody>
+        <tr><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)"><strong>1. Identity</strong></td><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)">The same router is <code>AGG-RAK-01</code> in the port table and <code>agg-rak-01.core</code> in the ARP export. The join fails; the report says "port not found".</td><td style="padding:8px 0;vertical-align:top;border-bottom:1px solid var(--line)">One identifier rule per source, applied before load, and a pre-load check that every foreign key resolves.</td></tr>
+        <tr><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)"><strong>2. Missing fields</strong></td><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)">Port MAC empty, ARP not exported, link has no layer attribute. Each empty column switches off one algorithm.</td><td style="padding:8px 0;vertical-align:top;border-bottom:1px solid var(--line)">Count nulls per column per source, every run, and alarm on the count. Treat the collector like a KPI feed.</td></tr>
+        <tr><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)"><strong>3. Layer-2 blind spots</strong></td><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)">Routers in switch mode, link aggregation, sub-interfaces bound to trunks the manager does not export, and links inferred from port <em>descriptions</em> ("UPLINK to X").</td><td style="padding:8px 0;vertical-align:top;border-bottom:1px solid var(--line)">Prefer LLDP where the vendor exposes it; keep description parsing as a low-probability fallback and store the probability on the link.</td></tr>
+        <tr><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)"><strong>4. Virtual addresses</strong></td><td style="padding:8px 8px 8px 0;vertical-align:top;border-bottom:1px solid var(--line)">The gateway runs VRRP, so the base station's next hop answers with the virtual MAC <code>00-00-5E-00-01-xx</code> <a href="#ref-4">[4]</a>. Vendor lookup by OUI fails; the row goes null.</td><td style="padding:8px 0;vertical-align:top;border-bottom:1px solid var(--line)">Collect ARP on the router side too, and map virtual MACs to the VRRP group explicitly.</td></tr>
+        <tr><td style="padding:8px 8px 8px 0;vertical-align:top"><strong>5. Process</strong></td><td style="padding:8px 8px 8px 0;vertical-align:top">Two vendors exported by hand from a GUI, a once-a-day snapshot, the region dictionary copied into five scripts, no versioning of the rules.</td><td style="padding:8px 0;vertical-align:top">Automate every export, one shared site and region table, rules under version control, and a diff against yesterday's tables before restoration runs.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Notice that none of the five is an algorithm problem. The shortest-path code is fine. The MAC-table matcher is fine. What fails is the contract between the people who run the element managers and the people who run the platform, and that contract is usually a folder of scripts with "(1)" and "(2)" in the file names.</p>
+
+  <h2 id="build">What I would build differently</h2>
+
+  <p>If I were starting the inventory layer of an assurance platform tomorrow, I would spend the first month on nothing but the contract:</p>
+
+  <ol>
+    <li><strong>Define the eight tables once</strong>, vendor-neutral, with every column documented in plain English and a stated identifier rule. NE, PORT, LINK, ARP or LLDP, MAC, SERVICE, SITE, REGION. Everything downstream reads only these.</li>
+    <li><strong>One collector per source, outside the element manager.</strong> The knowledge in those hand-built scripts (which command gives which field, which export contains the MAC, how the site identifier is derived) is the real asset. Move it into a documented field-mapping table per vendor and a small transformation job. Most of it is SQL over CSV.</li>
+    <li><strong>A quality gate before restoration</strong>: row counts, null counts, foreign-key resolution, duplicates by identifier, and a diff against the previous run. Cheap, and it catches the naming mismatch a day before the correlation engine does.</li>
+    <li><strong>LLDP before descriptions, router-side ARP before base-station-side ARP</strong>, and a probability column on every generated link.</li>
+    <li><strong>Naming rules as data.</strong> The site-identifier rule and the region dictionary are configuration, stored once, with an owner. Not five copies in five scripts.</li>
+    <li><strong>Publish the two numbers.</strong> Restoration rate and coverage rate on the same dashboard as alarm volume. When they drop, correlation is about to get worse, and now you know why.</li>
+  </ol>
+
+  <p>One note on standards, because someone always asks whether this "follows eTOM." It does, at the process level: everything above is the TM Forum process called Resource Data Collection and Distribution, plus Manage Resource Inventory under Resource Management and Operations support <a href="#ref-5">[5]</a>. But eTOM is a process map; it says nothing about columns. The data standard that goes with it is the information framework and its Resource Inventory API <a href="#ref-6">[6]</a>, and the honest position is that the eight tables above are a project format from which a standard view can be generated when a consumer needs one. Standards are an export profile, not the working store.</p>
+
+  <div class="callout">
+    <p><strong>The one-line version:</strong> every other block in the platform, alarms, performance, correlation, impact, asks the inventory a question. If the inventory cannot answer, nothing else can, and no amount of model training changes that.</p>
+  </div>
+
+  <h2 id="video">The five-minute version</h2>
+
+  <p>I turned this article into a short animated explainer for a design review: where the data comes from, the three restoration steps, the two numbers, the correlation walk and the five gaps. It is vendor-neutral and free to reuse with attribution.</p>
+
+  <figure>
+    <video controls preload="metadata" poster="/assets/topology-video-poster.jpg" style="width:100%;height:auto;display:block;border-radius:10px;border:1px solid var(--line);background:#101722">
+      <source src="/assets/topology-restoration-and-correlation.mp4" type="video/mp4">
+      Your browser does not play MP4. <a href="/assets/topology-restoration-and-correlation.mp4">Download the video</a>.
+    </video>
+    <figcaption>Topology restoration and alarm correlation, 6 minutes 10 seconds. <a href="#ref-9">Narration script [9]</a>.</figcaption>
+  </figure>
+
+  <p class="closing">The correlation engine is not the product. <span class="grad">The map is the product. The engine just reads it.</span></p>
+
+  <div class="author">
+    <img src="/assets/portrait.jpg" alt="Mohamed Kadri" width="64" height="64">
+    <div class="who"><b>Mohamed Kadri</b> operates and transforms Tier-1 telecom networks, and led a
+      NOC's L2-to-L3 autonomy transition that automated 75 percent of Level-1 incidents.
+      He now builds AI and cloud products, and maintains
+      <a href="https://github.com/mkadri85/guardplane">guardplane</a>, an open-source control plane for agent fleets.
+      <a href="https://www.linkedin.com/in/mohamed-kadri-b3508916">LinkedIn</a> &middot; <a href="/">mkadri85.github.io</a></div>
+  </div>
+
+  <hr>
+
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>Does the collector or probe build the network topology?</h3>
+  <p>No. A collector copies raw tables from each element manager (elements, ports, links, ARP, LLDP, MAC tables, services) into the inventory and computes nothing. A separate restoration job reads those tables, matches them, and writes generated links and per-site paths back. Alarm enrichment is a third function that only reads the inventory.</p>
+
+  <h3>What data do I need from each vendor to restore a service path?</h3>
+  <p>From the radio manager: the base station list with site identifier, and each port's MAC and IP address. From the IP manager: elements, ports, intra-domain links, ARP or LLDP, and if possible pseudowire and tunnel hop lists. From the microwave manager: radios, radio links and the MAC forwarding table. From optical: cross-connections and per-layer signal flows. Plus a site and region table maintained by people.</p>
+
+  <h3>How does the platform connect a base station to the right router?</h3>
+  <p>It matches the base station port's IP and MAC against the router's ARP table. If ARP is unavailable it uses LLDP neighbours, then same-subnet matching, then the router's MAC forwarding table filtered by VLAN. The resulting link is stored with a flag marking it as generated rather than exported.</p>
+
+  <h3>Why do microwave links not appear in ARP?</h3>
+  <p>Microwave and legacy transport forward Ethernet frames transparently and do not answer ARP, so the router sees the base station as directly attached. The platform recovers the hidden hops by matching the base station's MAC and VLAN in the microwave node's MAC forwarding table, applying a co-site rule, and walking the microwave manager's own link table.</p>
+
+  <h3>How do I know the restored topology is correct?</h3>
+  <p>Two rates: restoration rate (base stations with a complete path over all base stations) and coverage rate (nodes on at least one path over all nodes), plus a failure report per base station naming the algorithm and reason. In practice most failures are identifier mismatches between tables, not missing equipment.</p>
+
+  <h3>Why does alarm correlation depend on topology?</h3>
+  <p>Because the core rule is a walk: an alarm on a node whose upstream path contains a failed link is a child of that link's alarm. Without paths, the engine has only timestamps and names to work with, and one microwave failure becomes six unrelated tickets sent to the wrong team.</p>
+
+  <hr>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Standards are cited for the mechanisms named in the text. The field observations are the author's own, from a multi-vendor mobile network in the Gulf region, anonymised to region level; vendor documentation was read but is not quoted.</p>
+  <ol class="refs">
+    <li id="ref-1">D. Plummer, <a href="https://www.rfc-editor.org/rfc/rfc826">RFC 826: An Ethernet Address Resolution Protocol</a>, IETF, 1982. Supports: the ARP table as the IP-to-MAC source used in restoration step 1 (sections: Nobody exports the topology; Restoration).</li>
+    <li id="ref-2">IEEE, <a href="https://standards.ieee.org/ieee/802.1AB/6047/">IEEE 802.1AB-2016: Station and Media Access Control Connectivity Discovery (LLDP)</a>. Supports: LLDP neighbour tables as the preferred link source over description parsing (sections: Restoration; Where the map breaks).</li>
+    <li id="ref-3">S. Bryant and P. Pate, <a href="https://www.rfc-editor.org/rfc/rfc3985">RFC 3985: Pseudo Wire Emulation Edge-to-Edge (PWE3) Architecture</a>, IETF, 2005. Supports: pseudowire source and sink and the tunnel that carries it as the exact-path source in restoration step 2 (section: Restoration).</li>
+    <li id="ref-4">S. Nadas (ed.), <a href="https://www.rfc-editor.org/rfc/rfc5798">RFC 5798: Virtual Router Redundancy Protocol (VRRP) Version 3</a>, IETF, 2010, section 7.3. Supports: the virtual router MAC address <code>00-00-5E-00-01-{VRID}</code> that defeats OUI-based vendor lookup (section: Where the map breaks, gap 4).</li>
+    <li id="ref-5">TM Forum, <a href="https://www.tmforum.org/resources/suite/gb921-business-process-framework-etom-suite-v25-0/">GB921 Business Process Framework (eTOM) suite, v25.0</a>. Supports: Resource Data Collection and Distribution and Manage Resource Inventory as the processes this pipeline implements (section: What I would build differently).</li>
+    <li id="ref-6">TM Forum, <a href="https://www.tmforum.org/oda/open-apis/directory/resource-inventory-management-api-TMF639/v4.0">TMF639 Resource Inventory Management API, v4.0</a>, and <a href="https://www.tmforum.org/oda/open-apis/directory/alarm-management-api-TMF642/v5.0">TMF642 Alarm Management API, v5.0</a>. Supports: the standard views that can be generated from the working tables (section: What I would build differently).</li>
+    <li id="ref-7">UMBOSS, <a href="https://umboss.com/blog/what-is-network-discovery/">What is network discovery?</a> Independent vendor blog. Supports: the observation that discovery protocols are implemented differently per vendor and that reconciliation against planned inventory is the last step (sections: Where the map breaks; What I would build differently).</li>
+    <li id="ref-8">Progress WhatsUp Gold, <a href="https://www.whatsupgold.com/blog/best-practices-series-network-discovery">Best practices series: network discovery</a>. Supports: scheduled rediscovery and credential and protocol coverage as the operational baseline (section: What I would build differently).</li>
+    <li id="ref-9">Narration script of the video above: <a href="/assets/topology-restoration-video-script.txt">Topology restoration and alarm correlation, script with timings</a>.</li>
+  </ol>
+
+  <p>Related: <a href="/blog/agentic-ai-microwave-backhaul/">The Loop Meets the Microwave Network</a> on what an agentic loop must reason about on the same backhaul, and <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a> on the operating discipline that makes any of this safe to automate.</p>
+
+</article>
+
+
+
+<style>
+
+.share{display:flex;flex-wrap:wrap;align-items:center;gap:10px;max-width:760px;margin:38px auto 8px;box-sizing:border-box;
+  padding:16px 18px;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);border-radius:12px}
+.share b{font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent,#4f8fc9);font-weight:600;margin-inline-end:4px}
+.share a{display:inline-block;padding:7px 13px;border:1px solid var(--line,#243044);
+  border-radius:999px;font-size:14px;color:var(--ink,#e6edf6);
+  background:rgba(255,255,255,.02);transition:border-color .15s,color .15s}
+.share a:hover{border-color:var(--accent,#4f8fc9);color:var(--accent,#4f8fc9)}
+@media(max-width:520px){.share{gap:8px;padding:14px}
+  .share a{font-size:13px;padding:6px 11px}}
+</style>
+
+<style>
+.share-rail{position:fixed;top:50%;transform:translateY(-50%);
+  inset-inline-start:calc((100vw - 760px)/2 - 76px);
+  display:none;flex-direction:column;gap:10px;z-index:30}
+@media(min-width:1080px){.share-rail{display:flex}}
+.share-rail a{display:grid;place-items:center;width:42px;height:42px;
+  border-radius:50%;border:1px solid var(--line,#243044);
+  background:var(--panel,#121a29);color:var(--dim,#8b9bb4);
+  transition:color .15s,border-color .15s,transform .15s}
+.share-rail a:hover{color:var(--accent,#4f8fc9);
+  border-color:var(--accent,#4f8fc9);transform:translateY(-1px)}
+.share-rail svg{width:17px;height:17px;fill:currentColor;display:block}
+</style>
+<nav class="share-rail" aria-label="Share this article">
+  <a data-n="li" target="_blank" rel="noopener" title="Share on LinkedIn" aria-label="Share on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
+  <a data-n="x" target="_blank" rel="noopener" title="Share on X" aria-label="Share on X"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></a>
+  <a data-n="rd" target="_blank" rel="noopener" title="Share on Reddit" aria-label="Share on Reddit"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0C5.373 0 0 5.373 0 12c0 3.314 1.343 6.314 3.515 8.485l-2.286 2.286C.775 23.225 1.097 24 1.738 24H12c6.627 0 12-5.373 12-12S18.627 0 12 0Zm4.388 3.199c1.104 0 1.999.895 1.999 1.999 0 1.105-.895 2-1.999 2-.946 0-1.739-.657-1.947-1.539v.002c-1.147.162-2.032 1.15-2.032 2.341v.007c1.776.067 3.4.567 4.686 1.363.473-.363 1.064-.58 1.707-.58 1.547 0 2.802 1.254 2.802 2.802 0 1.117-.655 2.081-1.601 2.531-.088 3.256-3.637 5.876-7.997 5.876-4.361 0-7.905-2.617-7.998-5.87-.954-.447-1.614-1.415-1.614-2.538 0-1.548 1.255-2.802 2.803-2.802.645 0 1.239.218 1.712.585 1.275-.79 2.881-1.291 4.64-1.365v-.01c0-1.663 1.263-3.034 2.88-3.207.188-.911.993-1.595 1.959-1.595Zm-8.085 8.376c-.784 0-1.459.78-1.506 1.797-.047 1.016.64 1.429 1.426 1.429.786 0 1.371-.369 1.418-1.385.047-1.017-.553-1.841-1.338-1.841Zm7.406 0c-.786 0-1.385.824-1.338 1.841.047 1.017.634 1.385 1.418 1.385.785 0 1.473-.413 1.426-1.429-.046-1.017-.721-1.797-1.506-1.797Zm-3.703 4.013c-.974 0-1.907.048-2.77.135-.147.015-.241.168-.183.305.483 1.154 1.622 1.964 2.953 1.964 1.33 0 2.47-.81 2.953-1.964.057-.137-.037-.29-.184-.305-.863-.087-1.795-.135-2.769-.135Z"/></svg></a>
+  <a data-n="fb" target="_blank" rel="noopener" title="Share on Facebook" aria-label="Share on Facebook"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg></a>
+  <a data-n="th" target="_blank" rel="noopener" title="Share on Threads" aria-label="Share on Threads"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18.263 11.097c-.03-3.486-1.92-5.586-5.111-5.586-2.13 0-3.922.963-4.863 2.499l2.062 1.438c.535-.843 1.272-1.543 2.628-1.543 1.528 0 2.318.85 2.544 2.431a15 15 0 0 0-2.236-.173c-4.125 0-6.068 1.867-6.068 4.336s1.943 3.99 4.804 3.99c3.139 0 5.013-2.115 5.781-4.735.798.361 1.348 1.204 1.348 2.47 0 3.387-3.907 5.232-7.22 5.232-4.885 0-8.077-3.207-8.077-8.424 0-6.392 4.223-10.487 9.9-10.487 3.808 0 5.69 1.671 6.97 3.914l2.108-1.475C21.44 2.078 18.331 0 13.663 0 6.227 0 1.168 5.277 1.168 12.934c0 7 4.953 11.066 10.856 11.066 4.878 0 9.809-2.846 9.809-7.716 0-2.545-1.46-4.231-3.569-5.187m-6.33 4.855c-1.077 0-2.026-.512-2.026-1.453 0-1.483 1.822-1.934 3.606-1.934.678 0 1.34.045 1.927.173-.422 1.927-1.671 3.215-3.508 3.214Z"/></svg></a>
+</nav>
+
+<nav class="share" aria-label="Share this article">
+  <b>Share</b>
+  <a data-n="li" target="_blank" rel="noopener">LinkedIn</a>
+  <a data-n="x" target="_blank" rel="noopener">X</a>
+  <a data-n="rd" target="_blank" rel="noopener">Reddit</a>
+  <a data-n="fb" target="_blank" rel="noopener">Facebook</a>
+  <a data-n="th" target="_blank" rel="noopener">Threads</a>
+</nav>
+<script>
+(function(){
+  var c=document.querySelector('link[rel="canonical"]');
+  var u=(c&&c.href)?c.href:location.href.split('#')[0];
+  var m=document.querySelector('meta[property="og:title"]');
+  var t=(m&&m.content)?m.content:document.title;
+  var U=encodeURIComponent(u),T=encodeURIComponent(t);
+  var map={
+    li:'https://www.linkedin.com/sharing/share-offsite/?url='+U,
+    x:'https://x.com/intent/post?url='+U+'&text='+T,
+    rd:'https://www.reddit.com/submit?url='+U+'&title='+T,
+    fb:'https://www.facebook.com/sharer/sharer.php?u='+U,
+    th:'https://www.threads.com/intent/post?text='+T+'%20'+U
+  };
+  Array.prototype.forEach.call(document.querySelectorAll('a[data-n]'),
+    function(a){a.href=map[a.getAttribute('data-n')];});
+})();
+</script>
+
+<footer>
+  <div class="wrap">Mohamed Kadri - Cloud &amp; Digital Transformation Leader - Dubai, UAE - <a href="/">mkadri85.github.io</a></div>
+</footer>
+
+<script>
+(function(){
+  var m = location.pathname.match(/^\/blog\/([^\/]+)/);
+  if (!m) return;
+  var seed = 10, ar = document.documentElement.lang === 'ar';
+  fetch('https://abacus.jasoncameron.dev/hit/mkadri85-blog/' + m[1])
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (!d || typeof d.value !== 'number') return;
+      var el = document.querySelector('.meta');
+      if (!el) return;
+      var s = document.createElement('span');
+      s.textContent = ' \u00b7 ' + (d.value + seed).toLocaleString() + (ar ? ' \u0642\u0631\u0627\u0621\u0629' : ' reads');
+      el.appendChild(s);
+    }).catch(function(){});
+})();
+</script>
+<link rel="stylesheet" href="/assets/print-theme.css">
+</body>
+</html>

@@ -11,6 +11,8 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 
 ## Key articles
 
+- [The Map Is the Product: How Assurance Platforms Build Network Topology](https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/): how a multi-vendor assurance platform reconstructs topology from raw EMS exports (NE, port, link, ARP/LLDP, MAC table, service), the three restoration steps, restoration and coverage rate as KPIs, why alarm correlation depends on the map, and five gaps with fixes; includes a five-minute video
+
 - [Why Long Context Is Hard: KV Cache, MLA, KDA](https://mkadri85.github.io/blog/why-long-context-is-hard/): Part 2 of the zero-background series - why the KV cache dominates long-context cost (131 GB of notes for one 32k-token chat under standard attention), and the fixes: GQA, DeepSeek's MLA, Moonshot's Kimi Delta Attention; Arabic edition at https://mkadri85.github.io/blog/why-long-context-is-hard/ar/
 
 - [Mixture of Experts (MoE) Explained Simply](https://mkadri85.github.io/blog/mixture-of-experts-explained/): zero-background guide to MoE - experts, routers, expert specialization, total vs active parameters - anchored on Kimi K3's claimed 2.8T/~2%-active design, fully referenced to the primary papers; Arabic edition at https://mkadri85.github.io/blog/mixture-of-experts-explained/ar/

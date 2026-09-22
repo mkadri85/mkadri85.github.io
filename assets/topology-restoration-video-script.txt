@@ -1,0 +1,52 @@
+Narration script - Topology restoration and alarm correlation
+Prepared by Mohamed Kadri
+(timings match the video; re-record in your own voice if you prefer)
+
+[00:00] Topology restoration and correlation
+  This short video explains how a multi-domain assurance platform builds the network topology, how it uses that topology to correlate alarms, and where the gaps usually are.
+
+[00:11] 1. Where the data comes from
+  The platform never reads the topology from the network directly. It reads from each vendor element manager: radio, microwave, IP and transport, and optical.
+  One collector per element manager copies raw tables on a schedule: network elements, ports with their MAC and IP address, links, ARP and LLDP neighbours, MAC forwarding tables, tunnels and services.
+  The collector does not compute anything. It parses, maps the fields to a common table format, and stores the rows in the inventory.
+  Some tables cannot be exported by any element manager. Site and region are maintained by hand, usually from the site database, and joined by naming rules.
+
+[00:53] 2. Restoration step 1: base station to first router
+  Restoration is a separate job that reads the raw tables and computes links and paths. It runs once a day, off peak.
+  Step one connects each base station to its first router. The base station port has a MAC and an IP address. The router ARP table lists IP and MAC per interface.
+  When the IP and MAC match, the platform creates a cross-domain link between the base station port and the router interface.
+  If ARP is missing, it falls back to LLDP neighbours, then to same-subnet matching, and finally to the router MAC forwarding table with the VLAN.
+
+[01:30] 3. Restoration step 2: inside the transport network
+  Step two follows the service through the transport domain. The best source is the service itself: the pseudowire source and sink, and the tunnel hop list from the element manager.
+  When the service data is complete, the path is exact: cell site gateway, aggregation, and the gateway to the core.
+  When it is incomplete, the platform switches to shortest path over the physical links, from the access layer to the aggregation layer. This needs a network layer on every node.
+  If a hop is still missing, a virtual node is inserted so the path can close. It is marked as generated, not collected.
+
+[02:06] 4. Restoration step 3: transparent layers
+  Microwave and legacy transport are transparent to IP. They do not appear in ARP.
+  Here the platform matches the base station MAC and VLAN against the MAC forwarding table of the microwave or MSTP node, and uses the co-site rule: the base station and the first microwave share the same site.
+  Between the radios it uses the microwave link table. This is why the site identifier and the VLAN must be correct in the raw data.
+
+[02:33] 5. The result
+  The output is two things: a physical topology of links, and one service path per base station, hop by hop, stored back in the inventory.
+  Two numbers tell you if it worked. Restoration rate: base stations with a complete path over all base stations. Coverage rate: nodes on a path over all nodes.
+  A failure report lists why each base station failed: port not found, ARP not matched, no link data, no shortest path.
+
+[03:01] 6. How correlation uses the topology
+  Now the alarms arrive. Each alarm is enriched from the inventory: site, region, domain, and the position on the path.
+  A microwave link fails. Six base stations behind it lose their transmission and raise their own alarms.
+  The correlation engine walks the paths. Every alarm downstream of the failed link becomes a child. The link alarm is the root cause.
+  The group of alarms becomes one event, one ticket, and a service impact count: six sites, and the cells and users behind them.
+  Without the topology, the same alarms would be seven independent tickets.
+
+[03:38] 7. Where the gaps are
+  Gap one: identity. The same node must have the same identifier in every table. Most restoration failures are naming mismatches, not missing hardware.
+  Gap two: missing fields. No port MAC, no ARP, no link layer. Each empty field switches off one algorithm.
+  Gap three: layer two blind spots. Routers in switch mode, link aggregation, sub-interfaces, and links inferred from port descriptions.
+  Gap four: virtual addresses. A gateway with VRRP answers with a virtual MAC, so vendor and interface lookups fail.
+  Gap five: process. Manual exports for some vendors, a once-a-day snapshot, five copies of the same region table, and no quality check on the input.
+  The fix is the same in every case: define the standard tables once, measure the input before restoration, and keep naming rules as data, not as code.
+
+[04:34] Inventory first
+  Inventory first. Every other block, alarms, performance, correlation, and impact, asks the inventory a question. If it cannot answer, nothing else can.
