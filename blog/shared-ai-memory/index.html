@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>One Repository, One Shared Brain - Mohamed Kadri</title>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is shared AI memory for a development team?", "acceptedAnswer": {"@type": "Answer", "text": "Committed text files inside the repository itself: one AGENTS.md of stable rules, and a .ai/ directory holding current work, decisions, known issues and lessons. Every agent reads them at session start and writes back before session end, so engineering knowledge travels with the code instead of staying inside one assistant's chat history. Git is the distribution layer; no new infrastructure is needed."}}, {"@type": "Question", "name": "Why not use a memory service from day one?", "acceptedAnswer": {"@type": "Answer", "text": "Below roughly five developers, markdown plus grep beats any service on cost, trust and inspectability, because the memory is reviewed in pull requests like code. Write the upgrade trigger down in advance - more than about five developers, or the day grep across fifteen files stops finding things - and move to an MCP memory service with embeddings then, not in frustration."}}, {"@type": "Question", "name": "What must never go into shared memory?", "acceptedAnswer": {"@type": "Answer", "text": "Secrets, keys, tokens and credentials, with no exceptions. Personal data of users or customers, even when it looks anonymised. Anything derivable from code or git history, which belongs in commits and PR descriptions. Personal preferences and machine-specific paths, which stay gitignored. Raw chat transcripts - summaries only."}}, {"@type": "Question", "name": "How does shared memory usually fail?", "acceptedAnswer": {"@type": "Answer", "text": "Rarely by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. Benchmarks published in 2026 measure exactly this gap between retrieving updated evidence and acting on it [1], and show how a hedged remark can be consolidated into a confident assertion the agent then obeys [2]. That is why the operating rules treat a stale STATE.md like a failing test."}}]}</script>
 <meta name="description" content="A tool-agnostic guide to giving every developer and every AI coding agent the same project memory: one AGENTS.md, a versioned .ai/ knowledge base, and rules.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/shared-ai-memory/">
@@ -25,6 +26,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="One repository, one shared brain: developers and AI assistants connected to a shared knowledge base that lives in git">
 <meta property="article:published_time" content="2026-07-06">
+<meta property="article:modified_time" content="2026-09-22">
 <meta property="article:author" content="Mohamed Kadri">
 <meta property="article:section" content="AI-assisted engineering">
 <meta property="article:tag" content="AI coding agents">
@@ -48,7 +50,7 @@
   "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/", "sameAs": ["https://www.linkedin.com/in/mohamed-kadri-b3508916"]},
   "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
   "datePublished": "2026-07-06",
-  "dateModified": "2026-07-06",
+  "dateModified": "2026-09-22",
   "mainEntityOfPage": "https://mkadri85.github.io/blog/shared-ai-memory/"
 }
 </script>
@@ -124,6 +126,9 @@
   hr{border:0;border-top:1px solid var(--line);margin:44px 0}
   footer{border-top:1px solid var(--line);margin-top:70px;padding:26px 0;
     color:var(--dim);font-size:13px;text-align:center}
+
+.refs{font-size:13.5px;color:var(--mut)}
+.refs li{margin-bottom:7px}
 </style>
   <!-- Microsoft Clarity -->
   <script>
@@ -175,7 +180,9 @@
       <li><a href="#failure-modes">Common failure modes</a></li>
       <li><a href="#scaling">When to graduate to a memory service</a></li>
       <li><a href="#checklist">Quick-start checklist</a></li>
-    </ol>
+          <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+</ol>
   </div>
 
   <h2 id="the-problem">The problem: your team's knowledge is trapped in chat logs</h2>
@@ -190,7 +197,7 @@
 
   <h2 id="the-principle">The principle: commit the contract, not the machinery</h2>
 
-  <p>Docker did not unify runtime environments by running a synchronization service. It unified them with a committed text file. <code>docker-compose.yml</code> travels with the repository, and every machine interprets it identically. The environment problem became a file-contract problem, and git solved distribution for free.</p>
+  <p>Docker did not unify runtime environments by running a synchronization service. It unified them with a committed text file. <code>docker-compose.yml</code> travels with the repository, and every machine interprets it identically. The environment problem became a file-contract problem, and git solved distribution for free. <a href="#ref-6">[6]</a></p>
 
   <p>Shared AI memory has exactly the same shape. The missing piece is a file contract that every agent reads at session start and writes back to before session end. Git is already the bus, and no new infrastructure is required.</p>
 
@@ -204,15 +211,15 @@
     <tr><th>Building block</th><th>How it fits</th></tr>
     <tr><td><strong>AGENTS.md</strong>, the open instruction-file standard stewarded under the Linux Foundation. Read natively by 20+ tools: Codex, Cursor, GitHub Copilot, Windsurf, Zed, Gemini CLI, Aider, Devin, Jules and more.</td><td>Your single entry point. One canonical file per repository.</td></tr>
     <tr><td><strong>Import bridges</strong> for tools with their own file. Claude Code reads CLAUDE.md rather than AGENTS.md, but supports imports, so a one-line <code>@AGENTS.md</code> shim closes the gap. Gemini CLI accepts the same trick through GEMINI.md, or reads AGENTS.md directly in recent versions.</td><td>Keeps one source of truth even when a tool insists on its own filename.</td></tr>
-    <tr><td><strong>The memory-bank pattern</strong>: a small committed directory of markdown that the agent reads at session start and updates at session end. A methodology rather than a product.</td><td>The shape of the knowledge base itself, trimmed hard in this guide.</td></tr>
+    <tr><td><strong>The memory-bank pattern</strong>: a small committed directory of markdown that the agent reads at session start and updates at session end. A methodology rather than a product. <a href="#ref-4">[4]</a></td><td>The shape of the knowledge base itself, trimmed hard in this guide.</td></tr>
     <tr><td><strong>MCP memory services</strong>: an always-on store with embeddings and semantic recall that every tool connects to.</td><td>Deliberately deferred. Below roughly five developers, flat files plus grep beat a service on cost, trust and inspectability.</td></tr>
   </table></div>
 
-  <div class="callout"><p><strong>One research finding should shape everything you build.</strong> Shared AI memory rarely fails by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. An uncurated shared memory becomes a shared source of hallucination for the whole team. Every rule in this guide exists to prevent that.</p></div>
+  <div class="callout"><p><strong>One research finding should shape everything you build.</strong> Shared AI memory rarely fails by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. An uncurated shared memory becomes a shared source of hallucination for the whole team. Every rule in this guide exists to prevent that. <a href="#ref-1">[1]</a> <a href="#ref-2">[2]</a></p></div>
 
   <h2 id="architecture">The three-layer architecture</h2>
 
-  <p><strong>Layer 1: rules.</strong> One canonical <code>AGENTS.md</code> per repository. Architecture overview, build and test commands, conventions, review criteria, and the session contract from this guide. Stable content that changes rarely.</p>
+  <p><strong>Layer 1: rules.</strong> One canonical <code>AGENTS.md</code> per repository. Architecture overview, build and test commands, conventions, review criteria, and the session contract from this guide. Stable content that changes rarely. <a href="#ref-3">[3]</a></p>
 
   <p><strong>Layer 2: evolving knowledge.</strong> A committed <code>.ai/</code> directory holding the state of play: current work, decisions, known issues, lessons. Changes weekly or daily, versioned and reviewed like code.</p>
 
@@ -250,7 +257,7 @@
 
   <h3>Step 2: bridge every tool to it</h3>
 
-  <p>Tools that read AGENTS.md natively need nothing. For the rest, create a shim rather than a copy:</p>
+  <p>Tools that read AGENTS.md natively need nothing. For the rest, create a shim rather than a copy: <a href="#ref-5">[5]</a></p>
 
 <pre><code># CLAUDE.md (entire file)
 @AGENTS.md
@@ -349,7 +356,7 @@ fi</code></pre>
 
   <h2 id="scaling">When to graduate to a memory service</h2>
 
-  <p>Write the upgrade trigger down in advance so the decision is never made in frustration: more than roughly five developers, or the day grep across fifteen markdown files stops finding things. At that point an MCP memory service with embeddings and semantic recall earns its infrastructure, and your committed files become its seed corpus rather than wasted work.</p>
+  <p>Write the upgrade trigger down in advance so the decision is never made in frustration: more than roughly five developers, or the day grep across fifteen markdown files stops finding things. At that point an MCP memory service with embeddings and semantic recall earns its infrastructure, and your committed files become its seed corpus rather than wasted work. <a href="#ref-7">[7]</a></p>
 
   <p>Until that day, the shared brain is a directory of markdown, reviewed like code, distributed by git. The same boring trick that fixed environments a decade ago: commit the contract, not the machinery.</p>
 
@@ -370,7 +377,32 @@ fi</code></pre>
 
   <hr>
 
-  <p style="color:var(--dim);font-size:14px">Useful references: the <a href="https://agents.md/" target="_blank" rel="noopener">AGENTS.md specification and supported-tool list</a>, the <a href="https://docs.cline.bot/best-practices/memory-bank" target="_blank" rel="noopener">memory-bank methodology</a>, and the <a href="https://github.com/anthropics/claude-code/issues/6235" target="_blank" rel="noopener">Claude Code AGENTS.md discussion</a> where the import bridge is documented.</p>
+  
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>What is shared AI memory for a development team?</h3>
+  <p>Committed text files inside the repository itself: one <code>AGENTS.md</code> of stable rules, and a <code>.ai/</code> directory holding current work, decisions, known issues and lessons. Every agent reads them at session start and writes back before session end, so engineering knowledge travels with the code instead of staying inside one assistant's chat history. Git is the distribution layer; no new infrastructure is needed.</p>
+
+  <h3>Why not use a memory service from day one?</h3>
+  <p>Below roughly five developers, markdown plus <code>grep</code> beats any service on cost, trust and inspectability, because the memory is reviewed in pull requests like code. Write the upgrade trigger down in advance - more than about five developers, or the day <code>grep</code> across fifteen files stops finding things - and move to an MCP memory service with embeddings then, not in frustration.</p>
+
+  <h3>What must never go into shared memory?</h3>
+  <p>Secrets, keys, tokens and credentials, with no exceptions. Personal data of users or customers, even when it looks anonymised. Anything derivable from code or git history, which belongs in commits and PR descriptions. Personal preferences and machine-specific paths, which stay gitignored. Raw chat transcripts - summaries only.</p>
+
+  <h3>How does shared memory usually fail?</h3>
+  <p>Rarely by forgetting. It fails by confidently remembering something that is no longer true: a renamed function, a reverted decision, a dead flag. Benchmarks published in 2026 measure exactly this gap between retrieving updated evidence and acting on it <a href="#ref-1">[1]</a>, and show how a hedged remark can be consolidated into a confident assertion the agent then obeys <a href="#ref-2">[2]</a>. That is why the operating rules treat a stale <code>STATE.md</code> like a failing test.</p>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Papers are cited for the failure mode the operating rules are built around; tool documentation for the conventions this guide relies on rather than invents.</p>
+  <ol class="refs">
+    <li id="ref-1">H. Chao, Y. Bai, R. Sheng, T. Li and Y. Sun, <a href="https://arxiv.org/abs/2605.06527">STALE: Can LLM Agents Know When Their Memories Are No Longer Valid?</a>, arXiv:2605.06527, May 2026. Supports: memory fails by retaining invalid beliefs, not by forgetting; the measured gap between retrieving updated evidence and acting on it (sections: The operating rules; Common failure modes).</li>
+    <li id="ref-2">A. Kwon, <a href="https://arxiv.org/abs/2606.29279">Manufactured Confidence: How Memory Consolidation Turns Hearsay into Confident Facts</a>, arXiv:2606.29279, June 2026. Supports: a hedged remark consolidated into a confident, dated assertion the agent then obeys; why uncurated memory becomes a shared source of hallucination (section: The operating rules).</li>
+    <li id="ref-3"><a href="https://agents.md/">AGENTS.md</a>, specification and list of tools that read it natively. Supports: the single canonical rules file and which assistants need an import shim (sections: The three-layer architecture; Implementation).</li>
+    <li id="ref-4">Cline, <a href="https://docs.cline.bot/best-practices/memory-bank">Memory Bank</a>, documentation. Supports: the committed-markdown memory pattern this guide generalises across tools (section: What already exists).</li>
+    <li id="ref-5">Anthropic, <a href="https://github.com/anthropics/claude-code/issues/6235">Claude Code issue #6235: AGENTS.md support</a>, GitHub. Supports: the import bridge used to point Claude Code at a shared AGENTS.md (section: Implementation).</li>
+    <li id="ref-6">Docker, <a href="https://docs.docker.com/compose/">Docker Compose</a>, documentation. Supports: the analogy of a committed text file that every machine interprets identically (section: The principle).</li>
+    <li id="ref-7"><a href="https://modelcontextprotocol.io/">Model Context Protocol</a>, open standard for connecting AI applications to external systems. Supports: the MCP memory service named as the upgrade path (section: When to graduate).</li>
+  </ol>
 </article>
 
 

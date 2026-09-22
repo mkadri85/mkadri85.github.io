@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Who Operates the Operators? Agentic SRE - Mohamed Kadri</title>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Why does an AI agent delete a production database after being told not to?", "acceptedAnswer": {"@type": "Answer", "text": "Because the prohibition was a text instruction, not a technical control. In the PocketOS incident the agent reached a production token from a staging task, and no confirmation step stood between it and a destructive command [2]. The same shape recurred at Replit in July 2025, during an explicit code freeze [3]. The fix is plumbing: a scoped credential per agent, and an approval boundary built for agents rather than borrowed from the one built for humans."}}, {"@type": "Question", "name": "What are the stages of the SRE loop when it is applied to an agent fleet?", "acceptedAnswer": {"@type": "Answer", "text": "Five. Detect: an agent drifts, loops, burns tokens, or starts failing its own output checks. Triage: pull its recent sessions, tool calls and cost curve. Correlate: tie the behaviour to a prompt change, a model swap, or a bad tool response. Remediate: reroute to another model, roll back the agent version, or pause it. Escalate: hand off to a person when the fix is novel or the blast radius is large."}}, {"@type": "Question", "name": "Why is detecting agent failures harder than detecting infrastructure failures?", "acceptedAnswer": {"@type": "Answer", "text": "Because the degradation is silent, intermittent and non-deterministic. Anthropic's postmortem of its 2025 issues shows it: three overlapping bugs degraded output for weeks, the company's own checks did not catch it, and privacy controls meant engineers could not freely replay the broken conversations [7]. Standard uptime checks miss exactly this, so detection needs one replayable record per decision and a score on the output, not just a health endpoint."}}, {"@type": "Question", "name": "What should I build before letting agents remediate on their own?", "acceptedAnswer": {"@type": "Answer", "text": "Three things with no AI in them. A scoped identity and credential for every agent. One replayable record per decision - model, tools, arguments, returns, tokens, output score. A kill switch that pauses an agent, or a whole class of agents, without a deploy. Then wire detection to alerts and keep remediation manual. Only afterwards let the loop close on the one or two boring, reversible failures it has handled correctly many times; everything else keeps escalating to you."}}]}</script>
 <meta name="description" content="AI agents have started causing the production incidents they were built to resolve. A field guide to running the SRE incident loop on the agents themselves.">
 <meta name="author" content="Mohamed Kadri">
 <link rel="canonical" href="https://mkadri85.github.io/blog/agentic-sre-agent-fleets/">
@@ -25,6 +26,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="A control plane watching over a fleet of autonomous AI agents, one of them turning red">
 <meta property="article:published_time" content="2026-07-09">
+<meta property="article:modified_time" content="2026-09-22">
 <meta property="article:author" content="Mohamed Kadri">
 <meta property="article:section" content="AI operations">
 <meta property="article:tag" content="agentic SRE">
@@ -48,7 +50,7 @@
   "author": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/", "sameAs": ["https://www.linkedin.com/in/mohamed-kadri-b3508916"]},
   "publisher": {"@type": "Person", "name": "Mohamed Kadri", "url": "https://mkadri85.github.io/"},
   "datePublished": "2026-07-09",
-  "dateModified": "2026-07-09",
+  "dateModified": "2026-09-22",
   "mainEntityOfPage": "https://mkadri85.github.io/blog/agentic-sre-agent-fleets/"
 }
 </script>
@@ -230,6 +232,9 @@
     .arch-cap span:nth-child(1){opacity:1}.pulse{display:none}
     .chips.agents span.bad{border-color:var(--warn);color:var(--warn)}
   }
+
+.refs{font-size:13.5px;color:var(--mut)}
+.refs li{margin-bottom:7px}
 </style>
   <!-- Microsoft Clarity -->
   <script>
@@ -280,14 +285,16 @@
       <li><a href="#breaker">The circuit breaker</a></li>
       <li><a href="#build-first">What I would build first</a></li>
       <li><a href="#where">Where this is actually going</a></li>
-    </ol>
+          <li><a href="#faq">Quick questions and answers</a></li>
+      <li><a href="#refs">Sources and references</a></li>
+</ol>
   </div>
 
   <h2 id="nine-seconds">Nine seconds</h2>
 
   <p class="lead"><strong>On 25 April 2026, an AI coding agent deleted a company's production database and every backup in about nine seconds.</strong></p>
 
-  <p>The company was PocketOS, which builds software for car rental firms. The agent was Cursor, running Claude Opus 4.6. It was working in the staging environment, hit a credential mismatch, and decided the fix was to delete a Railway volume. To do that it went looking for an API token, found one in an unrelated file, and used it to fire a <code>curl</code> command that deleted the <strong>production</strong> volume instead. No confirmation step stood in the way. The backups went with it, because Railway keeps volume-level backups on the same volume. Staff spent the weekend rebuilding customer reservations from Stripe payment records and email logs.</p>
+  <p>The company was PocketOS, which builds software for car rental firms. The agent was Cursor, running Claude Opus 4.6. It was working in the staging environment, hit a credential mismatch, and decided the fix was to delete a Railway volume. To do that it went looking for an API token, found one in an unrelated file, and used it to fire a <code>curl</code> command that deleted the <strong>production</strong> volume instead. No confirmation step stood in the way. The backups went with it, because Railway keeps volume-level backups on the same volume. Staff spent the weekend rebuilding customer reservations from Stripe payment records and email logs. <a href="#ref-1">[1]</a></p>
 
   <p style="font-size:15px;opacity:.72">Reported by <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/" target="_blank" rel="noopener">The Register</a>, <a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> and others.</p>
 
@@ -295,13 +302,13 @@
 
   <p>Read that line again, because it is the whole problem in six words. The agent knew the rules. It had been told not to touch production. It deleted production anyway, quickly, confidently, and with a credential it should never have been able to reach. This was not a model being stupid. It was a system with no boundary between an agent's intent and a destructive action.</p>
 
-  <p>PocketOS is small, so it made a good headline. The pattern is not small. In July 2025, an AI agent inside Replit deleted a live database during an explicit code freeze, taking out 1,206 records it had been told to leave alone. Between January and May 2026, one observability vendor catalogued 73 separate production incidents caused by deployed agents. If you run agents in production and you have not had your own near miss yet, you are early, not safe.</p>
+  <p>PocketOS is small, so it made a good headline. The pattern is not small. In July 2025, an AI agent inside Replit deleted a live database during an explicit code freeze, taking out 1,206 records it had been told to leave alone. Between January and May 2026, one observability vendor catalogued 73 separate production incidents caused by deployed agents. If you run agents in production and you have not had your own near miss yet, you are early, not safe. <a href="#ref-3">[3]</a> <a href="#ref-4">[4]</a></p>
 
   <h2 id="pattern">Why this keeps happening</h2>
 
   <p>The uncomfortable part is that none of these were exotic failures. They were ordinary automation acting on an incomplete view of the world, which is the one thing large language models do constantly.</p>
 
-  <p>Two structural gaps show up every time. The first is credentials. The PocketOS agent reached a production token from a staging task. On a marketplace platform I help run, an early version of our own agent tooling could see far more of the environment than any single task needed, for the boring reason that wiring one broad service account is easier than scoping a narrow one per job. That shortcut is fine until an agent improvises, and improvising is the job.</p>
+  <p>Two structural gaps show up every time. The first is credentials. The PocketOS agent reached a production token from a staging task. On a marketplace platform I help run, an early version of our own agent tooling could see far more of the environment than any single task needed, for the boring reason that wiring one broad service account is easier than scoping a narrow one per job. That shortcut is fine until an agent improvises, and improvising is the job. <a href="#ref-2">[2]</a></p>
 
   <p>The second gap is the approval boundary. Most teams already gate risky changes behind human review. What they miss is that the gate was built for humans. When a person runs a destructive command, a second engineer signs off. When an agent runs the same command through an API, the review never triggers, because the safeguard was written around a human workflow that the agent quietly stepped outside. The control that would have caught a person does not exist for the thing now doing the work.</p>
 
@@ -330,13 +337,13 @@
     <tr><td><strong>Escalate</strong></td><td>Page a human when confidence is low.</td><td>Hand off to a human when the fix is novel or the blast radius is large.</td></tr>
   </table></div>
 
-  <p>How far this already works on the infrastructure side is worth seeing clearly, because it sets a realistic bar. Datadog shipped Bits AI SRE to general availability on 2 December 2025; its own description is that it reaches a root-cause conclusion "before on-call responders even log in." AWS published a walkthrough of its DevOps Agent handling a live alarm: a CloudWatch alert fires on elevated 5xx errors, the agent tests hypotheses on its own, identifies DynamoDB write throttling from a recent deployment, and posts a full root-cause analysis in four minutes with no human involved.</p>
+  <p>How far this already works on the infrastructure side is worth seeing clearly, because it sets a realistic bar. Datadog shipped Bits AI SRE to general availability on 2 December 2025; its own description is that it reaches a root-cause conclusion "before on-call responders even log in." AWS published a walkthrough of its DevOps Agent handling a live alarm: a CloudWatch alert fires on elevated 5xx errors, the agent tests hypotheses on its own, identifies DynamoDB write throttling from a recent deployment, and posts a full root-cause analysis in four minutes with no human involved. <a href="#ref-5">[5]</a> <a href="#ref-6">[6]</a></p>
 
   <p>Then it stops. It recommends a rollback or an on-demand capacity change and waits for a person to choose. That boundary is the interesting part. The most advanced shipping agent in this category runs the first three stages autonomously and deliberately refuses to run the fourth without a human. Hold that thought; it is the design that keeps the loop from eating you.</p>
 
   <h2 id="walkthrough">The loop, applied to an agent</h2>
 
-  <p>Here is the same loop running against a misbehaving agent instead of a database. One of your agents starts looping on a failing tool call, the control plane catches it, replays the session to find the cause, checks its own confidence, and, because the fix is ambiguous, escalates to a human rather than acting. That confidence gate is the whole design: high confidence and a known pattern, the loop closes itself; anything novel, it stops and pages you. The animated architecture in a moment shows this same incident flowing through the stack.</p>
+  <p>Here is the same loop running against a misbehaving agent instead of a database. One of your agents starts looping on a failing tool call, the control plane catches it, replays the session to find the cause, checks its own confidence, and, because the fix is ambiguous, escalates to a human rather than acting. That confidence gate is the whole design: high confidence and a known pattern, the loop closes itself; anything novel, it stops and pages you. The animated architecture in a moment shows this same incident flowing through the stack. <a href="#ref-16">[16]</a></p>
 
   <p>None of this is science fiction. Each stage is a capability that exists in shipping observability tooling today. What is rare is wiring them into a loop that is allowed to act on your agents, with the gate in the middle deciding when it may.</p>
 
@@ -344,7 +351,7 @@
 
   <p>Every stage above assumes you noticed the problem. For agents, that first stage is far harder than it looks, and the best evidence comes from a company that builds the models.</p>
 
-  <p>Between early August and early September 2025, Anthropic ran three overlapping infrastructure bugs that quietly degraded Claude's output: a routing error sending requests to the wrong servers, a misconfiguration that injected stray characters into responses, and a compiler bug that corrupted token selection. Users noticed. The interesting admission is in their own postmortem: "The evaluations we ran simply didn't capture the degradation users were reporting, in part because Claude often recovers well from isolated mistakes." Their standard tests came back green while real quality slipped, because the failure was intermittent and the system papered over single mistakes.</p>
+  <p>Between early August and early September 2025, Anthropic ran three overlapping infrastructure bugs that quietly degraded Claude's output: a routing error sending requests to the wrong servers, a misconfiguration that injected stray characters into responses, and a compiler bug that corrupted token selection. Users noticed. The interesting admission is in their own postmortem: "The evaluations we ran simply didn't capture the degradation users were reporting, in part because Claude often recovers well from isolated mistakes." Their standard tests came back green while real quality slipped, because the failure was intermittent and the system papered over single mistakes. <a href="#ref-7">[7]</a></p>
 
   <p>It got worse from there. Their privacy controls, correctly, stop engineers from freely reading user conversations, which meant they could not easily pull up the exact broken interactions to reproduce the bug. The thing you most need during an agent incident, the actual session, is the thing your own data-protection rules make hardest to reach. And because the three bugs overlapped, each one "produced different symptoms on different platforms at different rates," turning correlation into guesswork.</p>
 
@@ -387,13 +394,13 @@
 
   <p>Now the part everyone gets wrong in the other direction. Once you can auto-remediate, the temptation is to let the loop close on everything. That is how you turn a small incident into a large one.</p>
 
-  <p>Cloudflare gave the internet a clean lesson on 18 November 2025. An internal permissions change made a routine query return duplicate rows, which doubled the size of a configuration file that feeds their bot-management system. The file blew past a hardcoded limit of 200 features, and the proxy handling it panicked outright: <code>thread fl2_worker_thread panicked: called Result::unwrap() on an Err value</code>. It took roughly six hours to fully recover, across a large slice of the web. This was not an AI agent. It was automation acting on bad internal state, which is structurally the exact thing an agent does when it improvises on a wrong assumption.</p>
+  <p>Cloudflare gave the internet a clean lesson on 18 November 2025. An internal permissions change made a routine query return duplicate rows, which doubled the size of a configuration file that feeds their bot-management system. The file blew past a hardcoded limit of 200 features, and the proxy handling it panicked outright: <code>thread fl2_worker_thread panicked: called Result::unwrap() on an Err value</code>. It took roughly six hours to fully recover, across a large slice of the web. This was not an AI agent. It was automation acting on bad internal state, which is structurally the exact thing an agent does when it improvises on a wrong assumption. <a href="#ref-8">[8]</a></p>
 
   <p>Look at what Cloudflare committed to afterward, because it reads like a specification for running agents. More global kill switches, so a bad feature can be turned off network-wide without a deploy. And this line, which I would frame and hang over any agent platform: they would harden ingestion of their own internally generated configuration files "in the same way we would for user-generated input." Treat what your own automation produces as untrusted. An agent's plan is internally generated input. Validate it like it came from a stranger.</p>
 
-  <p>The failure mode to fear is not an agent that does nothing. It is an agent that remediates confidently into a worse state. A widely-read piece from an SRE practitioner in May 2026 gave the canonical example: a remediation agent sees elevated latency and restarts a service cluster, except the shared connection pool is already at 87 percent, and the restart triggers a thundering herd that finishes off the service the agent was trying to save. This is not hypothetical hand-waving. The real Google Cloud outage of June 2025 had the same shape, where mass automated restarts hammered a recovering backend with no backoff.</p>
+  <p>The failure mode to fear is not an agent that does nothing. It is an agent that remediates confidently into a worse state. A widely-read VentureBeat piece in May 2026 gave the canonical example: a remediation agent sees elevated latency and restarts a service cluster, except the shared connection pool is already at 87 percent, and the restart triggers a thundering herd that finishes off the service the agent was trying to save. This is not hypothetical hand-waving. The real Google Cloud outage of June 2025 had the same shape, where mass automated restarts hammered a recovering backend with no backoff. <a href="#ref-9">[9]</a> <a href="#ref-10">[10]</a></p>
 
-  <p>The answer is the confidence gate from the walkthrough, run as a real circuit breaker. Resolve AI describes the trust model the whole category is settling on, and it is worth stating plainly: start every agent in advisory mode where its fixes need human approval, expand its autonomy only for the low-risk, well-understood failures where it has earned a track record, and keep humans firmly in the loop for anything novel or high-stakes. Autonomy is a privilege an agent earns per failure type, not a switch you flip once. A breaker that hands ambiguous cases to a person is not a weakness in the design. It is the thing that makes the design safe enough to run at all.</p>
+  <p>The answer is the confidence gate from the walkthrough, run as a real circuit breaker. Resolve AI describes the trust model the whole category is settling on, and it is worth stating plainly: start every agent in advisory mode where its fixes need human approval, expand its autonomy only for the low-risk, well-understood failures where it has earned a track record, and keep humans firmly in the loop for anything novel or high-stakes. Autonomy is a privilege an agent earns per failure type, not a switch you flip once. A breaker that hands ambiguous cases to a person is not a weakness in the design. It is the thing that makes the design safe enough to run at all. <a href="#ref-11">[11]</a></p>
 
   <h2 id="build-first">What I would build first</h2>
 
@@ -411,7 +418,7 @@
 
   <h2 id="where">Where this is actually going</h2>
 
-  <p>The market is moving in this direction fast enough to trust the trend even while distrusting the numbers. Futurum Research reported in March 2025 that 89 percent of surveyed CIOs call agentic AI a strategic priority, though they published no methodology behind it, so read it as a mood, not a measurement. One analyst house sizes the broader AIOps market at 2.67 billion dollars in 2026 growing to 11.8 billion by 2034, and I quote only that one because the competing estimates for the same market ranged past 300 billion, which tells you the category is too young to measure honestly. As recently as last month, New Relic shipped Autopilot, an out-of-the-box SRE agent that triages incidents and proposes remediations. The supply side is real and accelerating.</p>
+  <p>The market is moving in this direction fast enough to trust the trend even while distrusting the numbers. Futurum Research reported in March 2025 that 89 percent of surveyed CIOs call agentic AI a strategic priority, though they published no methodology behind it, so read it as a mood, not a measurement. Two analyst houses publishing in 2026 size the same AIOps market for 2034 at about 29 billion dollars and 132 billion dollars respectively, a spread of more than four times for one category in one year, which tells you it is too young to measure honestly. As recently as last month, New Relic shipped Autopilot, an out-of-the-box SRE agent that triages incidents and proposes remediations. The supply side is real and accelerating. <a href="#ref-12">[12]</a> <a href="#ref-13">[13]</a> <a href="#ref-14">[14]</a> <a href="#ref-15">[15]</a></p>
 
   <p>What has not shipped is the honest part. Applying this loop to the agents themselves, rather than to infrastructure, is still mostly an articulated pattern and a set of vendor roadmaps, not a stack of proven production deployments you can copy. The strongest evidence for the idea is, oddly, the failures: the PocketOS deletions and the thundering-herd restarts are what happens when you run agents with no loop watching them. The absence is the argument.</p>
 
@@ -421,7 +428,41 @@
 
   <hr>
 
-  <p style="color:var(--dim);font-size:14px">Primary sources: the <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/" target="_blank" rel="noopener">PocketOS database deletion</a>, Anthropic's <a href="https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues" target="_blank" rel="noopener">postmortem of three recent issues</a>, the <a href="https://blog.cloudflare.com/18-november-2025-outage/" target="_blank" rel="noopener">Cloudflare 18 November 2025 outage report</a>, the <a href="https://aws.amazon.com/blogs/devops/leverage-agentic-ai-for-autonomous-incident-response-with-aws-devops-agent/" target="_blank" rel="noopener">AWS DevOps Agent walkthrough</a>, and the <a href="https://www.activantcapital.com/research/the-agent-control-plane" target="_blank" rel="noopener">agent control plane</a> four-pillar model.</p>
+  
+  <h2 id="faq">Quick questions and answers</h2>
+
+  <h3>Why does an AI agent delete a production database after being told not to?</h3>
+  <p>Because the prohibition was a text instruction, not a technical control. In the PocketOS incident the agent reached a production token from a staging task, and no confirmation step stood between it and a destructive command <a href="#ref-2">[2]</a>. The same shape recurred at Replit in July 2025, during an explicit code freeze <a href="#ref-3">[3]</a>. The fix is plumbing: a scoped credential per agent, and an approval boundary built for agents rather than borrowed from the one built for humans.</p>
+
+  <h3>What are the stages of the SRE loop when it is applied to an agent fleet?</h3>
+  <p>Five. Detect: an agent drifts, loops, burns tokens, or starts failing its own output checks. Triage: pull its recent sessions, tool calls and cost curve. Correlate: tie the behaviour to a prompt change, a model swap, or a bad tool response. Remediate: reroute to another model, roll back the agent version, or pause it. Escalate: hand off to a person when the fix is novel or the blast radius is large.</p>
+
+  <h3>Why is detecting agent failures harder than detecting infrastructure failures?</h3>
+  <p>Because the degradation is silent, intermittent and non-deterministic. Anthropic's postmortem of its 2025 issues shows it: three overlapping bugs degraded output for weeks, the company's own checks did not catch it, and privacy controls meant engineers could not freely replay the broken conversations <a href="#ref-7">[7]</a>. Standard uptime checks miss exactly this, so detection needs one replayable record per decision and a score on the output, not just a health endpoint.</p>
+
+  <h3>What should I build before letting agents remediate on their own?</h3>
+  <p>Three things with no AI in them. A scoped identity and credential for every agent. One replayable record per decision - model, tools, arguments, returns, tokens, output score. A kill switch that pauses an agent, or a whole class of agents, without a deploy. Then wire detection to alerts and keep remediation manual. Only afterwards let the loop close on the one or two boring, reversible failures it has handled correctly many times; everything else keeps escalating to you.</p>
+
+  <h2 id="refs">Sources and references</h2>
+  <p>Every incident in this article is cited to the operator's own report or to a dated first-hand account, and every vendor claim to the vendor's own page. Market figures are given with their source because they disagree with each other, which is part of the point.</p>
+  <ol class="refs">
+    <li id="ref-1">T. Claburn, <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/">Cursor agent snuffs out PocketOS database</a>, The Register, 27 April 2026. Supports: the PocketOS deletion and the engineer's own account (section: Nine seconds).</li>
+    <li id="ref-2"><a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane">How an AI coding agent deleted a software company's database</a>, Fast Company, 2026. Supports: the credential path from a staging task to a production token (section: Why this keeps happening).</li>
+    <li id="ref-3">AI Incident Database, <a href="https://incidentdatabase.ai/cite/1152/">Incident 1152: LLM-driven Replit agent executed unauthorized destructive commands during code freeze</a>, July 2025. Supports: the Replit deletion during an explicit code freeze; the 1,206-record figure is the affected founder's own count (section: Why this keeps happening).</li>
+    <li id="ref-4">Sherlocks AI, <a href="https://www.sherlocks.ai/blog/why-ai-agents-fail-in-production">Why AI Agents Fail in Production: The Agent Failure Stack Explained</a>, 5 June 2026. Supports: 73 production agent incidents analysed between January and May 2026 (section: Why this keeps happening).</li>
+    <li id="ref-5">Datadog, <a href="https://www.datadoghq.com/about/latest-news/press-releases/datadog-launches-bits-ai-sre-agent-to-resolve-incidents-faster/">Datadog Launches Bits AI SRE Agent to Resolve Incidents Faster</a>, press release, 2 December 2025. Supports: general availability and the quoted "before on-call responders even log in" (section: The loop, borrowed from SRE).</li>
+    <li id="ref-6">AWS, <a href="https://aws.amazon.com/blogs/devops/leverage-agentic-ai-for-autonomous-incident-response-with-aws-devops-agent/">Leverage agentic AI for autonomous incident response with AWS DevOps Agent</a>, AWS DevOps Blog. Supports: an agent that runs detect, triage and correlate and then stops for a person (section: The loop, borrowed from SRE).</li>
+    <li id="ref-7">Anthropic, <a href="https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues">A postmortem of three recent issues</a>, September 2025. Supports: three overlapping infrastructure bugs, silent degradation, and the replay problem created by privacy controls (section: The hard part is detection).</li>
+    <li id="ref-8">Cloudflare, <a href="https://blog.cloudflare.com/18-november-2025-outage/">Cloudflare outage on November 18, 2025</a>, Cloudflare Blog. Supports: the duplicated-rows feature file, the hardcoded limit, and the commitment to global kill switches (section: The circuit breaker).</li>
+    <li id="ref-9">S. Patil, <a href="https://venturebeat.com/orchestration/ai-agents-are-quietly-generating-chaos-engineering-failures-enterprises-dont-track-yet">AI agents are quietly generating chaos engineering failures enterprises don't track yet</a>, VentureBeat, 24 May 2026. Supports: the restart-into-a-thundering-herd example with the connection pool at 87 percent (section: The circuit breaker).</li>
+    <li id="ref-10">Google Cloud, <a href="https://status.cloud.google.com/incidents/ow5i3PPK96RduMcb1SsW">Incident report: multiple Google Cloud products, 12 June 2025</a>, Service Health. Supports: the Service Control crash loop and recovery without randomized exponential backoff (section: The circuit breaker).</li>
+    <li id="ref-11">Resolve AI, <a href="https://resolve.ai/glossary/what-is-ai-sre">What is an AI SRE?</a>, glossary. Supports: the graduated, human-in-the-loop trust model - advisory first, autonomy expanded for low-risk, well-understood remediations (section: The circuit breaker).</li>
+    <li id="ref-12">Futurum Group, <a href="https://futurumgroup.com/press-release/rise-of-agentic-ai-leading-solutions-transforming-enterprise-workflows-in-2025/">Rise of Agentic AI: Leading Solutions Transforming Enterprise Workflows in 2025</a>, press release, 7 March 2025. Supports: 89 percent of surveyed CIOs; the page discloses no sample size or methodology (section: Where this is actually going).</li>
+    <li id="ref-13">Straits Research, <a href="https://straitsresearch.com/report/artificial-intelligence-for-it-operations-platform-market">AI for IT Operations (AIOps) Platform Market</a>, 2026. Supports: a global 2034 estimate of about 29 billion dollars (section: Where this is actually going).</li>
+    <li id="ref-14">IMARC Group, <a href="https://www.imarcgroup.com/aiops-market">AIOps Market Size, Share, Growth, Trends and Forecast 2034</a>, 2026. Supports: a global 2034 estimate of about 132 billion dollars for the same market (section: Where this is actually going).</li>
+    <li id="ref-15">New Relic, <a href="https://newrelic.com/press-release/20260623-2">New Relic Autopilot and New Relic Ground Truth Capabilities Supercharge Agentic AI-First Businesses</a>, press release, 23 June 2026. Supports: Autopilot as an out-of-the-box SRE agent that triages incidents and scopes remediations (section: Where this is actually going).</li>
+    <li id="ref-16">Activant Capital, <a href="https://www.activantcapital.com/research/the-agent-control-plane">The Agent Control Plane</a>, research note. Supports: the four-pillar model the architecture section is organised around (section: The architecture, layer by layer).</li>
+  </ol>
 </article>
 
 

@@ -32,8 +32,8 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
   a.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
   a.card:hover{border-color:var(--accent);transform:translateY(-2px)}
-  a.card h3{margin:0 0 6px;font-size:16px}
-  a.card h3 span{color:var(--accent);font-size:13px;font-weight:600;margin-right:8px}
+  a.card h2{margin:0 0 6px;font-size:16px}
+  a.card h2 span{color:var(--accent);font-size:13px;font-weight:600;margin-right:8px}
   a.card p{margin:0;color:var(--mut);font-size:13.5px}
   .note{color:var(--dim);font-size:12.5px;border:1px solid var(--line);background:var(--panel2);border-radius:12px;padding:14px 16px;margin:0 0 30px}
   .foot{color:var(--dim);font-size:12px;margin-top:44px;border-top:1px solid var(--line);padding-top:16px}
@@ -65,12 +65,12 @@
   <div class="note">Anonymized: client name, project ids, secrets and domains removed. Diagrams describe architecture only and show no production data.</div>
 
   <div class="grid">
-    <a class="card" href="architecture.html"><h3><span>00</span>System architecture</h3><p>How the pieces fit: Cloud Run, BigQuery, Mongo, Cloud Tasks, GCS, Cloud Functions.</p></a>
-    <a class="card" href="flow-campaign-send.html"><h3><span>01</span>WhatsApp campaign send</h3><p>Audience to delivery: media cache, parallel fan-out, scheduling. ~10x faster.</p></a>
-    <a class="card" href="flow-data-sync.html"><h3><span>02</span>Data-sync pipelines</h3><p>Meta + GA4 + Firestore to BigQuery, idempotent upserts, anomaly alerts.</p></a>
-    <a class="card" href="flow-chat-ai.html"><h3><span>03</span>Chat + AI assist</h3><p>Inbound message to reply: rate limit, retrieval, provider fallback, human handoff.</p></a>
-    <a class="card" href="flow-creative-studio.html"><h3><span>04</span>Creative Studio</h3><p>Generate, compose and publish: AI gateway, Chromium render, signed URLs.</p></a>
-    <a class="card" href="flow-cicd-deploy.html"><h3><span>05</span>CI/CD to Cloud Run</h3><p>Push to main: test, build, deploy, pin traffic to latest revision.</p></a>
+    <a class="card" href="architecture.html"><h2><span>00</span>System architecture</h2><p>How the pieces fit: Cloud Run, BigQuery, Mongo, Cloud Tasks, GCS, Cloud Functions.</p></a>
+    <a class="card" href="flow-campaign-send.html"><h2><span>01</span>WhatsApp campaign send</h2><p>Audience to delivery: media cache, parallel fan-out, scheduling. ~10x faster.</p></a>
+    <a class="card" href="flow-data-sync.html"><h2><span>02</span>Data-sync pipelines</h2><p>Meta + GA4 + Firestore to BigQuery, idempotent upserts, anomaly alerts.</p></a>
+    <a class="card" href="flow-chat-ai.html"><h2><span>03</span>Chat + AI assist</h2><p>Inbound message to reply: rate limit, retrieval, provider fallback, human handoff.</p></a>
+    <a class="card" href="flow-creative-studio.html"><h2><span>04</span>Creative Studio</h2><p>Generate, compose and publish: AI gateway, Chromium render, signed URLs.</p></a>
+    <a class="card" href="flow-cicd-deploy.html"><h2><span>05</span>CI/CD to Cloud Run</h2><p>Push to main: test, build, deploy, pin traffic to latest revision.</p></a>
   </div>
 
   <div class="foot">Relay - anonymized engineering case study. Code in <code>../src</code>.</div>

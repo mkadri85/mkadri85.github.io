@@ -40,7 +40,7 @@
   @media(min-width:761px){.note>summary{display:none}.note>.note-body{display:block}}
   .wrap{display:grid;grid-template-columns:minmax(430px,1.55fr) minmax(285px,1fr) minmax(285px,1fr);gap:14px;padding:14px 22px;max-width:1640px;margin:0 auto;align-items:start}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .card h3{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--line)}
+  .card h2{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:10px 14px;border-bottom:1px solid var(--line)}
   .pad{padding:12px 14px}
   /* controls */
   .controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px 14px}
@@ -184,7 +184,7 @@
 <div class="wrap">
   <div>
     <div class="card" data-tab="net">
-      <h3>Multi-vendor microwave region — three NMS islands (three vendors' management systems that don't talk to each other)</h3>
+      <h2>Multi-vendor microwave region — three NMS islands (three vendors' management systems that don't talk to each other)</h2>
       <div class="controls">
         <button class="primary" id="btnStory">▶ Run the story (60s)</button>
         <button id="btnRain">Inject rain storm</button>
@@ -218,29 +218,29 @@
       <svg id="map" viewBox="0 0 100 74" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
     <div class="card" data-tab="net" style="margin-top:14px">
-      <h3>Link inspector — click any link on the map</h3>
+      <h2>Link inspector — click any link on the map</h2>
       <div class="pad" id="inspector" style="color:var(--dim);font-size:13px">Click a link to see what a NOC would see: RSL/SNR both directions, ACM state, capacity at current modulation, utilization, and the services riding it.</div>
     </div>
   </div>
 
   <div>
     <div class="card" data-tab="diag">
-      <h3>Layer 2 — glass-box diagnosis (click a finding for the evidence trail)</h3>
+      <h2>Layer 2 — glass-box diagnosis (click a finding for the evidence trail)</h2>
       <div id="findings"><div class="pad" style="color:var(--dim)">Region healthy. Inject a scenario on the left.</div></div>
     </div>
     <div class="card" data-tab="dec" style="margin-top:14px">
-      <h3>Layer 3 — gated proposals awaiting a human</h3>
+      <h2>Layer 3 — gated proposals awaiting a human</h2>
       <div id="props"><div class="pad" style="color:var(--dim)">Nothing pending. Actions inside policy fire automatically; anything bigger lands here.</div></div>
     </div>
   </div>
 
   <div>
     <div class="card" data-tab="dec">
-      <h3>Decision log — actions, verifications, breaker</h3>
+      <h2>Decision log — actions, verifications, breaker</h2>
       <div class="log" id="log"></div>
     </div>
     <div class="card" data-tab="alarms" style="margin-top:14px">
-      <h3>Raw alarm feeds — what the three islands actually emit</h3>
+      <h2>Raw alarm feeds — what the three islands actually emit</h2>
       <div class="sevbar" id="sevbar">
         <span class="sevpill sp-crit">Critical<span class="n" id="scCrit">0</span></span>
         <span class="sevpill sp-maj">Major<span class="n" id="scMaj">0</span></span>
