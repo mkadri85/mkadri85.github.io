@@ -1,0 +1,48 @@
+/* Scroll reveal for browsers without CSS scroll-driven animations.
+ *
+ * print-theme.css does this with animation-timeline: view(), which Chrome and Edge
+ * support and Safari does not. On an iPhone that means no motion at all, which is
+ * how this was found. So: if the browser can do it in CSS, stay out of the way. If
+ * it cannot, do the same thing with an observer.
+ *
+ * The hiding class goes on <html> from JavaScript, never in the HTML. A visitor
+ * with JavaScript off, or a crawler, gets the page fully visible - nothing is ever
+ * hidden by a stylesheet that might load without its script.
+ */
+(function () {
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+
+  var cssHandlesIt = window.CSS && CSS.supports && CSS.supports('animation-timeline', 'view()');
+  if (cssHandlesIt) return;
+
+  if (!('IntersectionObserver' in window)) return;
+
+  var SEL = 'article h2, article figure, article table, article .callout,' +
+            ' article .toc, article blockquote, .grid .post';
+
+  var els = [].slice.call(document.querySelectorAll(SEL));
+  if (!els.length) return;
+
+  document.documentElement.classList.add('reveal-js');
+  els.forEach(function (el) { el.classList.add('rv'); });
+
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      e.target.classList.add('rv-in');
+      io.unobserve(e.target);
+    });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+  els.forEach(function (el) { io.observe(el); });
+
+  // Anything already on screen at load is revealed immediately, so the first
+  // screen is never sitting at zero opacity waiting for a scroll that may not come.
+  requestAnimationFrame(function () {
+    els.forEach(function (el) {
+      var b = el.getBoundingClientRect();
+      if (b.top < innerHeight && b.bottom > 0) { el.classList.add('rv-in'); io.unobserve(el); }
+    });
+  });
+})();

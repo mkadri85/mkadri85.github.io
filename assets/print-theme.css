@@ -1,17 +1,22 @@
 /* ============================================================
    Engineering print - dual theme (follows the system)
+   --bg2 is the ALTERNATING BAND colour. The home page marks four sections with it
+   to break the page into chapters. It was never redefined here, so it kept the
+   original near-black #0d1220 in both themes: on the light theme that put four
+   black slabs on a white page with dark text on them, measured 2.29:1. It has to
+   be themed like every other surface.
    Spec: /DESIGN-SPEC.md  (tokens verified WCAG + APCA, 2026-09-01)
    Loaded last: re-points the legacy vars, then component voice.
    ============================================================ */
 :root{
-  --bg:#f7f9fb; --panel:#e9f1f8; --panel2:#eef4fa; --line:#c8d4de;
+  --bg:#f7f9fb; --bg2:#eaf0f6; --panel:#e9f1f8; --panel2:#eef4fa; --line:#c8d4de;
   --ink:#1d2b3f; --head:#14365c; --mut:#3f5166; --dim:#4a5b6d;
   --accent:#35648f; --violet:#35648f; --glow:rgba(53,100,143,.08);
   --amber:#9a640b; --amber-big:#b97a10; --warn:#b3261e; --maxw:1200px;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --bg:#111926; --panel:#1a2534; --panel2:#16202e; --line:#2b394c;
+    --bg:#111926; --bg2:#0c131f; --panel:#1a2534; --panel2:#16202e; --line:#2b394c;
     --ink:#dbe4ee; --head:#e8eef6; --mut:#aebccd; --dim:#a8b8ca;
     --accent:#85aed4; --violet:#85aed4; --glow:rgba(133,174,212,.10);
     --amber:#e2a94e; --amber-big:#e2a94e; --warn:#ff8a80;
@@ -122,3 +127,24 @@ article .subtitle, .post .meta, article .meta{color:var(--mut);}
 
 /* The reduced-motion rule above switches animation off entirely, which leaves each
    element at its normal static state - visible. Nothing to undo here. */
+
+/* Fallback path for Safari and anything else without animation-timeline. The
+   .reveal-js class is set by reveal.js at runtime, so these rules can never hide
+   content from a visitor whose JavaScript did not run, or from a crawler. */
+.reveal-js .rv{opacity:0; transform:translateY(18px);
+  transition:opacity .65s cubic-bezier(.2,.7,.2,1), transform .65s cubic-bezier(.2,.7,.2,1);}
+.reveal-js .grid .post.rv{transform:translateY(26px) scale(.985);}
+.reveal-js .rv.rv-in{opacity:1; transform:none;}
+
+/* Display scale. Measured against the reference the operator asked to match: its
+   section headings run 42-64px at weight 500, this site ran 38px at weight 700.
+   Large and light reads as assured; small and heavy reads as shouting. Only the
+   section headings move - body copy and article h2 keep their reading size. */
+section h2, section .h2{
+  font-size:clamp(2.1rem, 3.4vw, 2.85rem);
+  font-weight:600;
+  letter-spacing:-.018em;
+  line-height:1.14;
+}
+/* Sections carry their own band, so give them room to read as separate chapters. */
+section{padding-block:clamp(64px, 7vw, 104px);}
