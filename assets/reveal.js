@@ -81,7 +81,11 @@
       // drop the compositor hint once the transition has finished
       setTimeout(function () { s.classList.add('sec-done'); }, 1200);
     });
-  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  // threshold 0: fire the moment the section's top edge crosses the line 12% above
+  // the bottom of the viewport. A fraction-of-section threshold is wrong for tall
+  // sections - on a phone the projects section runs to thousands of pixels, and
+  // 8% of that meant scrolling hundreds of pixels into it before anything moved.
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0 });
 
   secs.forEach(function (s) { io.observe(s); });
 
