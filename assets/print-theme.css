@@ -57,3 +57,9 @@ html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3
 .hc-row .k{color:var(--dim);} .hc-row .v{color:var(--ink);}
 .hc-chips .chip, .chip{background:var(--panel2); border:1px solid var(--line); color:var(--head);}
 .mobile-nav, .mnav, nav.open{background:var(--bg)!important;}
+/* 2026-09-22: prose colour on paper. The per-post inline CSS still carries the
+   old dark-theme greys (#c6cedb / #d7deea) for p, li, td; on the light theme that
+   fell to ~1.6:1. Re-point them to the ink token so both themes meet the 7:1 floor. */
+article p, article li, article td, article .lead, .callout p, .post p, main.wrap p, main.wrap li
+{color:var(--ink);}
+article .subtitle, .post .meta, article .meta{color:var(--mut);}
