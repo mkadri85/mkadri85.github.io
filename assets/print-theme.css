@@ -190,3 +190,13 @@ html.sec-js section .reveal{transition-delay:calc(min(var(--i, 0), 8) * 60ms);}
   html.sec-snap{scroll-snap-type:y proximity; scroll-padding-top:var(--hdr, 64px);}
   html.sec-snap section{scroll-snap-align:start;}
 }
+
+/* Read next: two or three hand-chosen links at the end of every article, so a
+   reader who finishes one piece is handed the next and no post is an orphan
+   that only the index links to. Chosen by subject, never a generic list. */
+.readnext{margin:56px 0 8px;padding:22px 24px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.readnext .rn-kicker{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-size:.7rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.readnext ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.readnext li a{color:var(--head);text-decoration:none;font-weight:600;border-bottom:1px solid transparent}
+.readnext li a:hover{border-bottom-color:var(--accent)}
+.readnext .rn-lang{color:var(--dim);font-size:.85em;font-weight:400}

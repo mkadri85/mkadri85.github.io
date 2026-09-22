@@ -313,7 +313,7 @@
     <li id="ref-3"><a href="https://arxiv.org/abs/2412.19437">DeepSeek-V3 Technical Report</a>, 2024. Supports: MLA at frontier scale; model dimensions used in the 131 GB illustration (sections: The KV cache; DeepSeek's fix).</li>
     <li id="ref-4"><a href="https://arxiv.org/abs/2510.26692">Kimi Linear Technical Report (Kimi Delta Attention)</a>, Moonshot AI, 2025. Supports: the fixed-size whiteboard, per-channel forgetting, the 3:1 hybrid and up to 75 percent KV cache reduction (section: Kimi's fix).</li>
     <li id="ref-5">He, Zhang, Ren, Sun: <a href="https://arxiv.org/abs/1512.03385">Deep Residual Learning for Image Recognition</a>, 2015. Supports: the original residual connections idea (section: Two more pieces).</li>
-    <li id="ref-6"><a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026. Supports: KDA inside K3 (69 KDA layers to 24 gated MLA across 93 layers), the 1,048,576-token window, and the Stable LatentMoE and Attention Residuals design - the layer split and context length now verifiable in the published config until the public files are independently checked (sections: Kimi's fix; Two more pieces).</li>
+    <li id="ref-6"><a href="https://www.kimi.ai/blog/kimi-k3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026. Supports: KDA inside K3 (69 KDA layers to 24 gated MLA across 93 layers), the 1,048,576-token window, and the Stable LatentMoE and Attention Residuals design - the layer split and context length now verifiable in the published config until the public files are independently checked (sections: Kimi's fix; Two more pieces).</li>
   </ol>
 
   <p style="font-size:13.5px;color:var(--dim)">Further watching: Welch Labs, &ldquo;How DeepSeek Rewrote the Transformer&rdquo; - the best visual explanation of MLA. Note on the 131 GB figure: computed from the published DeepSeek-V3 attention dimensions (2 x 128 dimensions x 2 bytes x 128 heads x 61 layers x 32,768 tokens) as what standard multi-head attention would cost; DeepSeek-V3 itself avoids it with MLA. About this article: written by Mohamed Kadri; every number was checked against the primary paper or official release listed, and Kimi K3 figures are marked as company claims until the released files are independently verified. Last updated: July 27, 2026.</p>
@@ -322,6 +322,15 @@
 
   <p>Part 1 of this series: <a href="/blog/mixture-of-experts-explained/">Mixture of Experts (MoE) Explained Simply</a>. More on operating AI in production: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a>.</p>
 
+
+  <nav class="readnext" aria-label="Read next">
+    <div class="rn-kicker">Read next</div>
+    <ul>
+      <li><a href="/blog/mixture-of-experts-explained/">Mixture of Experts (MoE) Explained Simply: Kimi K3 Has 2.8 Trillion Parameters and Uses 104 Billion</a></li>
+      <li><a href="/blog/self-host-llm-one-gpu/">I Self-Hosted AI for a Week. The Model Was the Easy Part.</a></li>
+      <li><a href="/blog/agent-noc/">Your AI Agents Need a NOC</a></li>
+    </ul>
+  </nav>
 </article>
 
 
@@ -409,7 +418,7 @@
     }).catch(function(){});
 })();
 </script>
-<link rel="stylesheet" href="/assets/print-theme.css?v=5440a7c041">
-<script src="/assets/reveal.js?v=5440a7c041" defer></script>
+<link rel="stylesheet" href="/assets/print-theme.css?v=7882872041">
+<script src="/assets/reveal.js?v=7882872041" defer></script>
 </body>
 </html>

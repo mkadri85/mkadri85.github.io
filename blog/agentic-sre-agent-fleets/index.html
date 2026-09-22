@@ -296,7 +296,7 @@
 
   <p>The company was PocketOS, which builds software for car rental firms. The agent was Cursor, running Claude Opus 4.6. It was working in the staging environment, hit a credential mismatch, and decided the fix was to delete a Railway volume. To do that it went looking for an API token, found one in an unrelated file, and used it to fire a <code>curl</code> command that deleted the <strong>production</strong> volume instead. No confirmation step stood in the way. The backups went with it, because Railway keeps volume-level backups on the same volume. Staff spent the weekend rebuilding customer reservations from Stripe payment records and email logs. <a href="#ref-1">[1]</a></p>
 
-  <p style="font-size:15px;opacity:.72">Reported by <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/" target="_blank" rel="noopener">The Register</a>, <a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> and others.</p>
+  <p style="font-size:15px;opacity:.72">Reported by <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startup/" target="_blank" rel="noopener">The Register</a>, <a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane" target="_blank" rel="noopener">Fast Company</a> and others.</p>
 
   <p>The engineer's own summary afterward: "I violated every principle I was given."</p>
 
@@ -446,7 +446,7 @@
   <h2 id="refs">Sources and references</h2>
   <p>Every incident in this article is cited to the operator's own report or to a dated first-hand account, and every vendor claim to the vendor's own page. Market figures are given with their source because they disagree with each other, which is part of the point.</p>
   <ol class="refs">
-    <li id="ref-1">T. Claburn, <a href="https://www.theregister.com/2026/04/27/cursoropus_agent_snuffs_out_pocketos/">Cursor agent snuffs out PocketOS database</a>, The Register, 27 April 2026. Supports: the PocketOS deletion and the engineer's own account (section: Nine seconds).</li>
+    <li id="ref-1">T. Claburn, <a href="https://www.theregister.com/software/2026/04/27/cursor-opus-agent-snuffs-out-startup/">Cursor agent snuffs out PocketOS database</a>, The Register, 27 April 2026. Supports: the PocketOS deletion and the engineer's own account (section: Nine seconds).</li>
     <li id="ref-2"><a href="https://www.fastcompany.com/91533544/cursor-claude-ai-agent-deleted-software-company-pocket-os-database-jer-crane">How an AI coding agent deleted a software company's database</a>, Fast Company, 2026. Supports: the credential path from a staging task to a production token (section: Why this keeps happening).</li>
     <li id="ref-3">AI Incident Database, <a href="https://incidentdatabase.ai/cite/1152/">Incident 1152: LLM-driven Replit agent executed unauthorized destructive commands during code freeze</a>, July 2025. Supports: the Replit deletion during an explicit code freeze; the 1,206-record figure is the affected founder's own count (section: Why this keeps happening).</li>
     <li id="ref-4">Sherlocks AI, <a href="https://www.sherlocks.ai/blog/why-ai-agents-fail-in-production">Why AI Agents Fail in Production: The Agent Failure Stack Explained</a>, 5 June 2026. Supports: 73 production agent incidents analysed between January and May 2026 (section: Why this keeps happening).</li>
@@ -463,6 +463,15 @@
     <li id="ref-15">New Relic, <a href="https://newrelic.com/press-release/20260623-2">New Relic Autopilot and New Relic Ground Truth Capabilities Supercharge Agentic AI-First Businesses</a>, press release, 23 June 2026. Supports: Autopilot as an out-of-the-box SRE agent that triages incidents and scopes remediations (section: Where this is actually going).</li>
     <li id="ref-16">Activant Capital, <a href="https://www.activantcapital.com/research/the-agent-control-plane">The Agent Control Plane</a>, research note. Supports: the four-pillar model the architecture section is organised around (section: The architecture, layer by layer).</li>
   </ol>
+
+  <nav class="readnext" aria-label="Read next">
+    <div class="rn-kicker">Read next</div>
+    <ul>
+      <li><a href="/blog/agent-noc/">Your AI Agents Need a NOC</a></li>
+      <li><a href="/blog/shared-ai-memory/">One Repository. One Shared Brain.</a></li>
+      <li><a href="/blog/topology-restoration-alarm-correlation/">The Map Is the Product</a></li>
+    </ul>
+  </nav>
 </article>
 
 
@@ -550,7 +559,7 @@
     }).catch(function(){});
 })();
 </script>
-<link rel="stylesheet" href="/assets/print-theme.css?v=5440a7c041">
-<script src="/assets/reveal.js?v=5440a7c041" defer></script>
+<link rel="stylesheet" href="/assets/print-theme.css?v=7882872041">
+<script src="/assets/reveal.js?v=7882872041" defer></script>
 </body>
 </html>

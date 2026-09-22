@@ -163,6 +163,29 @@ def main():
             if any(l == FAIL for l, _, _ in issues):
                 failed += 1
 
+    # internal link graph: every post must be linked from at least one OTHER post's body,
+    # and must carry a Read next block. Three posts were orphans before this check existed.
+    import glob as _g
+    posts=[d for d in sorted(os.listdir("blog")) if os.path.isdir(os.path.join("blog",d))]
+    inbound={d:set() for d in posts}
+    for d in posts:
+        pth=os.path.join("blog",d,"index.html")
+        if not os.path.exists(pth): continue
+        h=open(pth,encoding="utf-8",errors="replace").read()
+        a=re.search(r"<article.*?</article>",h,re.S); b=a.group(0) if a else h
+        for t in set(re.findall(r'href="/blog/([a-z0-9-]+)/',b)):
+            if t in inbound and t!=d: inbound[t].add(d)
+    for d in posts:
+        pth=os.path.join("blog",d,"index.html")
+        if not os.path.exists(pth): continue
+        h=open(pth,encoding="utf-8",errors="replace").read()
+        iss=[]
+        if not inbound[d]: iss.append((FAIL,"internal links","orphan - no other post links here"))
+        if 'class="readnext"' not in h: iss.append((WARN,"internal links","no Read next block"))
+        if iss:
+            for r in results:
+                if r[0]==pth: r[1].extend(iss); break
+            else: results.append((pth,iss))
     for path, issues in results:
         print(f"\n{path}")
         for level, check, detail in issues:

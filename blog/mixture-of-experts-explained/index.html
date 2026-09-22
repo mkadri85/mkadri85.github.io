@@ -379,7 +379,7 @@
     <li id="ref-11"><a href="https://ai.meta.com/blog/llama-4-multimodal-intelligence/">Llama 4</a>, Meta, 2025. Supports: Llama 4 as a US MoE model using a shared expert (history section; the chart).</li>
     <li id="ref-12"><a href="https://arxiv.org/abs/2508.10925">gpt-oss model card</a>, OpenAI, 2025. Supports: the gpt-oss bar in the chart and US adoption of extreme sparsity.</li>
     <li id="ref-13"><a href="https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/">Google announcement of Gemini 1.5</a>, 2024. Supports: Google saying its Gemini models use MoE (history section).</li>
-    <li id="ref-14"><a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026, alongside the <a href="https://www.kimi.com/blog/kimi-k3">Kimi K3 tech blog</a>. Supports: 2.8T total and 104B activated parameters, 896 experts with 16 selected per token, 2 shared experts, 93 layers as 69 KDA plus 24 gated MLA, MXFP4 weights with MXFP8 activations, and the 1,048,576-token context (intro; the chart; the update note).</li>
+    <li id="ref-14"><a href="https://huggingface.co/moonshotai/Kimi-K3">Kimi K3 model card and config.json</a>, Moonshot AI, released 27 July 2026, alongside the <a href="https://www.kimi.ai/blog/kimi-k3">Kimi K3 tech blog</a>. Supports: 2.8T total and 104B activated parameters, 896 experts with 16 selected per token, 2 shared experts, 93 layers as 69 KDA plus 24 gated MLA, MXFP4 weights with MXFP8 activations, and the 1,048,576-token context (intro; the chart; the update note).</li>
   </ol>
 
   <p style="font-size:13.5px;color:var(--dim)">About this article: written by Mohamed Kadri, a technical manager working in telecom network operations who builds and runs AI agent systems hands-on. Every number above was checked against the primary paper or official release listed. The Kimi K3 figures were company claims when this was first published; they were re-checked against the released model card and config.json on 27 July 2026, and the active-parameter figure was corrected from roughly 2 percent to 104 billion, about 3.7 percent. Last updated: July 27, 2026.</p>
@@ -388,6 +388,15 @@
 
   <p>Part 2 of this series: <a href="/blog/why-long-context-is-hard/">Why Long Context Is Hard: the KV Cache, MLA, and Kimi Delta Attention</a>. More on operating AI in production: <a href="/blog/agent-noc/">Your AI Agents Need a NOC</a> and <a href="/blog/agentic-sre-agent-fleets/">Who Operates the Operators?</a></p>
 
+
+  <nav class="readnext" aria-label="Read next">
+    <div class="rn-kicker">Read next</div>
+    <ul>
+      <li><a href="/blog/why-long-context-is-hard/">Why Long Context Is Hard: the KV Cache, MLA, and Kimi Delta Attention, Explained Simply</a></li>
+      <li><a href="/blog/self-host-llm-one-gpu/">I Self-Hosted AI for a Week. The Model Was the Easy Part.</a></li>
+      <li><a href="/blog/shared-ai-memory/">One Repository. One Shared Brain.</a></li>
+    </ul>
+  </nav>
 </article>
 
 
@@ -475,7 +484,7 @@
     }).catch(function(){});
 })();
 </script>
-<link rel="stylesheet" href="/assets/print-theme.css?v=5440a7c041">
-<script src="/assets/reveal.js?v=5440a7c041" defer></script>
+<link rel="stylesheet" href="/assets/print-theme.css?v=7882872041">
+<script src="/assets/reveal.js?v=7882872041" defer></script>
 </body>
 </html>
