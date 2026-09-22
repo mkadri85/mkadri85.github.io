@@ -56,10 +56,69 @@ html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] h3
 .hero-card{background:var(--panel)!important; backdrop-filter:none!important;}
 .hc-row .k{color:var(--dim);} .hc-row .v{color:var(--ink);}
 .hc-chips .chip, .chip{background:var(--panel2); border:1px solid var(--line); color:var(--head);}
+/* The mobile menu panel. Every page's inline CSS hardcodes a near-black
+   rgba(10,13,19,.97) for it, so on the light theme it put dark navy links on a
+   black panel: measured 1.36:1 at 390px wide. The rule that used to live here
+   aimed at .mobile-nav / .mnav / nav.open, none of which this site has, so it
+   never matched anything. The panel is .navlinks. Keep the blur, take the colour
+   from the theme. Scoped to .open so the desktop nav and the plain header nav
+   on article pages keep their own muted styling. */
 .mobile-nav, .mnav, nav.open{background:var(--bg)!important;}
+.navlinks.open{background:var(--bg)!important;}
+@supports (background: color-mix(in srgb, red 50%, transparent)){
+  .navlinks.open{background:color-mix(in srgb, var(--bg) 97%, transparent)!important;}
+}
+.navlinks.open a{color:var(--ink)!important;}
 /* 2026-09-22: prose colour on paper. The per-post inline CSS still carries the
    old dark-theme greys (#c6cedb / #d7deea) for p, li, td; on the light theme that
    fell to ~1.6:1. Re-point them to the ink token so both themes meet the 7:1 floor. */
 article p, article li, article td, article .lead, .callout p, .post p, main.wrap p, main.wrap li
 {color:var(--ink);}
 article .subtitle, .post .meta, article .meta{color:var(--mut);}
+
+/* ============================================================
+   Scroll reveal for article and index pages.
+   The home page already has its own IntersectionObserver reveal; these pages had
+   nothing, so they read as one flat wall. Done with CSS scroll-driven animations
+   rather than more JavaScript: the timeline is the scroll position, so the motion
+   tracks the finger instead of firing on a trigger.
+   Deliberately NOT applied to paragraphs. Text that fades in while you are trying
+   to read it is irritating; only the structural blocks move.
+   ============================================================ */
+@supports (animation-timeline: view()){
+  @keyframes eng-reveal{
+    from{opacity:0; transform:translateY(18px);}
+    to{opacity:1; transform:none;}
+  }
+  @keyframes eng-rise{
+    from{opacity:0; transform:translateY(26px) scale(.985);}
+    to{opacity:1; transform:none;}
+  }
+
+  /* Article pages: headings and the blocks that carry the figures and tables. */
+  article h2,
+  article figure,
+  article table,
+  article .callout,
+  article .toc,
+  article blockquote{
+    animation:eng-reveal linear both;
+    animation-timeline:view();
+    /* completes while the block is still entering, so anything already on
+       screen when the page loads is fully revealed rather than half faded */
+    animation-range:entry 0% entry 80%;
+  }
+
+  /* Blog index: the post cards, which is where the page feels most static. */
+  .grid .post{
+    animation:eng-rise linear both;
+    animation-timeline:view();
+    animation-range:entry 0% entry 85%;
+  }
+
+  /* An element already on screen when the page loads is past its entry range, so
+     it renders at the end state. Nothing above the fold flashes or waits. */
+}
+
+/* The reduced-motion rule above switches animation off entirely, which leaves each
+   element at its normal static state - visible. Nothing to undo here. */
