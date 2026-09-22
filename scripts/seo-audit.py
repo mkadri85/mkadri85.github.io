@@ -33,8 +33,18 @@ def text_of(pattern, html, group=1):
 
 
 def meta(name, html, attr="name"):
-    return text_of(rf'<meta[^>]+{attr}=["\']{name}["\'][^>]+content=["\']([^"\']*)["\']', html) \
-        or text_of(rf'<meta[^>]+content=["\']([^"\']*)["\'][^>]+{attr}=["\']{name}["\']', html)
+    """Read a meta tag's content.
+
+    The quote character has to be captured and matched, not treated as a class. An
+    earlier version used [^"\']* for the value, which stopped at the first apostrophe
+    inside the text - so a description reading "How Relay's inbox decides..." was
+    reported as 9 characters long and flagged as too short."""
+    for pat in (rf'<meta[^>]+{attr}=["\']{name}["\'][^>]*content=(["\'])(.*?)\1',
+                rf'<meta[^>]+content=(["\'])(.*?)\1[^>]*{attr}=["\']{name}["\']'):
+        m = re.search(pat, html, re.S | re.I)
+        if m:
+            return re.sub(r"\s+", " ", m.group(2)).strip()
+    return None
 
 
 class Headings(HTMLParser):
@@ -101,6 +111,8 @@ def audit(path, html, is_article):
     kinds = set(re.findall(r'"@type"\s*:\s*"([^"]+)"', " ".join(blocks)))
     if not blocks:
         add(FAIL, "structured data", "no JSON-LD - models and answer engines have nothing to lift")
+    if is_article and "WebApplication" in kinds:
+        is_article = False          # an interactive tool, judged as a tool
     if is_article:
         for want in ("Article", "BlogPosting", "TechArticle"):
             if want in kinds: break
@@ -118,7 +130,9 @@ def audit(path, html, is_article):
             add(WARN, "GEO", "no reference list - cited pages get quoted more often")
         elif cites < refs:
             add(WARN, "GEO", f"{refs - cites} of {refs} references never cited in the text")
-        qs = re.findall(r'<h[23][^>]*>([^<]*\?)</h[23]>', html)
+        # Arabic writes its question mark as U+061F. Matching only '?' warned about
+        # eight Arabic editions that do have question headings.
+        qs = re.findall(r'<h[23][^>]*>([^<]*[?؟])</h[23]>', html)
         if not qs:
             add(WARN, "AEO", "no question-shaped heading - answer engines match on questions")
     return out
