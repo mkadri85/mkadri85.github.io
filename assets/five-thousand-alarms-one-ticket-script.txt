@@ -1,0 +1,49 @@
+Narration script - Five thousand alarms, one ticket (part 2)
+Prepared by Mohamed Kadri
+
+[00:00] Five thousand alarms, one ticket
+  This video follows one fiber cut through an assurance platform: from five thousand raw alarms to one event, one owner, and one ticket. Filtering, correlation, demarcation and closure, step by step.
+
+[00:19] 1. The cut and the burst
+  A fiber is cut on a metro section carrying two optical channels, twenty IP links, forty microwave hubs and one hundred eighty base stations.
+  Every layer alarms on its own. Optical: loss of signal on the section, then forward defect and AIS indications on every wavelength and every client signal it carries. IP: interface down, then BFD, routing adjacency, label sessions, tunnels and pseudowires. Microwave: uplink down on every hub. Radio: transmission down, S1 and X2 down, cells unavailable. Core: signalling associations down for the same base stations.
+  Within one minute the platform receives about five thousand alarms. None of them says fiber cut.
+
+[01:20] 2. The pipeline shrinks the burst
+  Each alarm passes a fixed chain of rules before anyone sees it. The chain is the same for every vendor; only the rule content differs.
+  First, the collector: it standardizes the record, applies the vendor mask list, protects against storms by rate limiting, and enriches the alarm with site, region and domain from the inventory. Five thousand becomes three thousand eight hundred.
+  Second, deduplication and compression: a flapping port that raises and clears thirty times becomes one active alarm with a count. Delay-count rules promote an alarm only after it repeats. Two thousand one hundred.
+  Third, transient suppression: every new alarm is held for a short window. If the clear arrives inside the window, it is archived as a message and never shown. Loss-of-signal alarms skip the window, so the root is never delayed. One thousand nine hundred.
+  Fourth, the discriminator: informational and low-severity classes go to the message channel, kept and searchable, but no ticket. Eleven hundred alarms remain.
+  Fifth, the planned outage check: if the objects are inside an approved maintenance window, the alarm is tagged planned and no ticket is raised. Not today.
+
+[02:49] 3. Parent and child inside one domain
+  Now the biggest reduction, and it needs no topology at all: parent-child rules inside each element manager.
+  In optical, loss of signal on the section is the parent of every wavelength and client alarm on that section. In IP, interface down is the parent of BFD, routing, label, tunnel and pseudowire alarms on that interface. In radio, transmission down is the parent of S1, X2 and cell alarms on that base station.
+  The rules are per vendor and per alarm type, with a time window and an object hierarchy. Eleven hundred alarms become two hundred fifty-one parents: two optical, one at each end of the section; twenty IP, one per link; forty microwave; one hundred eighty radio; and nine core, one per tracking area. Still no fiber cut.
+
+[03:51] 4. Cross-domain correlation on the map
+  This is where the topology from the first video is used. The engine walks the restored paths.
+  The twenty IP links are carried by the two optical channels. The forty hubs and one hundred eighty base stations sit behind those links. The core alarms name exactly those base stations. Every one of them becomes a child of the optical alarm.
+  The two loss-of-signal alarms, one at each end, are synthesized into one root: section down. Two hundred fifty-one parents become one synthetic root with two hundred fifty-one children.
+
+[04:32] 5. Event and demarcation
+  The root, its children and the impact count become one event with a state: open, in progress, recovering, closed. Children that arrive late attach to the existing event; they never open a new one.
+  Demarcation decides who owns it. Loss of signal at both ends and no equipment alarm on either node means the fiber, not a transmitter. The fiber route from the inventory gives the segment: between site A and site B. Protection did not switch, so priority one.
+  If loss of signal were at one end only, the same rules would point at the far-end card, and a different team.
+
+[05:18] 6. One ticket, and the ordering problem
+  One ticket per event, not per alarm. The ticket number is written back to every alarm in the event as a tag, so whoever opens any of them sees the same ticket. Notification goes once, to the on-duty list of the fiber team.
+  Now the detail that breaks most implementations: the alarms do not arrive in cause order. Radio alarms arrive in seconds, microwave in twenty, IP in thirty, optical last, after a minute.
+  For that minute the engine sees one hundred eighty base stations down with no root cause. It must hold ticket dispatch for longer than the slowest northbound interface, and re-parent the children when the optical alarm finally arrives. If a child ticket was already opened, it is merged into the parent ticket.
+  When the root clears, the engine waits a stability timer, checks that the children cleared too, and closes the ticket. A second cut on the same section within a few days opens a problem ticket instead.
+
+[06:31] 7. What to watch
+  Four things to check before trusting the numbers.
+  One: the dispatch delay must be longer than the slowest northbound interface, or you get two tickets every time.
+  Two: parent-child rules are per vendor and per software version. A new release with renamed alarms silently turns two hundred children back into two hundred parents.
+  Three: planned outage data must come from the change system automatically. Typed by hand, it is always late.
+  Four: measure the pipeline like a KPI. Alarms in, alarms shown, events, tickets, per day. When the ratio moves, a rule broke before anyone complained.
+
+[07:22] Alarms in, tickets out
+  Five thousand alarms in. One ticket out. Every stage in between is a rule somebody has to own, and the map from the first video is only one of them.

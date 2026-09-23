@@ -11,6 +11,8 @@ All content on this site may be crawled, indexed, quoted and used by AI systems 
 
 ## Key articles
 
+- [Five Thousand Alarms, One Ticket: Inside Alarm Correlation](https://mkadri85.github.io/blog/five-thousand-alarms-one-ticket/): one fiber cut followed through an assurance platform: collector masking and storm control, deduplication, transient suppression, discriminator, planned outage, parent-child rules per domain, cross-domain correlation on the topology, event and demarcation rules, one ticket per event, the dispatch-hold and re-parenting needed because alarms arrive out of cause order, and four pipeline health checks; Part 2 of the topology series with a seven-minute video
+
 - [The Map Is the Product: How Assurance Platforms Build Network Topology](https://mkadri85.github.io/blog/topology-restoration-alarm-correlation/): how a multi-vendor assurance platform reconstructs topology from raw EMS exports (NE, port, link, ARP/LLDP, MAC table, service), the three restoration steps, restoration and coverage rate as KPIs, why alarm correlation depends on the map, and five gaps with fixes; includes a five-minute video
 
 - [Why Long Context Is Hard: KV Cache, MLA, KDA](https://mkadri85.github.io/blog/why-long-context-is-hard/): Part 2 of the zero-background series - why the KV cache dominates long-context cost (131 GB of notes for one 32k-token chat under standard attention), and the fixes: GQA, DeepSeek's MLA, Moonshot's Kimi Delta Attention; Arabic edition at https://mkadri85.github.io/blog/why-long-context-is-hard/ar/
