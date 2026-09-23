@@ -36,14 +36,14 @@ Prepared by Mohamed Kadri
   One ticket per event, not per alarm. The ticket number is written back to every alarm in the event as a tag, so whoever opens any of them sees the same ticket. Notification goes once, to the on-duty list of the fiber team.
   Now the detail that breaks most implementations: the alarms do not arrive in cause order. Radio alarms arrive in seconds, microwave in twenty, IP in thirty, optical last, after a minute.
   For that minute the engine sees one hundred eighty base stations down with no root cause. It must hold ticket dispatch for longer than the slowest northbound interface, and re-parent the children when the optical alarm finally arrives. If a child ticket was already opened, it is merged into the parent ticket.
-  When the root clears, the engine waits a stability timer, checks that the children cleared too, and closes the ticket. A second cut on the same section within a few days opens a problem ticket instead.
+  When the root clears, the engine waits a stability timer, checks that the children cleared too, and closes the ticket. A second cut on the same section within a few days opens a new ticket and a linked problem ticket.
 
-[06:31] 7. What to watch
+[06:32] 7. What to watch
   Four things to check before trusting the numbers.
   One: the dispatch delay must be longer than the slowest northbound interface, or you get two tickets every time.
   Two: parent-child rules are per vendor and per software version. A new release with renamed alarms silently turns two hundred children back into two hundred parents.
   Three: planned outage data must come from the change system automatically. Typed by hand, it is always late.
   Four: measure the pipeline like a KPI. Alarms in, alarms shown, events, tickets, per day. When the ratio moves, a rule broke before anyone complained.
 
-[07:22] Alarms in, tickets out
+[07:23] Alarms in, tickets out
   Five thousand alarms in. One ticket out. Every stage in between is a rule somebody has to own, and the map from the first video is only one of them.
