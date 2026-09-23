@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MKmemo</title>
+<meta name="description" content="MKmemo is a private, self-hosted memory assistant and meeting notetaker run by one person for his own work.">
+<meta name="author" content="Mohamed Kadri">
+<link rel="canonical" href="https://mkadri85.github.io/mkmemo/">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-96.png" type="image/png" sizes="96x96">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0e16;--panel:#121a29;--line:#243044;--ink:#eef1f6;--mut:#9aa6b8;--dim:#6a7689;--accent:#4f8fc9;--accent2:#77aede}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.7;-webkit-font-smoothing:antialiased}
+  h1,h2{font-family:'Space Grotesk',Inter,sans-serif;letter-spacing:-.02em}
+  a{color:var(--accent2)}
+  .wrap{max-width:1140px;margin:0 auto;padding:0 24px}
+  header{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:rgba(10,13,19,.72);border-bottom:1px solid var(--line)}
+  nav{max-width:1140px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+  .brand{font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--ink);text-decoration:none}
+  .navlinks a{color:var(--mut);text-decoration:none;margin-left:20px}
+  article{max-width:720px;margin:0 auto;padding:40px 0 60px}
+  article p,article li{color:var(--ink)}
+  .meta{color:var(--mut);font-size:.95em}
+  footer{border-top:1px solid var(--line);color:var(--dim);text-align:center;padding:24px;font-size:.9em}
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="brand" href="/">Mohamed Kadri</a>
+    <div class="navlinks">
+      <a href="/">Home</a>
+      <a href="/blog/">Writing</a>
+      <a href="/#contact">Contact</a>
+    </div>
+  </nav>
+</header>
+
+<main class="wrap">
+<article>
+
+<h1>MKmemo</h1>
+<p class="meta">A private assistant for one person's working memory. Self-hosted. Not a public service.</p>
+
+<p>MKmemo keeps track of what was said, decided and promised across the chats and meetings of a single operator, Mohamed Kadri, and answers questions about them later. It runs on a server he operates himself. There are no other users, no sign-up, and nothing is sold.</p>
+
+<h2>What it does</h2>
+<ul>
+  <li><strong>Meeting notetaker.</strong> A visible participant named "MK NoteTaker" joins a Google Meet, Microsoft Teams or Zoom call when it is invited or when the meeting is on the operator's calendar. The host admits it like any other participant. After the call it produces a transcript and a short brief for the operator, then deletes the audio.</li>
+  <li><strong>Calendar reading.</strong> It reads the operator's own calendars to find meetings with a joining link, so the notetaker can join on time without anyone typing anything.</li>
+  <li><strong>Invitation mail.</strong> It reads the notetaker's own mailbox, and only that mailbox, for invitations sent to it, so it can join a meeting that was started on the spot.</li>
+</ul>
+
+<h2>Where the data lives</h2>
+<p>Everything is stored on the operator's own server in an encrypted database, is never shared with third parties, and is never used for advertising or to train AI models. Details are in the <a href="/mkmemo/privacy/">privacy policy</a> and the <a href="/mkmemo/terms/">terms of service</a>.</p>
+
+<h2>Contact</h2>
+<p>Mohamed Kadri, Dubai, United Arab Emirates. <a href="mailto:engmohamedkadrialy@gmail.com">engmohamedkadrialy@gmail.com</a></p>
+
+</article>
+</main>
+
+<footer>
+  <div>Mohamed Kadri - Technical Operations Leader &amp; AI/Cloud Engineer - Dubai, United Arab Emirates</div>
+</footer>
+
+<link rel="stylesheet" href="/assets/print-theme.css?v=7882872041">
+</body>
+</html>
